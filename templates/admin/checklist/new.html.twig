@@ -1,0 +1,15 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Neue Stückliste - Besteller{% endblock %}
+
+{% block body %}
+<h1>Neue Stückliste</h1>
+
+{{ form_start(form) }}
+    {{ form_row(form.title) }}
+    {{ form_row(form.targetEmail) }}
+    {{ form_row(form.emailTemplate) }}
+    <button class="btn btn-primary">Speichern</button>
+    <a href="{{ path('admin_checklists') }}" class="btn btn-secondary">Abbrechen</a>
+{{ form_end(form) }}
+{% endblock %}
