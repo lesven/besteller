@@ -1,0 +1,25 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Startseite - Besteller{% endblock %}
+
+{% block body %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="text-center">
+            <h1 class="display-4">Besteller</h1>
+            <p class="lead">Stücklisten-Applikation für Mitarbeiterausstattung</p>
+            
+            {% if is_granted('ROLE_ADMIN') %}
+                <a href="{{ path('admin_dashboard') }}" class="btn btn-primary">Zur Verwaltung</a>
+            {% else %}
+                <div class="alert alert-info">
+                    <h5>Für Führungskräfte</h5>
+                    <p>Sie erhalten individuelle Links zu den Stücklisten per E-Mail.</p>
+                </div>
+                
+                <a href="{{ path('app_login') }}" class="btn btn-secondary">Administrator Login</a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

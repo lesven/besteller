@@ -1,0 +1,61 @@
+index:
+    path: /
+    controller: App\Controller\HomeController::index
+
+app_login:
+    path: /login
+    controller: App\Controller\SecurityController::login
+
+app_logout:
+    path: /logout
+    methods: GET
+
+# Public checklist routes
+checklist_show:
+    path: /checklist/{id}
+    controller: App\Controller\ChecklistController::show
+    requirements:
+        id: '\d+'
+
+checklist_submit:
+    path: /checklist/{id}/submit
+    controller: App\Controller\ChecklistController::submit
+    methods: [POST]
+    requirements:
+        id: '\d+'
+
+# Admin routes
+admin_dashboard:
+    path: /admin
+    controller: App\Controller\Admin\DashboardController::index
+
+admin_checklists:
+    path: /admin/checklists
+    controller: App\Controller\Admin\ChecklistController::index
+
+admin_checklist_new:
+    path: /admin/checklists/new
+    controller: App\Controller\Admin\ChecklistController::new
+
+admin_checklist_edit:
+    path: /admin/checklists/{id}/edit
+    controller: App\Controller\Admin\ChecklistController::edit
+    requirements:
+        id: '\d+'
+
+admin_checklist_delete:
+    path: /admin/checklists/{id}/delete
+    controller: App\Controller\Admin\ChecklistController::delete
+    methods: [POST]
+    requirements:
+        id: '\d+'
+
+admin_submissions:
+    path: /admin/submissions
+    controller: App\Controller\Admin\SubmissionController::index
+
+admin_submissions_checklist:
+    path: /admin/submissions/{checklistId}
+    controller: App\Controller\Admin\SubmissionController::byChecklist
+    requirements:
+        checklistId: '\d+'

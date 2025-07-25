@@ -1,0 +1,82 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Admin Dashboard - Besteller{% endblock %}
+
+{% block body %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Admin Dashboard</h1>
+    <div>
+        <a href="{{ path('admin_checklist_new') }}" class="btn btn-primary">Neue Stückliste</a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Stücklisten verwalten</h5>
+            </div>
+            <div class="card-body">
+                {% if checklists is empty %}
+                    <p class="text-muted">Noch keine Stücklisten vorhanden.</p>
+                {% else %}
+                    <div class="list-group">
+                        {% for checklist in checklists %}
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">{{ checklist.title }}</h6>
+                                    <small class="text-muted">{{ checklist.targetEmail }}</small>
+                                </div>
+                                <div>
+                                    <a href="{{ path('admin_checklist_edit', {id: checklist.id}) }}" class="btn btn-sm btn-outline-primary">Bearbeiten</a>
+                                    <a href="{{ path('admin_submissions_checklist', {checklistId: checklist.id}) }}" class="btn btn-sm btn-outline-secondary">Einsendungen</a>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                
+                <div class="mt-3">
+                    <a href="{{ path('admin_checklists') }}" class="btn btn-outline-primary">Alle Stücklisten</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Einsendungen</h5>
+            </div>
+            <div class="card-body">
+                <p>Verwalten Sie alle eingegangenen Einsendungen.</p>
+                <a href="{{ path('admin_submissions') }}" class="btn btn-outline-secondary">Alle Einsendungen anzeigen</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>Schnellstart</h5>
+            </div>
+            <div class="card-body">
+                <h6>So verwenden Sie das System:</h6>
+                <ol>
+                    <li><strong>Stückliste erstellen:</strong> Erstellen Sie eine neue Stückliste mit Gruppen und Auswahlmöglichkeiten</li>
+                    <li><strong>Link generieren:</strong> Erstellen Sie einen personalisierten Link für Führungskräfte</li>
+                    <li><strong>E-Mail-Template konfigurieren:</strong> Passen Sie das E-Mail-Template an Ihre Bedürfnisse an</li>
+                    <li><strong>Einsendungen verwalten:</strong> Überwachen Sie eingehende Einsendungen</li>
+                </ol>
+                
+                <div class="alert alert-info mt-3">
+                    <strong>Tipp:</strong> Links für Führungskräfte haben das Format:<br>
+                    <code>/checklist/{id}?name=Max%20Mustermann&mitarbeiter_id=12345&email=max@example.com</code>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
