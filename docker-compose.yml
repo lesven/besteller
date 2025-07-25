@@ -23,9 +23,11 @@ services:
     volumes:
       - ./:/var/www/html
     environment:
-      - DATABASE_URL=mysql://besteller:besteller@db:3306/besteller
-      - APP_ENV=prod
-      - APP_SECRET=your-secret-key-change-this
+      - APP_ENV=dev
+      - APP_DEBUG=1
+      - APP_SECRET=dev-secret-key-for-development-only
+      - DATABASE_URL=mysql://besteller:besteller@db:3306/besteller?serverVersion=10.11.2-MariaDB&charset=utf8mb4
+      - MAILER_DSN=smtp://mailhog:1025
     depends_on:
       - db
     networks:
@@ -40,6 +42,14 @@ services:
       MYSQL_PASSWORD: besteller
     volumes:
       - db_data:/var/lib/mysql
+    networks:
+      - besteller
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    ports:
+      - "8025:8025"  # Web UI
+      - "1025:1025"  # SMTP
     networks:
       - besteller
 
