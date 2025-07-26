@@ -47,6 +47,9 @@ clear-cache: ## Löscht den Symfony Cache
 test: ## Führt Tests aus
 	docker compose exec php bin/phpunit
 
+phpstan: ## Führt statische Analyse mit PHPStan aus
+	docker compose exec php vendor/bin/phpstan analyse
+
 logs: ## Zeigt Container Logs
 	docker compose logs -f
 

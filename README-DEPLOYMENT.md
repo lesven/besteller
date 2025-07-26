@@ -54,6 +54,7 @@ make logs           # Zeigt Logs
 make shell          # Öffnet Shell im PHP Container
 make migrate        # Führt Migrationen aus
 make clear-cache    # Löscht Symfony Cache
+make phpstan        # Führt statische Analyse aus
 ```
 
 ### Benutzerverwaltung
