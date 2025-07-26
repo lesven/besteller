@@ -21,6 +21,9 @@ class Checklist
     #[ORM\Column(type: 'string', length: 255)]
     private ?string $targetEmail = null;
 
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    private ?string $replyEmail = null;
+
     #[ORM\Column(type: 'text', nullable: true)]
     private ?string $emailTemplate = null;
 
@@ -60,6 +63,17 @@ class Checklist
     public function setTargetEmail(string $targetEmail): static
     {
         $this->targetEmail = $targetEmail;
+        return $this;
+    }
+
+    public function getReplyEmail(): ?string
+    {
+        return $this->replyEmail;
+    }
+
+    public function setReplyEmail(?string $replyEmail): static
+    {
+        $this->replyEmail = $replyEmail;
         return $this;
     }
 

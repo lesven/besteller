@@ -123,6 +123,7 @@ Die folgenden Platzhalter stehen im HTML-Template zur Verfügung:
 | `{{mitarbeiter_id}}` | Mitarbeitenden-ID (aus Link)                          |
 | `{{stückliste}}`  | Name der Stückliste                                      |
 | `{{auswahl}}`     | Strukturierte Ausgabe aller getätigten Auswahlen nach Gruppe |
+| `{{rueckfragen_email}}` | Hinterlegte Rückfragen-Adresse |
 
 ---
 

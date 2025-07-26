@@ -32,14 +32,25 @@
 
                     <div class="mb-3">
                         <label for="target_email" class="form-label">Ziel-E-Mail <span class="text-danger">*</span></label>
-                        <input type="email" 
-                               class="form-control" 
-                               id="target_email" 
-                               name="target_email" 
-                               value="{{ checklist.targetEmail ?? '' }}" 
+                        <input type="email"
+                               class="form-control"
+                               id="target_email"
+                               name="target_email"
+                               value="{{ checklist.targetEmail ?? '' }}"
                                required
                                placeholder="it@besteller.local">
                         <div class="form-text">E-Mail-Adresse, an die ausgefüllte Formulare gesendet werden</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="reply_email" class="form-label">Rückfragen-E-Mail</label>
+                        <input type="email"
+                               class="form-control"
+                               id="reply_email"
+                               name="reply_email"
+                               value="{{ checklist.replyEmail ?? '' }}"
+                               placeholder="kontakt@example.com">
+                        <div class="form-text">Optional: Adresse für Rückfragen</div>
                     </div>
 
                     <div class="d-flex gap-2">

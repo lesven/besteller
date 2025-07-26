@@ -133,6 +133,7 @@ http://localhost:8081/checklist/{stückliste_id}?name=Max%20Mustermann&mitarbeit
 - `{{mitarbeiter_id}}` - Mitarbeiter-ID
 - `{{stückliste}}` - Name der Stückliste
 - `{{auswahl}}` - Strukturierte Ausgabe aller Auswahlen
+- `{{rueckfragen_email}}` - Hinterlegte Rückfragen-Adresse
 
 ## 🛠️ Entwicklung
 
