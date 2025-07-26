@@ -101,17 +101,16 @@ Ziel dieser Anwendung ist die digitale Erfassung von benötigter Ausstattung fü
 - Vorschau des aktuellen Templates als reiner HTML-Text in einer Textbox
 - Upload ersetzt das bisherige Template
 
-#### US-8: E-Mail Einstellungen verwalten
-**Als** Admin
-**möchte ich** die Konfiguration des E-Mail Servers im Backend vornehmen können
-**damit** ich einen beliebigen SMTP Server hinterlegen kann.
+#### US-9: Benutzer verwalten verwalten
+**Als** Admin  
+**möchte ich** die benutzer des Stücklisten systems verwalten
+**damit** ich anderen Kollegen ermöglichen kann Stücklsiten zu erstellen und zu bearbeiten.
 
 **Akzeptanzkriterien:**
-- Server IP Adresse
-- Server Port
-- Username Passwort optional
-- ignorieren von SSL Zertifikaten
-
+- E-Mail adresse 
+- Passwort (16 Zeichen)
+- User bearbeiten
+- User löschen
 ---
 
 ## Platzhalter im E-Mail-Template
