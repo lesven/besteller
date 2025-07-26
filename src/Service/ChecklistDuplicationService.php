@@ -20,21 +20,21 @@ class ChecklistDuplicationService
     {
         $newChecklist = new Checklist();
         $newChecklist->setTitle('Duplikat von ' . $checklist->getTitle());
-        $newChecklist->setTargetEmail($checklist->getTargetEmail());
+        $newChecklist->setTargetEmail($checklist->getTargetEmail() ?? '');
         $newChecklist->setReplyEmail($checklist->getReplyEmail());
         $newChecklist->setEmailTemplate($checklist->getEmailTemplate());
 
         foreach ($checklist->getGroups() as $group) {
             $newGroup = new ChecklistGroup();
-            $newGroup->setTitle($group->getTitle());
+            $newGroup->setTitle($group->getTitle() ?? '');
             $newGroup->setDescription($group->getDescription());
             $newGroup->setSortOrder($group->getSortOrder());
             $newGroup->setChecklist($newChecklist);
 
             foreach ($group->getItems() as $item) {
                 $newItem = new GroupItem();
-                $newItem->setLabel($item->getLabel());
-                $newItem->setType($item->getType());
+                $newItem->setLabel($item->getLabel() ?? '');
+                $newItem->setType($item->getType() ?? '');
                 $newItem->setOptions($item->getOptions());
                 $newItem->setSortOrder($item->getSortOrder());
                 $newGroup->addItem($newItem);

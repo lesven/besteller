@@ -8,6 +8,8 @@ use Doctrine\Persistence\ManagerRegistry;
 
 /**
  * Repository für Checklist Entity
+ *
+ * @extends ServiceEntityRepository<Checklist>
  */
 class ChecklistRepository extends ServiceEntityRepository
 {
@@ -18,6 +20,9 @@ class ChecklistRepository extends ServiceEntityRepository
 
     /**
      * Alle aktiven Checklisten finden
+     */
+    /**
+     * @return list<Checklist>
      */
     public function findAll(): array
     {
@@ -32,6 +37,8 @@ class ChecklistRepository extends ServiceEntityRepository
      */
     public function find($id, $lockMode = null, $lockVersion = null): ?Checklist
     {
-        return parent::find($id, $lockMode, $lockVersion);
+        /** @var Checklist|null $entity */
+        $entity = parent::find($id, $lockMode, $lockVersion);
+        return $entity;
     }
 }
