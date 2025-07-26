@@ -39,7 +39,7 @@
                             <td>{{ submission.submittedAt|date('d.m.Y H:i') }}</td>
                             <td>{{ submission.name }}</td>
                             <td>{{ submission.mitarbeiterId }}</td>
-                            <td><pre class="mb-0">{{ submission.generatedEmail|striptags }}</pre></td>
+                            <td>{{ submission.generatedEmail|raw }}</td>
                             <td>
                                 <button type="button" class="btn btn-sm btn-outline-danger"
                                         data-bs-toggle="modal"
