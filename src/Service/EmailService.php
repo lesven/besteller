@@ -47,10 +47,13 @@ class EmailService
         
         // Platzhalter ersetzen
         $emailContent = $this->replacePlaceholders($template, $submission);
-        
+
+        $settings = $this->entityManager->getRepository(EmailSettings::class)->find(1);
+        $from = $settings?->getSenderEmail() ?? 'noreply@besteller.local';
+
         // E-Mail an Zieladresse (interne Bearbeitung)
         $targetEmail = (new Email())
-            ->from('noreply@besteller.local')
+            ->from($from)
             ->to($submission->getChecklist()->getTargetEmail())
             ->subject('Neue Stückliste eingegangen: ' . $submission->getChecklist()->getTitle() . ' - ' . $submission->getName())
             ->html($emailContent);
@@ -62,7 +65,7 @@ class EmailService
         $confirmationContent = $this->replacePlaceholders($confirmationTemplate, $submission);
         
         $managerEmail = (new Email())
-            ->from('noreply@besteller.local')
+            ->from($from)
             ->to($submission->getEmail())
             ->subject('Bestätigung: Die Bestellung wurde erfolgreich übermittelt')
             ->html($confirmationContent);

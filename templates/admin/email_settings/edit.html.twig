@@ -29,6 +29,10 @@
         <label class="form-label">Passwort (optional)</label>
         <input type="password" name="password" class="form-control" autocomplete="off" value="{{ settings.password }}">
     </div>
+    <div class="mb-3">
+        <label class="form-label">Absenderadresse</label>
+        <input type="email" name="sender_email" class="form-control" required value="{{ settings.senderEmail }}">
+    </div>
     <div class="form-check mb-3">
         <input type="checkbox" id="ignore_ssl" name="ignore_ssl" class="form-check-input" {% if settings.ignoreSsl %}checked{% endif %}>
         <label class="form-check-label" for="ignore_ssl">SSL Zertifikate ignorieren</label>

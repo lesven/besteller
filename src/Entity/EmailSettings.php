@@ -28,6 +28,9 @@ class EmailSettings
     #[ORM\Column(type: 'boolean')]
     private bool $ignoreSsl = false;
 
+    #[ORM\Column(type: 'string', length: 255)]
+    private string $senderEmail = 'noreply@besteller.local';
+
     public function getId(): ?int
     {
         return $this->id;
@@ -85,6 +88,17 @@ class EmailSettings
     public function setIgnoreSsl(bool $ignoreSsl): static
     {
         $this->ignoreSsl = $ignoreSsl;
+        return $this;
+    }
+
+    public function getSenderEmail(): string
+    {
+        return $this->senderEmail;
+    }
+
+    public function setSenderEmail(string $senderEmail): static
+    {
+        $this->senderEmail = $senderEmail;
         return $this;
     }
 }
