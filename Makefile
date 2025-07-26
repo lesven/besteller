@@ -47,6 +47,18 @@ clear-cache: ## Löscht den Symfony Cache
 test: ## Führt Tests aus
 	docker compose exec php bin/phpunit
 
+phpstan: ## Führt statische Analyse mit PHPStan aus
+	docker compose exec php vendor/bin/phpstan analyse --memory-limit=512M
+
+phpstan-fix: ## Führt PHPStan mit höherem Memory-Limit aus (1GB)
+	docker compose exec php vendor/bin/phpstan analyse --memory-limit=1G
+
+phpstan-baseline: ## Erstellt eine PHPStan Baseline für bestehende Fehler
+	docker compose exec php vendor/bin/phpstan analyse --memory-limit=512M --generate-baseline
+
+phpstan-clear: ## Löscht PHPStan Cache
+	docker compose exec php vendor/bin/phpstan clear-result-cache
+
 logs: ## Zeigt Container Logs
 	docker compose logs -f
 
