@@ -18,6 +18,10 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 )]
 class ChangePasswordCommand extends Command
 {
+    /**
+     * @param EntityManagerInterface      $entityManager Datenbankzugriff
+     * @param UserPasswordHasherInterface $passwordHasher Passwort-Hasher
+     */
     public function __construct(
         private EntityManagerInterface $entityManager,
         private UserPasswordHasherInterface $passwordHasher
@@ -25,14 +29,24 @@ class ChangePasswordCommand extends Command
         parent::__construct();
     }
 
+    /**
+     * Legt die benötigten Argumente für den Befehl fest.
+     */
     protected function configure(): void
     {
         $this
             ->addArgument('email', InputArgument::REQUIRED, 'E-Mail-Adresse des Benutzers')
-            ->addArgument('password', InputArgument::REQUIRED, 'Neues Passwort (mindestens 16 Zeichen)')
-        ;
+            ->addArgument('password', InputArgument::REQUIRED, 'Neues Passwort (mindestens 16 Zeichen)');
     }
 
+    /**
+     * Ändert das Passwort eines vorhandenen Benutzers.
+     *
+     * @param InputInterface  $input  Eingabedaten der Konsole
+     * @param OutputInterface $output Ausgabeschnittstelle
+     *
+     * @return int Statuscode
+     */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);

@@ -8,6 +8,14 @@ use Symfony\Component\HttpFoundation\Request;
 
 class SubmissionService
 {
+    /**
+     * Sammelt die vom Nutzer übermittelten Daten einer Stückliste.
+     *
+     * @param Checklist $checklist Die aktuelle Stückliste
+     * @param Request   $request   Der HTTP-Request mit den Formdaten
+     *
+     * @return array Die strukturierten Bestelldaten
+     */
     public function collectSubmissionData(Checklist $checklist, Request $request): array
     {
         $data = [];
@@ -48,6 +56,13 @@ class SubmissionService
         return $data;
     }
     
+    /**
+     * Formatiert übermittelte Daten für den Versand per E-Mail.
+     *
+     * @param array $data Die zuvor gesammelten Bestelldaten
+     *
+     * @return string HTML-Markup für die E-Mail
+     */
     public function formatSubmissionForEmail(array $data): string
     {
         $output = '';
