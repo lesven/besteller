@@ -73,6 +73,46 @@ class GroupItem
     }
 
     /**
+     * Decodes the options JSON into an array structure
+     *
+     * @return array<int|string, mixed>
+     */
+    private function decodeOptionsJson(): array
+    {
+        if (!$this->options) {
+            return [];
+        }
+
+        $decoded = json_decode($this->options, true);
+
+        return is_array($decoded) ? $decoded : [];
+    }
+
+    /**
+     * Normalizes a single option entry to the expected structure
+     *
+     * @param mixed $option
+     * @return array{label: string, active: bool}
+     */
+    private static function normalizeOption(mixed $option): array
+    {
+        if (is_array($option)) {
+            $label = isset($option['label']) && is_string($option['label']) ? $option['label'] : '';
+            $active = isset($option['active']) ? (bool) $option['active'] : false;
+
+            return [
+                'label' => $label,
+                'active' => $active,
+            ];
+        }
+
+        return [
+            'label' => is_string($option) ? $option : '',
+            'active' => false,
+        ];
+    }
+
+    /**
      * Gibt die Optionen als Array von Strings zurück
      *
      * @return list<string>
@@ -107,40 +147,12 @@ class GroupItem
      */
     public function getOptionsWithActive(): array
     {
-        if (!$this->options) {
+        $decoded = $this->decodeOptionsJson();
+        if ($decoded === []) {
             return [];
         }
 
-        $decoded = json_decode($this->options, true);
-        if (!is_array($decoded)) {
-            return [];
-        }
-
-        // Altes Format: einfache Liste von Strings
-        if (!empty($decoded) && array_key_exists(0, $decoded) && is_string($decoded[0])) {
-            return array_values(array_map(
-                fn($label) => ['label' => is_string($label) ? $label : '', 'active' => false],
-                $decoded
-            ));
-        }
-
-        $mapped = array_map(function ($option): array {
-            if (is_array($option) && array_key_exists('label', $option)) {
-                $label = is_string($option['label']) ? $option['label'] : '';
-                $active = isset($option['active']) ? (bool) $option['active'] : false;
-                return [
-                    'label' => $label,
-                    'active' => $active,
-                ];
-            }
-
-            return [
-                'label' => is_string($option) ? $option : '',
-                'active' => false,
-            ];
-        }, $decoded);
-
-        return array_values($mapped);
+        return array_values(array_map([self::class, 'normalizeOption'], $decoded));
     }
 
     /**
