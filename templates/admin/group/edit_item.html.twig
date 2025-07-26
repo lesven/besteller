@@ -47,8 +47,8 @@
                                   id="options" 
                                   name="options" 
                                   rows="5"
-                                  placeholder="Eine Option pro Zeile&#10;z.B.:&#10;MacBook Pro 14&quot;&#10;MacBook Pro 16&quot;&#10;ThinkPad X1">{% if item.options %}{{ item.optionsArray|join('\n') }}{% endif %}</textarea>
-                        <div class="form-text">Eine Option pro Zeile</div>
+                                  placeholder="Eine Option pro Zeile&#10;z.B.:&#10;MacBook Pro 14\"&#10;MacBook Pro 16\"&#10;ThinkPad X1 (aktiv)">{% if item.options %}{{ item.optionsLines|join('\\n') }}{% endif %}</textarea>
+                        <div class="form-text">Eine Option pro Zeile. Mit <code>(aktiv)</code> am Ende wird die Option vorausgewählt.</div>
                     </div>
 
                     <div class="mb-4">

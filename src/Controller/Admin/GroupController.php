@@ -88,8 +88,17 @@ class GroupController extends AbstractController
 
             // Handle options für Checkbox/Radio
             if (in_array($item->getType(), [GroupItem::TYPE_CHECKBOX, GroupItem::TYPE_RADIO])) {
-                $options = array_filter(array_map('trim', explode("\n", $request->request->get('options', ''))));
-                $item->setOptions(json_encode($options));
+                $lines = array_filter(array_map('trim', explode("\n", $request->request->get('options', ''))));
+                $options = [];
+                foreach ($lines as $line) {
+                    $active = false;
+                    if (preg_match('/\(aktiv\)$/i', $line)) {
+                        $active = true;
+                        $line = trim(preg_replace('/\(aktiv\)$/i', '', $line));
+                    }
+                    $options[] = ['label' => $line, 'active' => $active];
+                }
+                $item->setOptionsWithActive($options);
             }
 
             $this->entityManager->persist($item);
@@ -115,8 +124,17 @@ class GroupController extends AbstractController
 
             // Handle options für Checkbox/Radio
             if (in_array($item->getType(), [GroupItem::TYPE_CHECKBOX, GroupItem::TYPE_RADIO])) {
-                $options = array_filter(array_map('trim', explode("\n", $request->request->get('options', ''))));
-                $item->setOptions(json_encode($options));
+                $lines = array_filter(array_map('trim', explode("\n", $request->request->get('options', ''))));
+                $options = [];
+                foreach ($lines as $line) {
+                    $active = false;
+                    if (preg_match('/\(aktiv\)$/i', $line)) {
+                        $active = true;
+                        $line = trim(preg_replace('/\(aktiv\)$/i', '', $line));
+                    }
+                    $options[] = ['label' => $line, 'active' => $active];
+                }
+                $item->setOptionsWithActive($options);
             }
 
             $this->entityManager->flush();

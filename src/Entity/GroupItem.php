@@ -72,22 +72,85 @@ class GroupItem
     }
 
     /**
-     * Gibt die Optionen als Array zurück
+     * Gibt die Optionen als Array von Strings zurück
      */
     public function getOptionsArray(): array
+    {
+        return array_map(
+            fn(array $opt) => $opt['label'],
+            $this->getOptionsWithActive()
+        );
+    }
+
+    /**
+     * Speichert eine Liste von Optionen (nur Labels, alle inaktiv)
+     */
+    public function setOptionsArray(array $options): static
+    {
+        $structured = array_map(
+            fn(string $label) => ['label' => $label, 'active' => false],
+            $options
+        );
+        $this->options = json_encode($structured);
+        return $this;
+    }
+
+    /**
+     * Gibt die Optionen samt Aktiv-Status zurück
+     *
+     * @return array<int, array{label: string, active: bool}>
+     */
+    public function getOptionsWithActive(): array
     {
         if (!$this->options) {
             return [];
         }
-        
+
         $decoded = json_decode($this->options, true);
-        return is_array($decoded) ? $decoded : [];
+        if (!is_array($decoded)) {
+            return [];
+        }
+
+        // Altes Format: einfache Liste von Strings
+        if (!empty($decoded) && is_string($decoded[0])) {
+            return array_map(
+                fn(string $label) => ['label' => $label, 'active' => false],
+                $decoded
+            );
+        }
+
+        return array_map(function ($option) {
+            if (is_array($option) && array_key_exists('label', $option)) {
+                return [
+                    'label' => (string) $option['label'],
+                    'active' => isset($option['active']) ? (bool) $option['active'] : false,
+                ];
+            }
+
+            return ['label' => (string) $option, 'active' => false];
+        }, $decoded);
     }
 
-    public function setOptionsArray(array $options): static
+    /**
+     * Setzt Optionen inklusive Aktiv-Status
+     *
+     * @param array<int, array{label: string, active: bool}> $options
+     */
+    public function setOptionsWithActive(array $options): static
     {
         $this->options = json_encode($options);
         return $this;
+    }
+
+    /**
+     * Gibt die Optionen für Textareas zurück ("Label (aktiv)")
+     */
+    public function getOptionsLines(): array
+    {
+        return array_map(
+            fn(array $opt) => $opt['label'] . ($opt['active'] ? ' (aktiv)' : ''),
+            $this->getOptionsWithActive()
+        );
     }
 
     public function getSortOrder(): int
@@ -112,3 +175,4 @@ class GroupItem
         return $this;
     }
 }
+
