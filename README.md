@@ -148,6 +148,15 @@ Die folgenden Platzhalter stehen im HTML-Template zur Verfügung:
 - das neue Feld steht bei den Email Variablen zur Verfügung
 - das Standard Mail Template hat die neuen Möglichkeiten schon integriert
 
+#### US-111: Stücklisten duplizieren
+**Als** Admin  
+**möchte ich** eine komplette Stückliste mit allen Inhalten, ohne die Einsendungen natürlich dpulizieren können
+**damit** ich leicht für unsere einzlenen Standorte und Abteilugnen angepaste Stücklisten erstellen kann
+
+**Akzeptanzkriterien:**
+- alle Gruppen werden dupliziert
+- alle Elemente in den Gruppen werden dupliziert
+- die neue Liste heßt inital Duplikat von originalname
 
 
 ## Nicht-funktionale Anforderungen
