@@ -14,12 +14,27 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class ChecklistController extends AbstractController
 {
+    /**
+     * Konstruktor speichert benötigte Services.
+     *
+     * @param EntityManagerInterface $entityManager  Datenbankzugriff
+     * @param SubmissionService      $submissionService Service zum Sammeln der Formularwerte
+     * @param EmailService           $emailService     Versand der E-Mails
+     */
     public function __construct(
         private EntityManagerInterface $entityManager,
         private SubmissionService $submissionService,
         private EmailService $emailService
     ) {}
 
+    /**
+     * Zeigt eine Stückliste anhand der ID an und prüft Parameter.
+     *
+     * @param int     $id      ID der Stückliste
+     * @param Request $request Aktuelle HTTP-Anfrage
+     *
+     * @return Response HTML-Seite der Stückliste
+     */
     public function show(int $id, Request $request): Response
     {
         $checklist = $this->entityManager->getRepository(Checklist::class)->find($id);
@@ -60,6 +75,14 @@ class ChecklistController extends AbstractController
         ]);
     }
 
+    /**
+     * Verarbeitet eine eingereichte Stückliste und speichert sie.
+     *
+     * @param int     $id      ID der Stückliste
+     * @param Request $request Aktuelle HTTP-Anfrage
+     *
+     * @return Response Erfolgsmeldung nach dem Speichern
+     */
     public function submit(int $id, Request $request): Response
     {
         $checklist = $this->entityManager->getRepository(Checklist::class)->find($id);
@@ -117,6 +140,13 @@ class ChecklistController extends AbstractController
         ]);
     }
 
+    /**
+     * Zeigt das Formular zur Stückliste und verarbeitet Eingaben.
+     *
+     * @param Request $request Aktuelle HTTP-Anfrage
+     *
+     * @return Response Formularseite oder Erfolgsmeldung
+     */
     public function form(Request $request): Response
     {
         // Parameter aus URL prüfen
@@ -207,6 +237,14 @@ class ChecklistController extends AbstractController
         ]);
     }
 
+    /**
+     * Sammelt alle Formulardaten aus der Anfrage.
+     *
+     * @param Request   $request   Aktuelle HTTP-Anfrage
+     * @param Checklist $checklist Die zu verarbeitende Stückliste
+     *
+     * @return array Aufbereitete Formulardaten
+     */
     private function collectFormData(Request $request, Checklist $checklist): array
     {
         $formData = [];

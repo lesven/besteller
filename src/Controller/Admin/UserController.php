@@ -13,12 +13,23 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted('ROLE_ADMIN')]
 class UserController extends AbstractController
 {
+    /**
+     * Konstruktor stellt EntityManager und PasswordHasher bereit.
+     *
+     * @param EntityManagerInterface      $entityManager Datenbankzugriff
+     * @param UserPasswordHasherInterface $passwordHasher Passwort-Hasher
+     */
     public function __construct(
         private EntityManagerInterface $entityManager,
         private UserPasswordHasherInterface $passwordHasher
     ) {
     }
 
+    /**
+     * Zeigt eine Übersicht aller Benutzer.
+     *
+     * @return Response Liste aller Benutzer
+     */
     public function index(): Response
     {
         $users = $this->entityManager->getRepository(User::class)->findAll();
@@ -28,6 +39,13 @@ class UserController extends AbstractController
         ]);
     }
 
+    /**
+     * Legt einen neuen Benutzer an.
+     *
+     * @param Request $request Aktuelle HTTP-Anfrage
+     *
+     * @return Response Formular oder Weiterleitung
+     */
     public function new(Request $request): Response
     {
         if ($request->isMethod('POST')) {
@@ -56,6 +74,14 @@ class UserController extends AbstractController
         return $this->render('admin/user/new.html.twig');
     }
 
+    /**
+     * Bearbeitet einen vorhandenen Benutzer.
+     *
+     * @param Request $request Aktuelle HTTP-Anfrage
+     * @param User    $user    Der zu bearbeitende Benutzer
+     *
+     * @return Response Formular oder Weiterleitung
+     */
     public function edit(Request $request, User $user): Response
     {
         if ($request->isMethod('POST')) {
@@ -91,6 +117,14 @@ class UserController extends AbstractController
         ]);
     }
 
+    /**
+     * Entfernt einen Benutzer.
+     *
+     * @param Request $request Aktuelle HTTP-Anfrage
+     * @param User    $user    Der zu löschende Benutzer
+     *
+     * @return Response Weiterleitung zur Benutzerliste
+     */
     public function delete(Request $request, User $user): Response
     {
         if ($this->isCsrfTokenValid('delete' . $user->getId(), (string) $request->request->get('_token'))) {
