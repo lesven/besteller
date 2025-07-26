@@ -51,6 +51,11 @@
                             </a>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link {% if app.request.get('_route') starts with 'admin_email_settings' %}active{% endif %}" href="{{ path('admin_email_settings') }}">
+                                <i class="fas fa-envelope"></i> E-Mail Einstellungen
+                            </a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link" href="#">
                                 <i class="fas fa-users"></i> Benutzer
                             </a>

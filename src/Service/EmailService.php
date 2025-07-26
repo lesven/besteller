@@ -4,14 +4,42 @@ namespace App\Service;
 
 use App\Entity\Submission;
 use Symfony\Component\Mailer\MailerInterface;
+use Symfony\Component\Mailer\Mailer;
+use Symfony\Component\Mailer\Transport;
+use Doctrine\ORM\EntityManagerInterface;
+use App\Entity\EmailSettings;
 use Symfony\Component\Mime\Email;
 
 class EmailService
 {
     public function __construct(
         private MailerInterface $mailer,
-        private SubmissionService $submissionService
+        private SubmissionService $submissionService,
+        private EntityManagerInterface $entityManager
     ) {}
+
+    private function getMailer(): MailerInterface
+    {
+        $settings = $this->entityManager->getRepository(EmailSettings::class)->find(1);
+        if (!$settings) {
+            return $this->mailer;
+        }
+
+        $dsn = 'smtp://';
+        if ($settings->getUsername()) {
+            $dsn .= rawurlencode($settings->getUsername());
+            if ($settings->getPassword()) {
+                $dsn .= ':' . rawurlencode($settings->getPassword());
+            }
+            $dsn .= '@';
+        }
+        $dsn .= $settings->getHost() . ':' . $settings->getPort();
+        if ($settings->isIgnoreSsl()) {
+            $dsn .= '?verify_peer=0';
+        }
+
+        return new Mailer(Transport::fromDsn($dsn));
+    }
 
     public function generateAndSendEmail(Submission $submission): string
     {
@@ -27,7 +55,7 @@ class EmailService
             ->subject('Neue Stückliste eingegangen: ' . $submission->getChecklist()->getTitle() . ' - ' . $submission->getName())
             ->html($emailContent);
             
-        $this->mailer->send($targetEmail);
+        $this->getMailer()->send($targetEmail);
         
         // E-Mail an Führungskraft (Bestätigung)
         $confirmationTemplate = $this->getConfirmationTemplate();
@@ -39,7 +67,7 @@ class EmailService
             ->subject('Bestätigung: Die Bestellung wurde erfolgreich übermittelt')
             ->html($confirmationContent);
             
-        $this->mailer->send($managerEmail);
+        $this->getMailer()->send($managerEmail);
         
         return $emailContent;
     }

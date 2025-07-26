@@ -131,3 +131,7 @@ admin_checklist_email_template_reset:
     methods: [POST]
     requirements:
         id: '\d+'
+
+admin_email_settings:
+    path: /admin/email-settings
+    controller: App\Controller\Admin\EmailSettingsController::edit

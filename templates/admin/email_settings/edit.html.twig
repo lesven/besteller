@@ -1,0 +1,38 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}E-Mail Einstellungen{% endblock %}
+
+{% block content %}
+<h1>E-Mail Einstellungen</h1>
+
+{% for message in app.flashes('success') %}
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+{% endfor %}
+
+<form method="post">
+    <div class="mb-3">
+        <label class="form-label">Server Adresse</label>
+        <input type="text" name="host" class="form-control" required value="{{ settings.host }}">
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Port</label>
+        <input type="number" name="port" class="form-control" required value="{{ settings.port }}">
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Benutzername (optional)</label>
+        <input type="text" name="username" class="form-control" value="{{ settings.username }}">
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Passwort (optional)</label>
+        <input type="password" name="password" class="form-control" value="{{ settings.password }}">
+    </div>
+    <div class="form-check mb-3">
+        <input type="checkbox" id="ignore_ssl" name="ignore_ssl" class="form-check-input" {% if settings.ignoreSsl %}checked{% endif %}>
+        <label class="form-check-label" for="ignore_ssl">SSL Zertifikate ignorieren</label>
+    </div>
+    <button type="submit" class="btn btn-primary">Speichern</button>
+</form>
+{% endblock %}
