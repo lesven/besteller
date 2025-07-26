@@ -12,6 +12,16 @@
                     <small class="text-muted">Mitarbeiterausstattung für: <strong>{{ name }}</strong> (ID: {{ mitarbeiterId }})</small>
                 </div>
                 <div class="card-body">
+                    {# Flash Messages anzeigen #}
+                    {% for type, messages in app.flashes %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ type == 'error' ? 'danger' : type }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endfor %}
+                    
                     <form method="post">
                         {# Hidden fields für die Übertragung der URL-Parameter #}
                         <input type="hidden" name="name" value="{{ name }}">

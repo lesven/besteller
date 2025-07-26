@@ -153,31 +153,50 @@ class ChecklistController extends AbstractController
 
         // Formular verarbeiten
         if ($request->isMethod('POST')) {
-            $submissionData = $this->collectFormData($request, $checklist);
-            
-            $submission = new Submission();
-            $submission->setChecklist($checklist);
-            $submission->setName($name);
-            $submission->setMitarbeiterId($mitarbeiterId);
-            $submission->setEmail($email);
-            $submission->setData($submissionData);
-            $submission->setSubmittedAt(new \DateTimeImmutable());
+            try {
+                $submissionData = $this->collectFormData($request, $checklist);
+                
+                $submission = new Submission();
+                $submission->setChecklist($checklist);
+                $submission->setName($name);
+                $submission->setMitarbeiterId($mitarbeiterId);
+                $submission->setEmail($email);
+                $submission->setData($submissionData);
+                $submission->setSubmittedAt(new \DateTimeImmutable());
 
-            // Erst Submission speichern
-            $this->entityManager->persist($submission);
-            $this->entityManager->flush();
+                // Erst Submission speichern
+                $this->entityManager->persist($submission);
+                $this->entityManager->flush();
 
-            // Dann E-Mails senden und generierte E-Mail speichern
-            $generatedEmail = $this->emailService->generateAndSendEmail($submission);
-            $submission->setGeneratedEmail($generatedEmail);
-            
-            // Aktualisierte Submission speichern
-            $this->entityManager->flush();
+                // Dann E-Mails senden und generierte E-Mail speichern
+                try {
+                    $generatedEmail = $this->emailService->generateAndSendEmail($submission);
+                    $submission->setGeneratedEmail($generatedEmail);
+                    
+                    // Aktualisierte Submission speichern
+                    $this->entityManager->flush();
+                } catch (\Exception $e) {
+                    // E-Mail-Versendung fehlgeschlagen, aber Submission ist gespeichert
+                    // Log den Fehler für Admin-Review
+                    error_log('E-Mail-Versendung fehlgeschlagen für Submission ' . $submission->getId() . ': ' . $e->getMessage());
+                }
 
-            return $this->render('checklist/success.html.twig', [
-                'checklist' => $checklist,
-                'name' => $name
-            ]);
+                return $this->render('checklist/success.html.twig', [
+                    'checklist' => $checklist,
+                    'name' => $name
+                ]);
+                
+            } catch (\Exception $e) {
+                // Submission fehlgeschlagen
+                $this->addFlash('error', 'Es ist ein Fehler beim Übermitteln der Stückliste aufgetreten. Bitte versuchen Sie es erneut.');
+                
+                return $this->render('checklist/form.html.twig', [
+                    'checklist' => $checklist,
+                    'name' => $name,
+                    'mitarbeiterId' => $mitarbeiterId,
+                    'email' => $email
+                ]);
+            }
         }
 
         return $this->render('checklist/form.html.twig', [
