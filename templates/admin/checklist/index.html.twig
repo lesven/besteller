@@ -63,6 +63,10 @@
                                            class="btn btn-outline-info" title="E-Mail-Template">
                                             <i class="fas fa-envelope"></i>
                                         </a>
+                                        <a href="{{ path('admin_checklist_send_link', {'id': checklist.id}) }}"
+                                           class="btn btn-outline-success" title="Link senden">
+                                            <i class="fas fa-paper-plane"></i>
+                                        </a>
                                         <a href="{{ path('admin_checklist_duplicate', {'id': checklist.id}) }}"
                                            class="btn btn-outline-secondary" title="Duplizieren">
                                             <i class="fas fa-copy"></i>

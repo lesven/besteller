@@ -1,0 +1,41 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Link versenden: {{ checklist.title }}{% endblock %}
+
+{% block content %}
+<h1>Link zu "{{ checklist.title }}" versenden</h1>
+
+{% for type, messages in app.flashes %}
+    {% for message in messages %}
+        <div class="alert alert-{{ type == 'error' ? 'danger' : 'success' }} alert-dismissible fade show">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    {% endfor %}
+{% endfor %}
+
+<form method="post">
+    <div class="mb-3">
+        <label class="form-label">Empfängername</label>
+        <input type="text" name="recipient_name" class="form-control" required>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Empfänger E-Mail</label>
+        <input type="email" name="recipient_email" class="form-control" required>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Personen-ID</label>
+        <input type="text" name="mitarbeiter_id" class="form-control" required>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Personenname (optional)</label>
+        <input type="text" name="person_name" class="form-control">
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Individuelle Einleitung</label>
+        <textarea name="intro" class="form-control" rows="4"></textarea>
+    </div>
+    <button type="submit" class="btn btn-primary">Senden</button>
+    <a href="{{ path('admin_checklists') }}" class="btn btn-secondary">Abbrechen</a>
+</form>
+{% endblock %}

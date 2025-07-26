@@ -5,6 +5,7 @@ namespace App\Controller\Admin;
 use App\Entity\Checklist;
 use App\Repository\ChecklistRepository;
 use App\Service\EmailService;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
@@ -19,7 +20,8 @@ class ChecklistController extends AbstractController
     public function __construct(
         private EntityManagerInterface $entityManager,
         private ChecklistRepository $checklistRepository,
-        private EmailService $emailService
+        private EmailService $emailService,
+        private UrlGeneratorInterface $urlGenerator
     ) {
     }
 
@@ -220,5 +222,92 @@ class ChecklistController extends AbstractController
         $this->addFlash('success', 'Checkliste wurde erfolgreich dupliziert.');
 
         return $this->redirectToRoute('admin_checklists');
+    }
+
+    public function sendLink(Request $request, Checklist $checklist): Response
+    {
+        if ($request->isMethod('POST')) {
+            $recipientName = trim((string) $request->request->get('recipient_name'));
+            $recipientEmail = trim((string) $request->request->get('recipient_email'));
+            $mitarbeiterId = trim((string) $request->request->get('mitarbeiter_id'));
+            $personName = trim((string) $request->request->get('person_name')) ?: null;
+            $intro = (string) $request->request->get('intro');
+
+            if (!$recipientName || !filter_var($recipientEmail, FILTER_VALIDATE_EMAIL) || !$mitarbeiterId) {
+                $this->addFlash('error', 'Bitte Empfängerdaten und Personen-ID vollständig angeben.');
+            } else {
+                $link = $this->urlGenerator->generate('checklist_form', [
+                    'stückliste_id' => $checklist->getId(),
+                    'name' => $personName ?? $recipientName,
+                    'mitarbeiter_id' => $mitarbeiterId,
+                    'email' => $recipientEmail,
+                ], UrlGeneratorInterface::ABSOLUTE_URL);
+
+                $this->emailService->sendLinkEmail(
+                    $checklist,
+                    $recipientName,
+                    $recipientEmail,
+                    $mitarbeiterId,
+                    $personName,
+                    $intro,
+                    $link
+                );
+
+                $this->addFlash('success', 'Link wurde erfolgreich versendet.');
+
+                return $this->redirectToRoute('admin_checklists');
+            }
+        }
+
+        return $this->render('admin/checklist/send_link.html.twig', [
+            'checklist' => $checklist,
+        ]);
+    }
+
+    public function linkEmailTemplate(Request $request, Checklist $checklist): Response
+    {
+        if ($request->isMethod('POST')) {
+            /** @var UploadedFile $uploadedFile */
+            $uploadedFile = $request->files->get('template_file');
+            $templateContent = $request->request->get('template_content');
+
+            if ($uploadedFile) {
+                $mimeType = $uploadedFile->getMimeType();
+                $extension = strtolower($uploadedFile->getClientOriginalExtension());
+
+                if (!in_array($mimeType, ['text/html', 'text/plain']) && !in_array($extension, ['html', 'htm'])) {
+                    $this->addFlash('error', 'Bitte laden Sie nur HTML-Dateien hoch.');
+                    return $this->redirectToRoute('admin_checklist_link_template', ['id' => $checklist->getId()]);
+                }
+
+                if ($uploadedFile->getSize() > 1024 * 1024) {
+                    $this->addFlash('error', 'Die Datei ist zu groß. Maximale Größe: 1MB.');
+                    return $this->redirectToRoute('admin_checklist_link_template', ['id' => $checklist->getId()]);
+                }
+
+                $templateContent = file_get_contents($uploadedFile->getPathname());
+
+                if ($templateContent === false) {
+                    $this->addFlash('error', 'Die hochgeladene Datei konnte nicht gelesen werden.');
+                    return $this->redirectToRoute('admin_checklist_link_template', ['id' => $checklist->getId()]);
+                }
+            }
+
+            if ($templateContent) {
+                $checklist->setLinkEmailTemplate($templateContent);
+                $this->entityManager->flush();
+
+                $this->addFlash('success', 'Link-Template wurde erfolgreich aktualisiert.');
+            } else {
+                $this->addFlash('error', 'Bitte geben Sie Template-Inhalt ein oder laden eine Datei hoch.');
+            }
+
+            return $this->redirectToRoute('admin_checklist_link_template', ['id' => $checklist->getId()]);
+        }
+
+        return $this->render('admin/checklist/link_template.html.twig', [
+            'checklist' => $checklist,
+            'currentTemplate' => $checklist->getLinkEmailTemplate() ?? $this->emailService->getDefaultLinkTemplate(),
+        ]);
     }
 }

@@ -1,0 +1,35 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Link-E-Mail-Template: {{ checklist.title }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Link-E-Mail-Template</h1>
+    <div class="btn-group">
+        <a href="{{ path('admin_checklist_edit', {'id': checklist.id}) }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Zurück zur Checkliste
+        </a>
+    </div>
+</div>
+
+{% for type, messages in app.flashes %}
+    {% for message in messages %}
+        <div class="alert alert-{{ type == 'error' ? 'danger' : 'success' }} alert-dismissible fade show">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    {% endfor %}
+{% endfor %}
+
+<form method="post" enctype="multipart/form-data">
+    <div class="mb-3">
+        <label class="form-label">HTML-Datei hochladen</label>
+        <input type="file" name="template_file" accept=".html,.htm" class="form-control">
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Template-Inhalt</label>
+        <textarea name="template_content" class="form-control" rows="15">{{ currentTemplate }}</textarea>
+    </div>
+    <button type="submit" class="btn btn-primary">Speichern</button>
+</form>
+{% endblock %}
