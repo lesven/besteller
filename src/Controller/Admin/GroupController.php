@@ -187,7 +187,7 @@ class GroupController extends AbstractController
                     $active = false;
                     if (preg_match('/\(aktiv\)$/i', $line)) {
                         $active = true;
-                        $line = trim((string) preg_replace('/\(aktiv\)$/i', '', $line));
+                        $line = trim(preg_replace('/\(aktiv\)$/i', '', $line) ?? $line);
                     }
                     $options[] = ['label' => $line, 'active' => $active];
                 }
