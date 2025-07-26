@@ -378,7 +378,7 @@ class ChecklistController extends AbstractController
             $extension = strtolower($uploadedFile->getClientOriginalExtension());
 
             if (!in_array($mimeType, ['text/html', 'text/plain']) && !in_array($extension, ['html', 'htm'])) {
-                $this->addFlash('error', 'Bitte laden Sie nur HTML-Dateien hoch (.html oder .htm).');
+                $this->addFlash('error', 'Bitte laden Sie nur HTML-Dateien hoch (.html oder .htm). Detektierter MIME-Typ: ' . $mimeType . '.');
                 return $this->redirectToRoute($route, ['id' => $checklist->getId()]);
             }
 
