@@ -59,12 +59,16 @@
                                            class="btn btn-outline-primary" title="Bearbeiten">
                                             <i class="fas fa-edit"></i>
                                         </a>
-                                        <a href="{{ path('admin_checklist_email_template', {'id': checklist.id}) }}" 
+                                        <a href="{{ path('admin_checklist_email_template', {'id': checklist.id}) }}"
                                            class="btn btn-outline-info" title="E-Mail-Template">
                                             <i class="fas fa-envelope"></i>
                                         </a>
-                                        <button type="button" class="btn btn-outline-danger" 
-                                                data-bs-toggle="modal" 
+                                        <a href="{{ path('admin_checklist_duplicate', {'id': checklist.id}) }}"
+                                           class="btn btn-outline-secondary" title="Duplizieren">
+                                            <i class="fas fa-copy"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-outline-danger"
+                                                data-bs-toggle="modal"
                                                 data-bs-target="#deleteModal{{ checklist.id }}"
                                                 title="Löschen">
                                             <i class="fas fa-trash"></i>
