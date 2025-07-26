@@ -32,6 +32,7 @@ class EmailSettingsController extends AbstractController
             $settings->setUsername($request->request->get('username') ?: null);
             $settings->setPassword($request->request->get('password') ?: null);
             $settings->setIgnoreSsl($request->request->getBoolean('ignore_ssl'));
+            $settings->setSenderEmail($request->request->get('sender_email'));
 
             $this->entityManager->flush();
 
