@@ -46,29 +46,31 @@
                                                       placeholder="Bitte eingeben..."></textarea>
                                         
                                         {% elseif item.type == 'radio' %}
-                                            {% for option in item.optionsArray %}
+                                            {% for option in item.optionsWithActive %}
                                                 <div class="form-check">
-                                                    <input class="form-check-input" 
-                                                           type="radio" 
-                                                           name="item_{{ item.id }}" 
-                                                           value="{{ option }}" 
-                                                           id="item_{{ item.id }}_{{ loop.index }}">
+                                                    <input class="form-check-input"
+                                                           type="radio"
+                                                           name="item_{{ item.id }}"
+                                                           value="{{ option.label }}"
+                                                           id="item_{{ item.id }}_{{ loop.index }}"
+                                                           {% if option.active %}checked{% endif %}>
                                                     <label class="form-check-label" for="item_{{ item.id }}_{{ loop.index }}">
-                                                        {{ option }}
+                                                        {{ option.label }}
                                                     </label>
                                                 </div>
                                             {% endfor %}
-                                        
+
                                         {% elseif item.type == 'checkbox' %}
-                                            {% for option in item.optionsArray %}
+                                            {% for option in item.optionsWithActive %}
                                                 <div class="form-check">
-                                                    <input class="form-check-input" 
-                                                           type="checkbox" 
-                                                           name="item_{{ item.id }}[]" 
-                                                           value="{{ option }}" 
-                                                           id="item_{{ item.id }}_{{ loop.index }}">
+                                                    <input class="form-check-input"
+                                                           type="checkbox"
+                                                           name="item_{{ item.id }}[]"
+                                                           value="{{ option.label }}"
+                                                           id="item_{{ item.id }}_{{ loop.index }}"
+                                                           {% if option.active %}checked{% endif %}>
                                                     <label class="form-check-label" for="item_{{ item.id }}_{{ loop.index }}">
-                                                        {{ option }}
+                                                        {{ option.label }}
                                                     </label>
                                                 </div>
                                             {% endfor %}
