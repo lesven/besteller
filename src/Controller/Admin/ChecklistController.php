@@ -5,6 +5,7 @@ namespace App\Controller\Admin;
 use App\Entity\Checklist;
 use App\Repository\ChecklistRepository;
 use App\Service\EmailService;
+use App\Service\ChecklistDuplicationService;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -29,7 +30,8 @@ class ChecklistController extends AbstractController
         private EntityManagerInterface $entityManager,
         private ChecklistRepository $checklistRepository,
         private EmailService $emailService,
-        private UrlGeneratorInterface $urlGenerator
+        private UrlGeneratorInterface $urlGenerator,
+        private ChecklistDuplicationService $duplicationService
     ) {
     }
 
@@ -228,33 +230,7 @@ class ChecklistController extends AbstractController
      */
     public function duplicate(Checklist $checklist): Response
     {
-        $newChecklist = new Checklist();
-        $newChecklist->setTitle('Duplikat von ' . $checklist->getTitle());
-        $newChecklist->setTargetEmail($checklist->getTargetEmail());
-        $newChecklist->setReplyEmail($checklist->getReplyEmail());
-        $newChecklist->setEmailTemplate($checklist->getEmailTemplate());
-
-        foreach ($checklist->getGroups() as $group) {
-            $newGroup = new \App\Entity\ChecklistGroup();
-            $newGroup->setTitle($group->getTitle());
-            $newGroup->setDescription($group->getDescription());
-            $newGroup->setSortOrder($group->getSortOrder());
-            $newGroup->setChecklist($newChecklist);
-
-            foreach ($group->getItems() as $item) {
-                $newItem = new \App\Entity\GroupItem();
-                $newItem->setLabel($item->getLabel());
-                $newItem->setType($item->getType());
-                $newItem->setOptions($item->getOptions());
-                $newItem->setSortOrder($item->getSortOrder());
-                $newGroup->addItem($newItem);
-            }
-
-            $newChecklist->addGroup($newGroup);
-        }
-
-        $this->entityManager->persist($newChecklist);
-        $this->entityManager->flush();
+        $this->duplicationService->duplicate($checklist);
 
         $this->addFlash('success', 'Checkliste wurde erfolgreich dupliziert.');
 
