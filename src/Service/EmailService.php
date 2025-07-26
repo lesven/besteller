@@ -269,7 +269,7 @@ class EmailService
         $email = (new Email())
             ->from($from)
             ->to($recipientEmail)
-            ->subject('Link zur Stückliste ' . $checklist->getTitle())
+            ->subject('Link zur Bestelliste ' . $checklist->getTitle())
             ->html($content);
 
         $this->getMailer()->send($email);
