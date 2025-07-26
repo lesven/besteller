@@ -5,6 +5,11 @@
 help: ## Zeigt diese Hilfe an
 	@echo "Verfügbare Befehle:"
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
+deploy: ## Führt alle Schritte für die Bereitstellung aus
+	git reset --hard HEAD
+	git pull
+	@$(MAKE) build
+	@$(MAKE) start
 
 build: ## Baut Docker Container
 	docker compose build
