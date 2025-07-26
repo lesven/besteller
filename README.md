@@ -89,6 +89,7 @@ Ziel dieser Anwendung ist die digitale Erfassung von benötigter Ausstattung fü
 
 **Akzeptanzkriterien:**
 - Liste pro Stückliste mit Datum, Name, Mitarbeiter-ID und E-Mail-Inhalt (als Klartext)
+- Einsendung löschen können um sie erneut absendbar zu machen
 - Keine Downloadfunktion erforderlich
 
 #### US-7: E-Mail-Templates verwalten
@@ -114,6 +115,19 @@ Die folgenden Platzhalter stehen im HTML-Template zur Verfügung:
 | `{{auswahl}}`     | Strukturierte Ausgabe aller getätigten Auswahlen nach Gruppe |
 
 ---
+
+#### US-8: E-Mail Einstellugnen verwalten
+**Als** Admin  
+**möchte ich** die Konfiguration des E-Mail Servers im Backend vornehmen können
+**damit** ich einen beliebigen SMTP Server hinterlegen kann.
+
+**Akzeptanzkriterien:**
+- Server IP Adresse
+- Server Port
+- Username Passwort optional
+- ignorieren von SSL Zertifikaten
+
+
 
 ## Nicht-funktionale Anforderungen
 
