@@ -55,12 +55,12 @@
                                 </td>
                                 <td>
                                     <div class="btn-group btn-group-sm" role="group">
-                                        <a href="{{ path('admin_checklist_edit', {'id': checklist.id}) }}" 
+                                        <a href="{{ path('admin_checklist_edit', {'id': checklist.id}) }}"
                                            class="btn btn-outline-primary" title="Bearbeiten">
                                             <i class="fas fa-edit"></i>
                                         </a>
-                                        <button type="button" class="btn btn-outline-danger" 
-                                                data-bs-toggle="modal" 
+                                        <button type="button" class="btn btn-outline-danger"
+                                                data-bs-toggle="modal"
                                                 data-bs-target="#deleteModal{{ checklist.id }}"
                                                 title="Löschen">
                                             <i class="fas fa-trash"></i>
@@ -74,5 +74,29 @@
             </div>
         </div>
     </div>
+
+    {# Delete modals #}
+    {% for checklist in checklists %}
+        <div class="modal fade" id="deleteModal{{ checklist.id }}" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Checkliste löschen</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Möchten Sie die Checkliste <strong>"{{ checklist.title }}"</strong> wirklich löschen?</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+                        <form method="post" action="{{ path('admin_checklist_delete', {'id': checklist.id}) }}" class="d-inline">
+                            <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ checklist.id) }}">
+                            <button type="submit" class="btn btn-danger">Löschen</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
 {% endif %}
 {% endblock %}
