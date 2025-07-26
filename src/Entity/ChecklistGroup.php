@@ -13,6 +13,7 @@ class ChecklistGroup
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
+    /** @phpstan-ignore-next-line */
     private ?int $id = null;
 
     #[ORM\Column(type: 'string', length: 255)]
@@ -28,6 +29,7 @@ class ChecklistGroup
     #[ORM\JoinColumn(nullable: false)]
     private ?Checklist $checklist = null;
 
+    /** @var Collection<int, GroupItem> */
     #[ORM\OneToMany(mappedBy: 'group', targetEntity: GroupItem::class, cascade: ['persist', 'remove'], orphanRemoval: true)]
     private Collection $items;
 

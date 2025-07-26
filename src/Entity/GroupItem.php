@@ -15,6 +15,7 @@ class GroupItem
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
+    /** @phpstan-ignore-next-line */
     private ?int $id = null;
 
     #[ORM\Column(type: 'string', length: 255)]
@@ -73,17 +74,21 @@ class GroupItem
 
     /**
      * Gibt die Optionen als Array von Strings zurück
+     *
+     * @return list<string>
      */
     public function getOptionsArray(): array
     {
-        return array_map(
+        return array_values(array_map(
             fn(array $opt) => $opt['label'],
             $this->getOptionsWithActive()
-        );
+        ));
     }
 
     /**
      * Speichert eine Liste von Optionen (nur Labels, alle inaktiv)
+     *
+     * @param list<string> $options
      */
     public function setOptionsArray(array $options, bool $active = false): static
     {
@@ -91,7 +96,7 @@ class GroupItem
             fn(string $label) => ['label' => $label, 'active' => $active],
             $options
         );
-        $this->options = json_encode($structured);
+        $this->options = json_encode($structured, JSON_THROW_ON_ERROR);
         return $this;
     }
 
@@ -113,22 +118,29 @@ class GroupItem
 
         // Altes Format: einfache Liste von Strings
         if (!empty($decoded) && array_key_exists(0, $decoded) && is_string($decoded[0])) {
-            return array_map(
-                fn(string $label) => ['label' => $label, 'active' => false],
+            return array_values(array_map(
+                fn($label) => ['label' => is_string($label) ? $label : '', 'active' => false],
                 $decoded
-            );
+            ));
         }
 
-        return array_map(function ($option) {
+        $mapped = array_map(function ($option): array {
             if (is_array($option) && array_key_exists('label', $option)) {
+                $label = is_string($option['label']) ? $option['label'] : '';
+                $active = isset($option['active']) ? (bool) $option['active'] : false;
                 return [
-                    'label' => (string) $option['label'],
-                    'active' => isset($option['active']) ? (bool) $option['active'] : false,
+                    'label' => $label,
+                    'active' => $active,
                 ];
             }
 
-            return ['label' => (string) $option, 'active' => false];
+            return [
+                'label' => is_string($option) ? $option : '',
+                'active' => false,
+            ];
         }, $decoded);
+
+        return array_values($mapped);
     }
 
     /**
@@ -138,19 +150,21 @@ class GroupItem
      */
     public function setOptionsWithActive(array $options): static
     {
-        $this->options = json_encode($options);
+        $this->options = json_encode($options, JSON_THROW_ON_ERROR);
         return $this;
     }
 
     /**
      * Gibt die Optionen für Textareas zurück ("Label (aktiv)")
+     *
+     * @return list<string>
      */
     public function getOptionsLines(): array
     {
-        return array_map(
+        return array_values(array_map(
             fn(array $opt) => $opt['label'] . ($opt['active'] ? ' (aktiv)' : ''),
             $this->getOptionsWithActive()
-        );
+        ));
     }
 
     public function getSortOrder(): int

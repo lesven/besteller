@@ -58,6 +58,7 @@ class SubmissionController extends AbstractController
         }
 
         $search = $request->query->get('q');
+        $search = is_string($search) ? $search : null;
         $submissions = $this->submissionRepository->findByChecklist($checklist, $search);
 
         return $this->render('admin/submission/by_checklist.html.twig', [
@@ -91,9 +92,12 @@ class SubmissionController extends AbstractController
      */
     public function delete(Request $request, Submission $submission): Response
     {
-        $checklistId = $submission->getChecklist()->getId();
+        $checklist = $submission->getChecklist();
+        $checklistId = $checklist->getId();
+        $token = $request->request->get('_token');
+        $token = is_string($token) ? $token : null;
 
-        if ($this->isCsrfTokenValid('delete' . $submission->getId(), $request->request->get('_token'))) {
+        if ($this->isCsrfTokenValid('delete' . $submission->getId(), $token)) {
             $this->entityManager->remove($submission);
             $this->entityManager->flush();
             $this->addFlash('success', 'Einsendung wurde erfolgreich gel\xC3\xB6scht.');
