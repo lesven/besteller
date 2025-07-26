@@ -11,40 +11,31 @@ class SubmissionService
     public function collectSubmissionData(Checklist $checklist, Request $request): array
     {
         $data = [];
-        
+
         foreach ($checklist->getGroups() as $group) {
             $groupData = [];
-            
+
             foreach ($group->getItems() as $item) {
                 $fieldName = 'item_' . $item->getId();
-                
-                switch ($item->getType()) {
-                    case GroupItem::TYPE_CHECKBOX:
-                        $values = $request->request->all($fieldName) ?? [];
-                        $groupData[$item->getLabel()] = $values;
-                        break;
-                        
-                    case GroupItem::TYPE_RADIO:
-                        $value = $request->request->get($fieldName);
-                        if ($value) {
-                            $groupData[$item->getLabel()] = $value;
-                        }
-                        break;
-                        
-                    case GroupItem::TYPE_TEXT:
-                        $value = $request->request->get($fieldName);
-                        if ($value) {
-                            $groupData[$item->getLabel()] = $value;
-                        }
-                        break;
+
+                $value = match ($item->getType()) {
+                    GroupItem::TYPE_CHECKBOX => $request->request->all($fieldName),
+                    default => $request->request->get($fieldName),
+                };
+
+                if ($value !== null && $value !== '' && $value !== []) {
+                    $groupData[$item->getLabel()] = [
+                        'type' => $item->getType(),
+                        'value' => $value,
+                    ];
                 }
             }
-            
+
             if (!empty($groupData)) {
                 $data[$group->getTitle()] = $groupData;
             }
         }
-        
+
         return $data;
     }
     
