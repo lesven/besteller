@@ -7,7 +7,6 @@ security:
                 check_path: app_login
                 enable_csrf: true
                 # Force HTTPS for login in production
-                require_previous_session: false
                 default_target_path: /admin
                 always_use_default_target_path: true
             logout:
