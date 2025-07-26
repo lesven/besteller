@@ -94,7 +94,7 @@ class SubmissionController extends AbstractController
     {
         $checklist = $submission->getChecklist();
         if (!$checklist) {
-            throw $this->createNotFoundException('Zugehörige Checkliste nicht gefunden.');
+            throw $this->createNotFoundException(sprintf('Zugehörige Checkliste für Submission #%d nicht gefunden.', $submission->getId()));
         }
         $checklistId = $checklist->getId();
         $token = $request->request->get('_token');
