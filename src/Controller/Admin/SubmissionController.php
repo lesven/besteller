@@ -93,9 +93,6 @@ class SubmissionController extends AbstractController
     public function delete(Request $request, Submission $submission): Response
     {
         $checklist = $submission->getChecklist();
-        if (!$checklist) {
-            throw new \RuntimeException('Submission without checklist');
-        }
         $checklistId = $checklist->getId();
         $token = $request->request->get('_token');
         $token = is_string($token) ? $token : null;
