@@ -168,3 +168,16 @@ admin_user_delete:
     methods: [POST]
     requirements:
         id: '\d+'
+
+# Link sending routes
+admin_checklist_send_link:
+    path: /admin/checklists/{id}/send-link
+    controller: App\Controller\Admin\ChecklistController::sendLink
+    requirements:
+        id: '\d+'
+
+admin_checklist_link_template:
+    path: /admin/checklists/{id}/link-template
+    controller: App\Controller\Admin\ChecklistController::linkEmailTemplate
+    requirements:
+        id: '\d+'

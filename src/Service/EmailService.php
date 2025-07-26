@@ -3,6 +3,7 @@
 namespace App\Service;
 
 use App\Entity\Submission;
+use App\Entity\Checklist;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mailer\Mailer;
 use Symfony\Component\Mailer\Transport;
@@ -236,6 +237,59 @@ class EmailService
         <p>Diese Bestätigungs-E-Mail wurde automatisch generiert.</p>
         <p>Übermittelt am: ' . date('d.m.Y H:i') . ' Uhr</p>
     </div>
+</body>
+</html>';
+    }
+
+    public function sendLinkEmail(
+        Checklist $checklist,
+        string $recipientName,
+        string $recipientEmail,
+        string $mitarbeiterId,
+        ?string $personName,
+        string $intro,
+        string $link
+    ): void {
+        $template = $checklist->getLinkEmailTemplate() ?? $this->getDefaultLinkTemplate();
+
+        $placeholders = [
+            '{{empfaenger_name}}' => $recipientName,
+            '{{person_name}}' => $personName ?? '',
+            '{{mitarbeiter_id}}' => $mitarbeiterId,
+            '{{intro}}' => nl2br($intro),
+            '{{link}}' => $link,
+            '{{stückliste}}' => $checklist->getTitle(),
+        ];
+
+        $content = str_replace(array_keys($placeholders), array_values($placeholders), $template);
+
+        $settings = $this->entityManager->getRepository(EmailSettings::class)->find(1);
+        $from = $settings?->getSenderEmail() ?? 'noreply@besteller.local';
+
+        $email = (new Email())
+            ->from($from)
+            ->to($recipientEmail)
+            ->subject('Link zur Stückliste ' . $checklist->getTitle())
+            ->html($content);
+
+        $this->getMailer()->send($email);
+    }
+
+    public function getDefaultLinkTemplate(): string
+    {
+        return '<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stückliste {{stückliste}}</title>
+</head>
+<body>
+    <p>Hallo {{empfaenger_name}},</p>
+    <p>{{intro}}</p>
+    <p>Bitte fülle die Stückliste <strong>{{stückliste}}</strong> für {{person_name}} (ID {{mitarbeiter_id}}) unter folgendem Link aus:</p>
+    <p><a href="{{link}}">{{link}}</a></p>
+    <p>Vielen Dank!</p>
 </body>
 </html>';
     }

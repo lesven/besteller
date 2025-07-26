@@ -27,6 +27,9 @@ class Checklist
     #[ORM\Column(type: 'text', nullable: true)]
     private ?string $emailTemplate = null;
 
+    #[ORM\Column(type: 'text', nullable: true)]
+    private ?string $linkEmailTemplate = null;
+
     #[ORM\OneToMany(mappedBy: 'checklist', targetEntity: ChecklistGroup::class, cascade: ['persist', 'remove'], orphanRemoval: true)]
     private Collection $groups;
 
@@ -85,6 +88,17 @@ class Checklist
     public function setEmailTemplate(?string $emailTemplate): static
     {
         $this->emailTemplate = $emailTemplate;
+        return $this;
+    }
+
+    public function getLinkEmailTemplate(): ?string
+    {
+        return $this->linkEmailTemplate;
+    }
+
+    public function setLinkEmailTemplate(?string $linkEmailTemplate): static
+    {
+        $this->linkEmailTemplate = $linkEmailTemplate;
         return $this;
     }
 
