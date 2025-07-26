@@ -255,8 +255,10 @@
                         </div>
                     </div>
                     <div class="col-6">
-                        <h4 class="text-success">{{ checklist.submissions|length }}</h4>
-                        <small class="text-muted">Einreichungen</small>
+                        <a href="{{ path('admin_submissions_checklist', {'checklistId': checklist.id}) }}" class="text-decoration-none">
+                            <h4 class="text-success mb-0">{{ checklist.submissions|length }}</h4>
+                            <small class="text-muted d-block">Einreichungen</small>
+                        </a>
                     </div>
                 </div>
             </div>
