@@ -27,6 +27,39 @@ class ChecklistController extends AbstractController
         private EmailService $emailService
     ) {}
 
+    private function getChecklistOr404(int $id): Checklist
+    {
+        $checklist = $this->entityManager->getRepository(Checklist::class)->find($id);
+        if (!$checklist) {
+            throw new NotFoundHttpException('Stückliste nicht gefunden');
+        }
+
+        return $checklist;
+    }
+
+    private function getRequestValues(Request $request, bool $useQuery = true): array
+    {
+        $source = $useQuery ? $request->query : $request->request;
+
+        $name = $source->get('name');
+        $mitarbeiterId = $source->get('mitarbeiter_id');
+        $email = $source->get('email');
+
+        if (!$name || !$mitarbeiterId || !$email) {
+            throw new NotFoundHttpException('Ungültige Parameter');
+        }
+
+        return [$name, $mitarbeiterId, $email];
+    }
+
+    private function findExistingSubmission(Checklist $checklist, string $mitarbeiterId): ?Submission
+    {
+        return $this->entityManager->getRepository(Submission::class)->findOneBy([
+            'checklist' => $checklist,
+            'mitarbeiterId' => $mitarbeiterId,
+        ]);
+    }
+
     /**
      * Zeigt eine Stückliste anhand der ID an und prüft Parameter.
      *
@@ -37,27 +70,10 @@ class ChecklistController extends AbstractController
      */
     public function show(int $id, Request $request): Response
     {
-        $checklist = $this->entityManager->getRepository(Checklist::class)->find($id);
-        
-        if (!$checklist) {
-            throw new NotFoundHttpException('Stückliste nicht gefunden');
-        }
+        $checklist = $this->getChecklistOr404($id);
+        [$name, $mitarbeiterId, $email] = $this->getRequestValues($request);
 
-        // Parameter aus URL prüfen
-        $name = $request->query->get('name');
-        $mitarbeiterId = $request->query->get('mitarbeiter_id');
-        $email = $request->query->get('email');
-
-        if (!$name || !$mitarbeiterId || !$email) {
-            throw new NotFoundHttpException('Ungültige Parameter');
-        }
-
-        // Prüfen ob bereits eingereicht
-        $existingSubmission = $this->entityManager->getRepository(Submission::class)
-            ->findOneBy([
-                'checklist' => $checklist,
-                'mitarbeiterId' => $mitarbeiterId
-            ]);
+        $existingSubmission = $this->findExistingSubmission($checklist, $mitarbeiterId);
 
         if ($existingSubmission) {
             return $this->render('checklist/already_submitted.html.twig', [
@@ -85,26 +101,10 @@ class ChecklistController extends AbstractController
      */
     public function submit(int $id, Request $request): Response
     {
-        $checklist = $this->entityManager->getRepository(Checklist::class)->find($id);
-        
-        if (!$checklist) {
-            throw new NotFoundHttpException('Stückliste nicht gefunden');
-        }
+        $checklist = $this->getChecklistOr404($id);
+        [$name, $mitarbeiterId, $email] = $this->getRequestValues($request, false);
 
-        $name = $request->request->get('name');
-        $mitarbeiterId = $request->request->get('mitarbeiter_id');
-        $email = $request->request->get('email');
-
-        if (!$name || !$mitarbeiterId || !$email) {
-            throw new NotFoundHttpException('Ungültige Parameter');
-        }
-
-        // Nochmals prüfen ob bereits eingereicht
-        $existingSubmission = $this->entityManager->getRepository(Submission::class)
-            ->findOneBy([
-                'checklist' => $checklist,
-                'mitarbeiterId' => $mitarbeiterId
-            ]);
+        $existingSubmission = $this->findExistingSubmission($checklist, $mitarbeiterId);
 
         if ($existingSubmission) {
             return $this->redirectToRoute('checklist_show', [
@@ -149,28 +149,15 @@ class ChecklistController extends AbstractController
      */
     public function form(Request $request): Response
     {
-        // Parameter aus URL prüfen
         $stücklisteId = $request->query->get('stückliste_id');
-        $name = $request->query->get('name');
-        $mitarbeiterId = $request->query->get('mitarbeiter_id');
-        $email = $request->query->get('email');
-
-        if (!$stücklisteId || !$name || !$mitarbeiterId || !$email) {
+        if (!$stücklisteId) {
             throw new NotFoundHttpException('Ungültige Parameter');
         }
 
-        $checklist = $this->entityManager->getRepository(Checklist::class)->find($stücklisteId);
-        
-        if (!$checklist) {
-            throw new NotFoundHttpException('Stückliste nicht gefunden');
-        }
+        [$name, $mitarbeiterId, $email] = $this->getRequestValues($request);
+        $checklist = $this->getChecklistOr404((int) $stücklisteId);
 
-        // Prüfen ob bereits eingereicht
-        $existingSubmission = $this->entityManager->getRepository(Submission::class)
-            ->findOneBy([
-                'checklist' => $checklist,
-                'mitarbeiterId' => $mitarbeiterId
-            ]);
+        $existingSubmission = $this->findExistingSubmission($checklist, $mitarbeiterId);
 
         if ($existingSubmission) {
             return $this->render('checklist/already_submitted.html.twig', [
@@ -184,7 +171,7 @@ class ChecklistController extends AbstractController
         // Formular verarbeiten
         if ($request->isMethod('POST')) {
             try {
-                $submissionData = $this->collectFormData($request, $checklist);
+                $submissionData = $this->submissionService->collectSubmissionData($checklist, $request);
                 
                 $submission = new Submission();
                 $submission->setChecklist($checklist);
@@ -237,45 +224,4 @@ class ChecklistController extends AbstractController
         ]);
     }
 
-    /**
-     * Sammelt alle Formulardaten aus der Anfrage.
-     *
-     * @param Request   $request   Aktuelle HTTP-Anfrage
-     * @param Checklist $checklist Die zu verarbeitende Stückliste
-     *
-     * @return array Aufbereitete Formulardaten
-     */
-    private function collectFormData(Request $request, Checklist $checklist): array
-    {
-        $formData = [];
-        
-        foreach ($checklist->getGroups() as $group) {
-            $groupData = [];
-            
-            foreach ($group->getItems() as $item) {
-                $fieldName = 'item_' . $item->getId();
-                
-                if ($item->getType() === 'checkbox') {
-                    // Checkbox arrays
-                    $value = $request->request->all($fieldName);
-                } else {
-                    // Text and radio
-                    $value = $request->request->get($fieldName);
-                }
-                
-                if ($value !== null && $value !== '' && $value !== []) {
-                    $groupData[$item->getLabel()] = [
-                        'type' => $item->getType(),
-                        'value' => $value
-                    ];
-                }
-            }
-            
-            if (!empty($groupData)) {
-                $formData[$group->getTitle()] = $groupData;
-            }
-        }
-        
-        return $formData;
-    }
 }
