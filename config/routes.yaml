@@ -104,3 +104,23 @@ admin_group_item_delete:
     methods: [POST]
     requirements:
         id: '\d+'
+
+# E-Mail-Template Verwaltung
+admin_checklist_email_template:
+    path: /admin/checklists/{id}/email-template
+    controller: App\Controller\Admin\ChecklistController::emailTemplate
+    requirements:
+        id: '\d+'
+
+admin_checklist_email_template_download:
+    path: /admin/checklists/{id}/email-template/download
+    controller: App\Controller\Admin\ChecklistController::downloadEmailTemplate
+    requirements:
+        id: '\d+'
+
+admin_checklist_email_template_reset:
+    path: /admin/checklists/{id}/email-template/reset
+    controller: App\Controller\Admin\ChecklistController::resetEmailTemplate
+    methods: [POST]
+    requirements:
+        id: '\d+'

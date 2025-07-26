@@ -5,9 +5,14 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1>Checkliste bearbeiten: {{ checklist.title }}</h1>
-    <a href="{{ path('admin_checklists') }}" class="btn btn-secondary">
-        <i class="fas fa-arrow-left"></i> Zurück zur Übersicht
-    </a>
+    <div class="btn-group">
+        <a href="{{ path('admin_checklist_email_template', {'id': checklist.id}) }}" class="btn btn-outline-info">
+            <i class="fas fa-envelope"></i> E-Mail-Template verwalten
+        </a>
+        <a href="{{ path('admin_checklists') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Zurück zur Übersicht
+        </a>
+    </div>
 </div>
 
 <div class="row">

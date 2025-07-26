@@ -59,6 +59,10 @@
                                            class="btn btn-outline-primary" title="Bearbeiten">
                                             <i class="fas fa-edit"></i>
                                         </a>
+                                        <a href="{{ path('admin_checklist_email_template', {'id': checklist.id}) }}" 
+                                           class="btn btn-outline-info" title="E-Mail-Template">
+                                            <i class="fas fa-envelope"></i>
+                                        </a>
                                         <button type="button" class="btn btn-outline-danger" 
                                                 data-bs-toggle="modal" 
                                                 data-bs-target="#deleteModal{{ checklist.id }}"
@@ -74,5 +78,35 @@
             </div>
         </div>
     </div>
+
+    <!-- Delete Modals -->
+    {% for checklist in checklists %}
+        <div class="modal fade" id="deleteModal{{ checklist.id }}" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Checkliste löschen</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Möchten Sie die Checkliste <strong>"{{ checklist.title }}"</strong> wirklich löschen?</p>
+                        <p class="text-danger">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <small>Alle zugehörigen Gruppen, Elemente und Einreichungen werden ebenfalls gelöscht!</small>
+                        </p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+                        <form method="post" action="{{ path('admin_checklist_delete', {'id': checklist.id}) }}" class="d-inline">
+                            <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ checklist.id) }}">
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash"></i> Löschen
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
 {% endif %}
 {% endblock %}
