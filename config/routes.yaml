@@ -24,6 +24,11 @@ checklist_submit:
     requirements:
         id: '\d+'
 
+# Public checklist form with parameters
+checklist_form:
+    path: /form
+    controller: App\Controller\ChecklistController::form
+
 # Admin routes
 admin_dashboard:
     path: /admin

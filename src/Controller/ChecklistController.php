@@ -116,4 +116,104 @@ class ChecklistController extends AbstractController
             'name' => $name
         ]);
     }
+
+    public function form(Request $request): Response
+    {
+        // Parameter aus URL prüfen
+        $stücklisteId = $request->query->get('stückliste_id');
+        $name = $request->query->get('name');
+        $mitarbeiterId = $request->query->get('mitarbeiter_id');
+        $email = $request->query->get('email');
+
+        if (!$stücklisteId || !$name || !$mitarbeiterId || !$email) {
+            throw new NotFoundHttpException('Ungültige Parameter');
+        }
+
+        $checklist = $this->entityManager->getRepository(Checklist::class)->find($stücklisteId);
+        
+        if (!$checklist) {
+            throw new NotFoundHttpException('Stückliste nicht gefunden');
+        }
+
+        // Prüfen ob bereits eingereicht
+        $existingSubmission = $this->entityManager->getRepository(Submission::class)
+            ->findOneBy([
+                'checklist' => $checklist,
+                'mitarbeiterId' => $mitarbeiterId
+            ]);
+
+        if ($existingSubmission) {
+            return $this->render('checklist/already_submitted.html.twig', [
+                'checklist' => $checklist,
+                'name' => $name,
+                'mitarbeiterId' => $mitarbeiterId,
+                'email' => $email
+            ]);
+        }
+
+        // Formular verarbeiten
+        if ($request->isMethod('POST')) {
+            $submissionData = $this->collectFormData($request, $checklist);
+            
+            $submission = new Submission();
+            $submission->setChecklist($checklist);
+            $submission->setName($name);
+            $submission->setMitarbeiterId($mitarbeiterId);
+            $submission->setEmail($email);
+            $submission->setData($submissionData);
+            $submission->setSubmittedAt(new \DateTimeImmutable());
+
+            $this->entityManager->persist($submission);
+            $this->entityManager->flush();
+
+            // E-Mail senden
+            $this->emailService->generateAndSendEmail($submission);
+
+            return $this->render('checklist/success.html.twig', [
+                'checklist' => $checklist,
+                'name' => $name
+            ]);
+        }
+
+        return $this->render('checklist/form.html.twig', [
+            'checklist' => $checklist,
+            'name' => $name,
+            'mitarbeiterId' => $mitarbeiterId,
+            'email' => $email
+        ]);
+    }
+
+    private function collectFormData(Request $request, Checklist $checklist): array
+    {
+        $formData = [];
+        
+        foreach ($checklist->getGroups() as $group) {
+            $groupData = [];
+            
+            foreach ($group->getItems() as $item) {
+                $fieldName = 'item_' . $item->getId();
+                
+                if ($item->getType() === 'checkbox') {
+                    // Checkbox arrays
+                    $value = $request->request->all($fieldName);
+                } else {
+                    // Text and radio
+                    $value = $request->request->get($fieldName);
+                }
+                
+                if ($value !== null && $value !== '' && $value !== []) {
+                    $groupData[$item->getLabel()] = [
+                        'type' => $item->getType(),
+                        'value' => $value
+                    ];
+                }
+            }
+            
+            if (!empty($groupData)) {
+                $formData[$group->getTitle()] = $groupData;
+            }
+        }
+        
+        return $formData;
+    }
 }

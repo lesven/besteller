@@ -1,0 +1,83 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ checklist.title }} - Besteller{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h1 class="h3 mb-0">{{ checklist.title }}</h1>
+                    <small class="text-muted">Mitarbeiterausstattung für: <strong>{{ name }}</strong> (ID: {{ mitarbeiterId }})</small>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% for group in checklist.groups %}
+                            <div class="mb-5">
+                                <h4 class="border-bottom pb-2">{{ group.title }}</h4>
+                                {% if group.description %}
+                                    <p class="text-muted mb-3">{{ group.description }}</p>
+                                {% endif %}
+
+                                {% for item in group.items %}
+                                    <div class="mb-3">
+                                        <label class="form-label">{{ item.label }}</label>
+                                        
+                                        {% if item.type == 'text' %}
+                                            <input type="text" 
+                                                   class="form-control" 
+                                                   name="item_{{ item.id }}" 
+                                                   placeholder="Bitte eingeben...">
+                                        
+                                        {% elseif item.type == 'radio' %}
+                                            {% for option in item.optionsArray %}
+                                                <div class="form-check">
+                                                    <input class="form-check-input" 
+                                                           type="radio" 
+                                                           name="item_{{ item.id }}" 
+                                                           value="{{ option }}" 
+                                                           id="item_{{ item.id }}_{{ loop.index }}">
+                                                    <label class="form-check-label" for="item_{{ item.id }}_{{ loop.index }}">
+                                                        {{ option }}
+                                                    </label>
+                                                </div>
+                                            {% endfor %}
+                                        
+                                        {% elseif item.type == 'checkbox' %}
+                                            {% for option in item.optionsArray %}
+                                                <div class="form-check">
+                                                    <input class="form-check-input" 
+                                                           type="checkbox" 
+                                                           name="item_{{ item.id }}[]" 
+                                                           value="{{ option }}" 
+                                                           id="item_{{ item.id }}_{{ loop.index }}">
+                                                    <label class="form-check-label" for="item_{{ item.id }}_{{ loop.index }}">
+                                                        {{ option }}
+                                                    </label>
+                                                </div>
+                                            {% endfor %}
+                                        {% endif %}
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endfor %}
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-paper-plane"></i> Stückliste absenden
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                <div class="card-footer text-muted">
+                    <small>
+                        <i class="fas fa-info-circle"></i>
+                        Die Angaben werden an {{ checklist.targetEmail }} und {{ email }} gesendet.
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

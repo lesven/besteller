@@ -1,0 +1,98 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Element bearbeiten{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Element bearbeiten</h1>
+    <a href="{{ path('admin_checklist_edit', {'id': item.group.checklist.id}) }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Zurück zur Checkliste
+    </a>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Element bearbeiten: {{ item.label }}</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" id="itemForm">
+                    <div class="mb-3">
+                        <label for="label" class="form-label">Label <span class="text-danger">*</span></label>
+                        <input type="text" 
+                               class="form-control" 
+                               id="label" 
+                               name="label" 
+                               value="{{ item.label }}" 
+                               required
+                               placeholder="z.B. Laptop benötigt">
+                        <div class="form-text">Beschriftung für das Eingabefeld</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="type" class="form-label">Typ <span class="text-danger">*</span></label>
+                        <select class="form-control" id="type" name="type" required onchange="toggleOptions()">
+                            <option value="">Bitte wählen...</option>
+                            <option value="checkbox" {{ item.type == 'checkbox' ? 'selected' : '' }}>Checkbox (Mehrfachauswahl)</option>
+                            <option value="radio" {{ item.type == 'radio' ? 'selected' : '' }}>Radio (Einzelauswahl)</option>
+                            <option value="text" {{ item.type == 'text' ? 'selected' : '' }}>Textfeld</option>
+                        </select>
+                        <div class="form-text">Art des Eingabeelements</div>
+                    </div>
+
+                    <div class="mb-3" id="optionsGroup" style="display: none;">
+                        <label for="options" class="form-label">Optionen <span class="text-danger">*</span></label>
+                        <textarea class="form-control" 
+                                  id="options" 
+                                  name="options" 
+                                  rows="5"
+                                  placeholder="Eine Option pro Zeile&#10;z.B.:&#10;MacBook Pro 14&quot;&#10;MacBook Pro 16&quot;&#10;ThinkPad X1">{% if item.options %}{{ item.optionsArray|join('\n') }}{% endif %}</textarea>
+                        <div class="form-text">Eine Option pro Zeile</div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="sort_order" class="form-label">Sortierung</label>
+                        <input type="number" 
+                               class="form-control" 
+                               id="sort_order" 
+                               name="sort_order" 
+                               value="{{ item.sortOrder }}" 
+                               min="0"
+                               placeholder="0">
+                        <div class="form-text">Niedrigere Zahlen werden zuerst angezeigt</div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Änderungen speichern
+                        </button>
+                        <a href="{{ path('admin_checklist_edit', {'id': item.group.checklist.id}) }}" class="btn btn-outline-secondary">Abbrechen</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleOptions() {
+    const type = document.getElementById('type').value;
+    const optionsGroup = document.getElementById('optionsGroup');
+    const optionsField = document.getElementById('options');
+    
+    if (type === 'checkbox' || type === 'radio') {
+        optionsGroup.style.display = 'block';
+        optionsField.required = true;
+    } else {
+        optionsGroup.style.display = 'none';
+        optionsField.required = false;
+    }
+}
+
+// Initial toggle
+document.addEventListener('DOMContentLoaded', function() {
+    toggleOptions();
+});
+</script>
+{% endblock %}
