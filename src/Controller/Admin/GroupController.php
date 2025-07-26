@@ -14,11 +14,24 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted('ROLE_ADMIN')]
 class GroupController extends AbstractController
 {
+    /**
+     * Konstruktor mit EntityManager für Gruppenoperationen.
+     *
+     * @param EntityManagerInterface $entityManager Datenbankzugriff
+     */
     public function __construct(
         private EntityManagerInterface $entityManager
     ) {
     }
 
+    /**
+     * Erstellt eine neue Gruppe innerhalb einer Checkliste.
+     *
+     * @param Request   $request   Aktuelle HTTP-Anfrage
+     * @param Checklist $checklist Checkliste, der die Gruppe hinzugefügt wird
+     *
+     * @return Response Formular oder Weiterleitung
+     */
     public function create(Request $request, Checklist $checklist): Response
     {
         $group = new ChecklistGroup();
@@ -43,6 +56,14 @@ class GroupController extends AbstractController
         ]);
     }
 
+    /**
+     * Bearbeitet die Angaben einer Gruppe.
+     *
+     * @param Request       $request Aktuelle HTTP-Anfrage
+     * @param ChecklistGroup $group   Die zu bearbeitende Gruppe
+     *
+     * @return Response Formular oder Weiterleitung
+     */
     public function edit(Request $request, ChecklistGroup $group): Response
     {
         if ($request->isMethod('POST')) {
@@ -62,6 +83,14 @@ class GroupController extends AbstractController
         ]);
     }
 
+    /**
+     * Löscht eine Gruppe aus der Checkliste.
+     *
+     * @param Request       $request Aktuelle HTTP-Anfrage
+     * @param ChecklistGroup $group   Die zu löschende Gruppe
+     *
+     * @return Response Weiterleitung zur Übersicht
+     */
     public function delete(Request $request, ChecklistGroup $group): Response
     {
         $checklistId = $group->getChecklist()->getId();
@@ -76,6 +105,14 @@ class GroupController extends AbstractController
         return $this->redirectToRoute('admin_checklist_edit', ['id' => $checklistId]);
     }
 
+    /**
+     * Fügt einer Gruppe ein neues Element hinzu.
+     *
+     * @param Request       $request Aktuelle HTTP-Anfrage
+     * @param ChecklistGroup $group   Gruppe, der das Element hinzugefügt wird
+     *
+     * @return Response Formular oder Weiterleitung
+     */
     public function addItem(Request $request, ChecklistGroup $group): Response
     {
         $item = new GroupItem();
@@ -115,6 +152,14 @@ class GroupController extends AbstractController
         ]);
     }
 
+    /**
+     * Bearbeitet ein bestehendes Gruppen-Element.
+     *
+     * @param Request  $request Aktuelle HTTP-Anfrage
+     * @param GroupItem $item   Das zu bearbeitende Element
+     *
+     * @return Response Formular oder Weiterleitung
+     */
     public function editItem(Request $request, GroupItem $item): Response
     {
         if ($request->isMethod('POST')) {
@@ -149,6 +194,14 @@ class GroupController extends AbstractController
         ]);
     }
 
+    /**
+     * Entfernt ein Element aus einer Gruppe.
+     *
+     * @param Request  $request Aktuelle HTTP-Anfrage
+     * @param GroupItem $item   Das zu löschende Element
+     *
+     * @return Response Weiterleitung zur Checkliste
+     */
     public function deleteItem(Request $request, GroupItem $item): Response
     {
         $checklistId = $item->getGroup()->getChecklist()->getId();

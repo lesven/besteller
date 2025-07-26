@@ -17,6 +17,14 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted('ROLE_ADMIN')]
 class ChecklistController extends AbstractController
 {
+    /**
+     * Konstruktor für benötigte Services im Admin-Bereich.
+     *
+     * @param EntityManagerInterface $entityManager     Zugriff auf die Datenbank
+     * @param ChecklistRepository    $checklistRepository Repository für Checklisten
+     * @param EmailService           $emailService        Service zum E-Mail-Versand
+     * @param UrlGeneratorInterface  $urlGenerator        Erzeugt absolute Links
+     */
     public function __construct(
         private EntityManagerInterface $entityManager,
         private ChecklistRepository $checklistRepository,
@@ -25,6 +33,11 @@ class ChecklistController extends AbstractController
     ) {
     }
 
+    /**
+     * Listet alle Checklisten auf.
+     *
+     * @return Response Liste aller Checklisten im Admin-Bereich
+     */
     public function index(): Response
     {
         $checklists = $this->checklistRepository->findAll();
@@ -34,6 +47,13 @@ class ChecklistController extends AbstractController
         ]);
     }
 
+    /**
+     * Erstellt eine neue Checkliste.
+     *
+     * @param Request $request Aktuelle HTTP-Anfrage
+     *
+     * @return Response Formular oder Weiterleitung
+     */
     public function new(Request $request): Response
     {
         $checklist = new Checklist();
@@ -62,6 +82,14 @@ class ChecklistController extends AbstractController
         ]);
     }
 
+    /**
+     * Bearbeitet eine bestehende Checkliste.
+     *
+     * @param Request   $request   Aktuelle HTTP-Anfrage
+     * @param Checklist $checklist Die zu bearbeitende Checkliste
+     *
+     * @return Response Formular oder Weiterleitung
+     */
     public function edit(Request $request, Checklist $checklist): Response
     {
         if ($request->isMethod('POST')) {
@@ -87,6 +115,14 @@ class ChecklistController extends AbstractController
         ]);
     }
 
+    /**
+     * Löscht eine Checkliste mitsamt zugehörigen Einsendungen.
+     *
+     * @param Request   $request   Aktuelle HTTP-Anfrage
+     * @param Checklist $checklist Die zu löschende Checkliste
+     *
+     * @return Response Weiterleitung zur Übersicht
+     */
     public function delete(Request $request, Checklist $checklist): Response
     {
         if ($this->isCsrfTokenValid('delete' . $checklist->getId(), $request->request->get('_token'))) {
@@ -102,6 +138,14 @@ class ChecklistController extends AbstractController
         return $this->redirectToRoute('admin_checklists');
     }
 
+    /**
+     * Bearbeitet das E-Mail-Template einer Checkliste.
+     *
+     * @param Request   $request   Aktuelle HTTP-Anfrage
+     * @param Checklist $checklist Die betreffende Checkliste
+     *
+     * @return Response Formularseite
+     */
     public function emailTemplate(Request $request, Checklist $checklist): Response
     {
         // Handle template upload
@@ -161,6 +205,13 @@ class ChecklistController extends AbstractController
         ]);
     }
 
+    /**
+     * Lädt das aktuelle E-Mail-Template als Datei herunter.
+     *
+     * @param Checklist $checklist Die betreffende Checkliste
+     *
+     * @return Response Download der Template-Datei
+     */
     public function downloadEmailTemplate(Checklist $checklist): Response
     {
         $template = $checklist->getEmailTemplate() ?? $this->emailService->getDefaultTemplate();
@@ -177,6 +228,14 @@ class ChecklistController extends AbstractController
         return $response;
     }
 
+    /**
+     * Setzt das E-Mail-Template auf den Standard zurück.
+     *
+     * @param Request   $request   Aktuelle HTTP-Anfrage
+     * @param Checklist $checklist Die betreffende Checkliste
+     *
+     * @return Response Weiterleitung nach dem Zurücksetzen
+     */
     public function resetEmailTemplate(Request $request, Checklist $checklist): Response
     {
         if ($this->isCsrfTokenValid('reset_template' . $checklist->getId(), $request->request->get('_token'))) {
@@ -189,6 +248,13 @@ class ChecklistController extends AbstractController
         return $this->redirectToRoute('admin_checklist_email_template', ['id' => $checklist->getId()]);
     }
 
+    /**
+     * Dupliziert eine vorhandene Checkliste inklusive Gruppen und Items.
+     *
+     * @param Checklist $checklist Die zu duplizierende Checkliste
+     *
+     * @return Response Weiterleitung nach dem Duplizieren
+     */
     public function duplicate(Checklist $checklist): Response
     {
         $newChecklist = new Checklist();
@@ -224,6 +290,14 @@ class ChecklistController extends AbstractController
         return $this->redirectToRoute('admin_checklists');
     }
 
+    /**
+     * Versendet einen personalisierten Link zur Stückliste.
+     *
+     * @param Request   $request   Aktuelle HTTP-Anfrage
+     * @param Checklist $checklist Die betreffende Checkliste
+     *
+     * @return Response Formular oder Weiterleitung
+     */
     public function sendLink(Request $request, Checklist $checklist): Response
     {
         if ($request->isMethod('POST')) {
@@ -264,6 +338,14 @@ class ChecklistController extends AbstractController
         ]);
     }
 
+    /**
+     * Bearbeitet das Template für die Link-E-Mails.
+     *
+     * @param Request   $request   Aktuelle HTTP-Anfrage
+     * @param Checklist $checklist Die betreffende Checkliste
+     *
+     * @return Response Formularseite
+     */
     public function linkEmailTemplate(Request $request, Checklist $checklist): Response
     {
         if ($request->isMethod('POST')) {

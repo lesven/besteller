@@ -14,6 +14,13 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted('ROLE_ADMIN')]
 class SubmissionController extends AbstractController
 {
+    /**
+     * Konstruktor stellt benötigte Repositories bereit.
+     *
+     * @param EntityManagerInterface $entityManager      Datenbankzugriff
+     * @param ChecklistRepository    $checklistRepository Repository für Checklisten
+     * @param SubmissionRepository   $submissionRepository Repository für Einsendungen
+     */
     public function __construct(
         private EntityManagerInterface $entityManager,
         private ChecklistRepository $checklistRepository,
@@ -21,6 +28,11 @@ class SubmissionController extends AbstractController
     ) {
     }
 
+    /**
+     * Übersicht über alle Stücklisten zur Auswahl.
+     *
+     * @return Response Auswahlseite der Stücklisten
+     */
     public function index(): Response
     {
         $checklists = $this->checklistRepository->findAll();
@@ -30,6 +42,14 @@ class SubmissionController extends AbstractController
         ]);
     }
 
+    /**
+     * Zeigt alle Einsendungen einer bestimmten Checkliste an.
+     *
+     * @param Request $request    Aktuelle HTTP-Anfrage
+     * @param int     $checklistId ID der Stückliste
+     *
+     * @return Response Tabelle der Einsendungen
+     */
     public function byChecklist(Request $request, int $checklistId): Response
     {
         $checklist = $this->checklistRepository->find($checklistId);
@@ -47,6 +67,13 @@ class SubmissionController extends AbstractController
         ]);
     }
 
+    /**
+     * Gibt die gespeicherte HTML-E-Mail einer Einsendung aus.
+     *
+     * @param Submission $submission Die gewählte Einsendung
+     *
+     * @return Response HTML-Ausgabe der gespeicherten E-Mail
+     */
     public function viewHtml(Submission $submission): Response
     {
         return new Response($submission->getGeneratedEmail(), 200, [
@@ -54,6 +81,14 @@ class SubmissionController extends AbstractController
         ]);
     }
 
+    /**
+     * Löscht eine Einsendung.
+     *
+     * @param Request    $request    Aktuelle HTTP-Anfrage
+     * @param Submission $submission Die zu löschende Einsendung
+     *
+     * @return Response Weiterleitung zur Einsendungsübersicht
+     */
     public function delete(Request $request, Submission $submission): Response
     {
         $checklistId = $submission->getChecklist()->getId();

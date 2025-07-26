@@ -9,6 +9,14 @@ use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
 
 class SecurityController extends AbstractController
 {
+    /**
+     * Zeigt das Login-Formular und verarbeitet Login-Fehler.
+     *
+     * @param AuthenticationUtils $authenticationUtils Hilfsobjekt für Authentifizierung
+     * @param Request $request                          Aktuelle HTTP-Anfrage
+     *
+     * @return Response Login-Seite oder Weiterleitung
+     */
     public function login(AuthenticationUtils $authenticationUtils, Request $request): Response
     {
         if ($this->getUser()) {
@@ -34,6 +42,11 @@ class SecurityController extends AbstractController
         ]);
     }
 
+    /**
+     * Wird von der Firewall abgefangen und führt den Logout aus.
+     *
+     * @return void
+     */
     public function logout(): void
     {
         throw new \LogicException('This method can be blank - it will be intercepted by the logout key on your firewall.');

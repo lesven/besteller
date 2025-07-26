@@ -12,10 +12,22 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted('ROLE_ADMIN')]
 class EmailSettingsController extends AbstractController
 {
+    /**
+     * Konstruktor mit EntityManager für den Zugriff auf die E-Mail-Einstellungen.
+     *
+     * @param EntityManagerInterface $entityManager Datenbankzugriff
+     */
     public function __construct(private EntityManagerInterface $entityManager)
     {
     }
 
+    /**
+     * Bearbeitet die globalen E-Mail-Einstellungen.
+     *
+     * @param Request $request Aktuelle HTTP-Anfrage
+     *
+     * @return Response Formularseite für die Einstellungen
+     */
     public function edit(Request $request): Response
     {
         $repository = $this->entityManager->getRepository(EmailSettings::class);

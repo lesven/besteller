@@ -8,6 +8,11 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class HomeController extends AbstractController
 {
+    /**
+     * Zeigt die Startseite an.
+     *
+     * @return Response Antwort mit der gerenderten Startseite
+     */
     public function index(): Response
     {
         return $this->render('home/index.html.twig');
