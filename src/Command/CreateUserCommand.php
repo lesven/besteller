@@ -53,6 +53,11 @@ class CreateUserCommand extends Command
         $email = $input->getArgument('email');
         $password = $input->getArgument('password');
 
+        if (!is_string($email) || !is_string($password)) {
+            $io->error('Ungültige Eingabewerte.');
+            return Command::FAILURE;
+        }
+
         // Passwort-Validierung
         if (strlen($password) < 16) {
             $io->error('Das Passwort muss mindestens 16 Zeichen lang sein.');
