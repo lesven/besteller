@@ -9,6 +9,7 @@ deploy: ## Führt alle Schritte für die Bereitstellung aus
 	git reset --hard HEAD
 	git pull
 	@$(MAKE) build
+	@$(MAKE) install
 	@$(MAKE) start
 
 build: ## Baut Docker Container
