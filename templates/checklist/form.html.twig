@@ -40,10 +40,10 @@
                                         <label class="form-label">{{ item.label }}</label>
                                         
                                         {% if item.type == 'text' %}
-                                            <input type="text" 
-                                                   class="form-control" 
-                                                   name="item_{{ item.id }}" 
-                                                   placeholder="Bitte eingeben...">
+                                            <textarea class="form-control"
+                                                      name="item_{{ item.id }}"
+                                                      rows="4"
+                                                      placeholder="Bitte eingeben..."></textarea>
                                         
                                         {% elseif item.type == 'radio' %}
                                             {% for option in item.optionsArray %}
