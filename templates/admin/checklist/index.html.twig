@@ -1,0 +1,78 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Checklisten verwalten{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Checklisten verwalten</h1>
+    <a href="{{ path('admin_checklist_new') }}" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Neue Checkliste erstellen
+    </a>
+</div>
+
+{% for message in app.flashes('success') %}
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+{% endfor %}
+
+{% if checklists is empty %}
+    <div class="alert alert-info">
+        <h4 class="alert-heading">Noch keine Checklisten vorhanden</h4>
+        <p>Es wurden noch keine Checklisten erstellt. <a href="{{ path('admin_checklist_new') }}" class="alert-link">Erstelle jetzt deine erste Checkliste</a>.</p>
+    </div>
+{% else %}
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Titel</th>
+                            <th>Ziel-E-Mail</th>
+                            <th>Gruppen</th>
+                            <th>Einreichungen</th>
+                            <th>Aktionen</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for checklist in checklists %}
+                            <tr>
+                                <td>{{ checklist.id }}</td>
+                                <td>
+                                    <strong>{{ checklist.title }}</strong>
+                                </td>
+                                <td>
+                                    <span class="text-muted">{{ checklist.targetEmail }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-secondary">{{ checklist.groups|length }} Gruppen</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-info">{{ checklist.submissions|length }} Einreichungen</span>
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <a href="{{ path('admin_checklist_edit', {'id': checklist.id}) }}" 
+                                           class="btn btn-outline-primary" title="Bearbeiten">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-outline-danger" 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#deleteModal{{ checklist.id }}"
+                                                title="Löschen">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+{% endif %}
+{% endblock %}

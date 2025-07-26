@@ -1,0 +1,69 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Neue Checkliste erstellen{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Neue Checkliste erstellen</h1>
+    <a href="{{ path('admin_checklists') }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Zurück zur Übersicht
+    </a>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Checklisten-Details</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    <div class="mb-3">
+                        <label for="title" class="form-label">Titel <span class="text-danger">*</span></label>
+                        <input type="text" 
+                               class="form-control" 
+                               id="title" 
+                               name="title" 
+                               value="{{ checklist.title ?? '' }}" 
+                               required
+                               placeholder="z.B. Neue Mitarbeiter Checkliste">
+                        <div class="form-text">Eindeutiger Name für diese Checkliste</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="target_email" class="form-label">Ziel-E-Mail <span class="text-danger">*</span></label>
+                        <input type="email" 
+                               class="form-control" 
+                               id="target_email" 
+                               name="target_email" 
+                               value="{{ checklist.targetEmail ?? '' }}" 
+                               required
+                               placeholder="it@besteller.local">
+                        <div class="form-text">E-Mail-Adresse, an die ausgefüllte Formulare gesendet werden</div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="email_template" class="form-label">E-Mail-Template (optional)</label>
+                        <textarea class="form-control" 
+                                  id="email_template" 
+                                  name="email_template" 
+                                  rows="5"
+                                  placeholder="Vorlage für die E-Mail-Benachrichtigung...">{{ checklist.emailTemplate ?? '' }}</textarea>
+                        <div class="form-text">
+                            Optional: Benutzerdefinierte Vorlage für E-Mail-Benachrichtigungen. 
+                            Leer lassen für Standard-Template.
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Checkliste erstellen
+                        </button>
+                        <a href="{{ path('admin_checklists') }}" class="btn btn-outline-secondary">Abbrechen</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

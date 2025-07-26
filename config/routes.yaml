@@ -59,3 +59,43 @@ admin_submissions_checklist:
     controller: App\Controller\Admin\SubmissionController::byChecklist
     requirements:
         checklistId: '\d+'
+
+# Gruppen-Verwaltung
+admin_group_create:
+    path: /admin/checklists/{id}/groups/new
+    controller: App\Controller\Admin\GroupController::create
+    requirements:
+        id: '\d+'
+
+admin_group_edit:
+    path: /admin/groups/{id}/edit
+    controller: App\Controller\Admin\GroupController::edit
+    requirements:
+        id: '\d+'
+
+admin_group_delete:
+    path: /admin/groups/{id}/delete
+    controller: App\Controller\Admin\GroupController::delete
+    methods: [POST]
+    requirements:
+        id: '\d+'
+
+# Gruppen-Elemente Verwaltung
+admin_group_item_add:
+    path: /admin/groups/{id}/items/new
+    controller: App\Controller\Admin\GroupController::addItem
+    requirements:
+        id: '\d+'
+
+admin_group_item_edit:
+    path: /admin/items/{id}/edit
+    controller: App\Controller\Admin\GroupController::editItem
+    requirements:
+        id: '\d+'
+
+admin_group_item_delete:
+    path: /admin/items/{id}/delete
+    controller: App\Controller\Admin\GroupController::deleteItem
+    methods: [POST]
+    requirements:
+        id: '\d+'

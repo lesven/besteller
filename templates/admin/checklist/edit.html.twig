@@ -1,0 +1,289 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Checkliste bearbeiten: {{ checklist.title }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Checkliste bearbeiten: {{ checklist.title }}</h1>
+    <a href="{{ path('admin_checklists') }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Zurück zur Übersicht
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Checklisten-Details</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    <div class="mb-3">
+                        <label for="title" class="form-label">Titel <span class="text-danger">*</span></label>
+                        <input type="text" 
+                               class="form-control" 
+                               id="title" 
+                               name="title" 
+                               value="{{ checklist.title }}" 
+                               required
+                               placeholder="z.B. Neue Mitarbeiter Checkliste">
+                        <div class="form-text">Eindeutiger Name für diese Checkliste</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="target_email" class="form-label">Ziel-E-Mail <span class="text-danger">*</span></label>
+                        <input type="email" 
+                               class="form-control" 
+                               id="target_email" 
+                               name="target_email" 
+                               value="{{ checklist.targetEmail }}" 
+                               required
+                               placeholder="it@besteller.local">
+                        <div class="form-text">E-Mail-Adresse, an die ausgefüllte Formulare gesendet werden</div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="email_template" class="form-label">E-Mail-Template (optional)</label>
+                        <textarea class="form-control" 
+                                  id="email_template" 
+                                  name="email_template" 
+                                  rows="5"
+                                  placeholder="Vorlage für die E-Mail-Benachrichtigung...">{{ checklist.emailTemplate }}</textarea>
+                        <div class="form-text">
+                            Optional: Benutzerdefinierte Vorlage für E-Mail-Benachrichtigungen. 
+                            Leer lassen für Standard-Template.
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Änderungen speichern
+                        </button>
+                        <a href="{{ path('admin_checklists') }}" class="btn btn-outline-secondary">Abbrechen</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Gruppen-Verwaltung -->
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0"><i class="fas fa-layer-group"></i> Gruppen</h5>
+                <a href="{{ path('admin_group_create', {'id': checklist.id}) }}" class="btn btn-sm btn-primary">
+                    <i class="fas fa-plus"></i> Neue Gruppe
+                </a>
+            </div>
+            <div class="card-body">
+                {% if checklist.groups is empty %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-layer-group fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">Noch keine Gruppen vorhanden</p>
+                        <a href="{{ path('admin_group_create', {'id': checklist.id}) }}" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Erste Gruppe erstellen
+                        </a>
+                    </div>
+                {% else %}
+                    <div class="accordion" id="groupsAccordion">
+                        {% for group in checklist.groups %}
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="heading{{ group.id }}">
+                                    <button class="accordion-button collapsed" type="button" 
+                                            data-bs-toggle="collapse" 
+                                            data-bs-target="#collapse{{ group.id }}" 
+                                            aria-expanded="false">
+                                        <div class="d-flex justify-content-between align-items-center w-100 me-2">
+                                            <div>
+                                                <strong>{{ group.title }}</strong>
+                                                {% if group.description %}
+                                                    <small class="text-muted d-block">{{ group.description }}</small>
+                                                {% endif %}
+                                            </div>
+                                            <span class="badge bg-secondary">{{ group.items|length }} Elemente</span>
+                                        </div>
+                                    </button>
+                                </h2>
+                                <div id="collapse{{ group.id }}" class="accordion-collapse collapse" 
+                                     data-bs-parent="#groupsAccordion">
+                                    <div class="accordion-body">
+                                        <div class="d-flex justify-content-between align-items-center mb-3">
+                                            <div>
+                                                <h6>Elemente in dieser Gruppe:</h6>
+                                            </div>
+                                            <div class="btn-group btn-group-sm">
+                                                <a href="{{ path('admin_group_item_add', {'id': group.id}) }}" 
+                                                   class="btn btn-outline-primary">
+                                                    <i class="fas fa-plus"></i> Element hinzufügen
+                                                </a>
+                                                <a href="{{ path('admin_group_edit', {'id': group.id}) }}" 
+                                                   class="btn btn-outline-secondary">
+                                                    <i class="fas fa-edit"></i> Gruppe bearbeiten
+                                                </a>
+                                                <button type="button" class="btn btn-outline-danger" 
+                                                        data-bs-toggle="modal" 
+                                                        data-bs-target="#deleteGroupModal{{ group.id }}">
+                                                    <i class="fas fa-trash"></i> Löschen
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        {% if group.items is empty %}
+                                            <p class="text-muted">Noch keine Elemente in dieser Gruppe</p>
+                                        {% else %}
+                                            <div class="table-responsive">
+                                                <table class="table table-sm">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Label</th>
+                                                            <th>Typ</th>
+                                                            <th>Optionen</th>
+                                                            <th>Sortierung</th>
+                                                            <th>Aktionen</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {% for item in group.items %}
+                                                            <tr>
+                                                                <td>{{ item.label }}</td>
+                                                                <td>
+                                                                    <span class="badge bg-info">
+                                                                        {% if item.type == 'checkbox' %}Checkbox
+                                                                        {% elseif item.type == 'radio' %}Radio
+                                                                        {% else %}Text
+                                                                        {% endif %}
+                                                                    </span>
+                                                                </td>
+                                                                <td>
+                                                                    {% if item.type in ['checkbox', 'radio'] %}
+                                                                        <small class="text-muted">{{ item.optionsArray|length }} Optionen</small>
+                                                                    {% else %}
+                                                                        <small class="text-muted">-</small>
+                                                                    {% endif %}
+                                                                </td>
+                                                                <td>{{ item.sortOrder }}</td>
+                                                                <td>
+                                                                    <div class="btn-group btn-group-sm">
+                                                                        <a href="{{ path('admin_group_item_edit', {'id': item.id}) }}" 
+                                                                           class="btn btn-outline-primary btn-sm">
+                                                                            <i class="fas fa-edit"></i>
+                                                                        </a>
+                                                                        <button type="button" class="btn btn-outline-danger btn-sm" 
+                                                                                data-bs-toggle="modal" 
+                                                                                data-bs-target="#deleteItemModal{{ item.id }}">
+                                                                            <i class="fas fa-trash"></i>
+                                                                        </button>
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                        {% endfor %}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Delete Group Modal -->
+                            <div class="modal fade" id="deleteGroupModal{{ group.id }}" tabindex="-1">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">Gruppe löschen</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <p>Möchten Sie die Gruppe <strong>"{{ group.title }}"</strong> wirklich löschen?</p>
+                                            <p class="text-danger"><small>Alle Elemente in dieser Gruppe werden ebenfalls gelöscht!</small></p>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+                                            <form method="post" action="{{ path('admin_group_delete', {'id': group.id}) }}" class="d-inline">
+                                                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ group.id) }}">
+                                                <button type="submit" class="btn btn-danger">Löschen</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Delete Item Modals -->
+                            {% for item in group.items %}
+                                <div class="modal fade" id="deleteItemModal{{ item.id }}" tabindex="-1">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Element löschen</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <p>Möchten Sie das Element <strong>"{{ item.label }}"</strong> wirklich löschen?</p>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+                                                <form method="post" action="{{ path('admin_group_item_delete', {'id': item.id}) }}" class="d-inline">
+                                                    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ item.id) }}">
+                                                    <button type="submit" class="btn btn-danger">Löschen</button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0"><i class="fas fa-chart-bar"></i> Statistiken</h6>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6">
+                        <div class="border-end">
+                            <h4 class="text-primary">{{ checklist.groups|length }}</h4>
+                            <small class="text-muted">Gruppen</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <h4 class="text-success">{{ checklist.submissions|length }}</h4>
+                        <small class="text-muted">Einreichungen</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6 class="card-title mb-0"><i class="fas fa-link"></i> Vorschau-Link</h6>
+            </div>
+            <div class="card-body">
+                <p class="small text-muted">Beispiel-Link zum Testen der Checkliste:</p>
+                <div class="input-group">
+                    <input type="text" class="form-control form-control-sm" 
+                           value="{{ url('checklist_form', {
+                               'stückliste_id': checklist.id,
+                               'name': 'Max Mustermann',
+                               'mitarbeiter_id': '12345',
+                               'email': 'max.mustermann@example.com'
+                           }) }}" readonly>
+                    <button class="btn btn-outline-secondary btn-sm" type="button" onclick="copyToClipboard(this.previousElementSibling)">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function copyToClipboard(input) {
+    input.select();
+    document.execCommand('copy');
+}
+</script>
+{% endblock %}

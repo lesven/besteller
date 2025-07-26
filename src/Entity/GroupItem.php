@@ -71,9 +71,17 @@ class GroupItem
         return $this;
     }
 
+    /**
+     * Gibt die Optionen als Array zurück
+     */
     public function getOptionsArray(): array
     {
-        return $this->options ? json_decode($this->options, true) ?? [] : [];
+        if (!$this->options) {
+            return [];
+        }
+        
+        $decoded = json_decode($this->options, true);
+        return is_array($decoded) ? $decoded : [];
     }
 
     public function setOptionsArray(array $options): static
