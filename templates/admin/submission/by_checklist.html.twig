@@ -39,7 +39,10 @@
                             <td>{{ submission.submittedAt|date('d.m.Y H:i') }}</td>
                             <td>{{ submission.name }}</td>
                             <td>{{ submission.mitarbeiterId }}</td>
-                            <td>{{ submission.generatedEmail|raw }}</td>
+                            <td>
+                                <iframe srcdoc="{{ submission.generatedEmail|e('html_attr') }}"
+                                        style="width: 600px; height: 400px; border: 1px solid #dee2e6;"></iframe>
+                            </td>
                             <td>
                                 <button type="button" class="btn btn-sm btn-outline-danger"
                                         data-bs-toggle="modal"
