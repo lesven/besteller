@@ -10,6 +10,16 @@
     </a>
 </div>
 
+<form method="get" class="mb-3">
+    <div class="input-group">
+        <input type="text" name="q" value="{{ search|default('') }}" class="form-control"
+               placeholder="Suche nach Name oder Mitarbeiter-ID">
+        <button class="btn btn-outline-secondary" type="submit">
+            <i class="fas fa-search"></i>
+        </button>
+    </div>
+</form>
+
 {% for message in app.flashes('success') %}
     <div class="alert alert-success alert-dismissible fade show" role="alert">
         {{ message }}

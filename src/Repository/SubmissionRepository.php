@@ -20,12 +20,18 @@ class SubmissionRepository extends ServiceEntityRepository
     /**
      * @return Submission[]
      */
-    public function findByChecklist(Checklist $checklist): array
+    public function findByChecklist(Checklist $checklist, ?string $search = null): array
     {
-        return $this->createQueryBuilder('s')
+        $qb = $this->createQueryBuilder('s')
             ->andWhere('s.checklist = :checklist')
-            ->setParameter('checklist', $checklist)
-            ->orderBy('s.submittedAt', 'DESC')
+            ->setParameter('checklist', $checklist);
+
+        if ($search !== null && $search !== '') {
+            $qb->andWhere('LOWER(s.name) LIKE :search OR LOWER(s.mitarbeiterId) LIKE :search')
+               ->setParameter('search', '%' . strtolower($search) . '%');
+        }
+
+        return $qb->orderBy('s.submittedAt', 'DESC')
             ->getQuery()
             ->getResult();
     }
