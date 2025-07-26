@@ -149,7 +149,7 @@ Die folgenden Platzhalter stehen im HTML-Template zur Verfügung:
 - das neue Feld steht bei den Email Variablen zur Verfügung
 - das Standard Mail Template hat die neuen Möglichkeiten schon integriert
 
-#### US-111: Stücklisten duplizieren
+#### US-11: Stücklisten duplizieren
 **Als** Admin  
 **möchte ich** eine komplette Stückliste mit allen Inhalten, ohne die Einsendungen natürlich dpulizieren können
 **damit** ich leicht für unsere einzlenen Standorte und Abteilugnen angepaste Stücklisten erstellen kann
@@ -158,6 +158,18 @@ Die folgenden Platzhalter stehen im HTML-Template zur Verfügung:
 - alle Gruppen werden dupliziert
 - alle Elemente in den Gruppen werden dupliziert
 - die neue Liste heßt inital Duplikat von originalname
+
+#### US-12: Versand eines Stücklisten links 
+**Als** Admin  
+**möchte ich** eeinen Link zu einer Stückliste versenden können
+**damit** ich Bestellugnen starten kann und den Leuten nciht manuell einen Link generieren muss
+
+**Akzeptanzkriterien:**
+- Empfängername und Empfängeremail müssen hinterlegt werden
+- PersonenID muss hinterlegt werden
+- Personenname für die die Bestellung ist kann hinterlegt werden
+- ein eigenes Email Template für den Versand ist hinterlegt
+- eine individuelle Einleitungs für die Email kann beim Versand hinterlegt werden
 
 
 ## Nicht-funktionale Anforderungen
