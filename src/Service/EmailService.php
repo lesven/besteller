@@ -13,12 +13,22 @@ use Symfony\Component\Mime\Email;
 
 class EmailService
 {
+    /**
+     * @param MailerInterface    $mailer            Mailer zum Versenden der E-Mails
+     * @param SubmissionService  $submissionService Service zum Aufbereiten der Bestelldaten
+     * @param EntityManagerInterface $entityManager Datenbank-Zugriff für Einstellungen
+     */
     public function __construct(
         private MailerInterface $mailer,
         private SubmissionService $submissionService,
         private EntityManagerInterface $entityManager
     ) {}
 
+    /**
+     * Erstellt bei Bedarf einen Mailer mit benutzerdefinierten Einstellungen.
+     *
+     * @return MailerInterface Konfigurierte Mailer-Instanz
+     */
     private function getMailer(): MailerInterface
     {
         $settings = $this->entityManager->getRepository(EmailSettings::class)->find(1);
@@ -42,6 +52,13 @@ class EmailService
         return new Mailer(Transport::fromDsn($dsn));
     }
 
+    /**
+     * Erstellt die E-Mail-Inhalte und versendet sie an Zieladresse und Führungskraft.
+     *
+     * @param Submission $submission Die eingereichte Bestellung
+     *
+     * @return string Der an die Zieladresse gesendete HTML-Inhalt
+     */
     public function generateAndSendEmail(Submission $submission): string
     {
         $template = $submission->getChecklist()->getEmailTemplate() ?? $this->getDefaultTemplate();
@@ -77,13 +94,21 @@ class EmailService
     }
     
     /**
-     * Get the default template for displaying in admin interface
+     * Liefert das Standardtemplate für die Anzeige im Administrationsbereich.
      */
     public function getDefaultTemplateForAdmin(): string
     {
         return $this->getDefaultTemplate();
     }
     
+    /**
+     * Ersetzt Platzhalter im Template durch Werte der Übermittlung.
+     *
+     * @param string     $template   HTML-Template mit Platzhaltern
+     * @param Submission $submission Die zugehörige Übermittlung
+     *
+     * @return string Fertiges HTML
+     */
     private function replacePlaceholders(string $template, Submission $submission): string
     {
         $auswahl = $this->submissionService->formatSubmissionForEmail($submission->getData());
@@ -99,6 +124,9 @@ class EmailService
         return str_replace(array_keys($placeholders), array_values($placeholders), $template);
     }
     
+    /**
+     * Liefert das Standardtemplate für die E-Mail an die Zieladresse.
+     */
     public function getDefaultTemplate(): string
     {
         return '<!DOCTYPE html>
@@ -185,6 +213,9 @@ class EmailService
 </html>';
     }
     
+    /**
+     * Liefert das Standardtemplate für die Bestätigungs-E-Mail an die Führungskraft.
+     */
     private function getConfirmationTemplate(): string
     {
         return '
@@ -241,6 +272,17 @@ class EmailService
 </html>';
     }
 
+    /**
+     * Versendet eine E-Mail mit einem personalisierten Link zur Stückliste.
+     *
+     * @param Checklist   $checklist      Die Ziel-Stückliste
+     * @param string      $recipientName  Name des Empfängers
+     * @param string      $recipientEmail E-Mail-Adresse des Empfängers
+     * @param string      $mitarbeiterId  ID der betroffenen Person
+     * @param string|null $personName     Name der betroffenen Person
+     * @param string      $intro          Einführungstext der Nachricht
+     * @param string      $link           Vollständiger Link zum Formular
+     */
     public function sendLinkEmail(
         Checklist $checklist,
         string $recipientName,
@@ -275,6 +317,9 @@ class EmailService
         $this->getMailer()->send($email);
     }
 
+    /**
+     * Liefert das Standardtemplate für Link-E-Mails.
+     */
     public function getDefaultLinkTemplate(): string
     {
         return '<!DOCTYPE html>

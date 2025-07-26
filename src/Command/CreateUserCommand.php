@@ -18,6 +18,10 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 )]
 class CreateUserCommand extends Command
 {
+    /**
+     * @param EntityManagerInterface      $entityManager Datenbankzugriff
+     * @param UserPasswordHasherInterface $passwordHasher Dienst zum Hashen des Passworts
+     */
     public function __construct(
         private EntityManagerInterface $entityManager,
         private UserPasswordHasherInterface $passwordHasher
@@ -25,14 +29,24 @@ class CreateUserCommand extends Command
         parent::__construct();
     }
 
+    /**
+     * Definiert die erwarteten Argumente für den Konsolenbefehl.
+     */
     protected function configure(): void
     {
         $this
             ->addArgument('email', InputArgument::REQUIRED, 'E-Mail-Adresse des Benutzers')
-            ->addArgument('password', InputArgument::REQUIRED, 'Passwort (mindestens 16 Zeichen)')
-        ;
+            ->addArgument('password', InputArgument::REQUIRED, 'Passwort (mindestens 16 Zeichen)');
     }
 
+    /**
+     * Führt den Befehl aus und erstellt den Benutzer.
+     *
+     * @param InputInterface  $input  Eingabeparameter der Konsole
+     * @param OutputInterface $output Ausgabeschnittstelle
+     *
+     * @return int Statuscode
+     */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
