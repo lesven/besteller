@@ -64,6 +64,7 @@ class SubmissionService
                         $output .= "<li><strong>{$itemLabel}:</strong> " . implode(', ', $value) . "</li>\n";
                     } else {
                         // Text und Radio
+                        $value = nl2br($value);
                         $output .= "<li><strong>{$itemLabel}:</strong> {$value}</li>\n";
                     }
                 } else {
@@ -71,6 +72,7 @@ class SubmissionService
                     if (is_array($itemData)) {
                         $output .= "<li><strong>{$itemLabel}:</strong> " . implode(', ', $itemData) . "</li>\n";
                     } else {
+                        $itemData = nl2br($itemData);
                         $output .= "<li><strong>{$itemLabel}:</strong> {$itemData}</li>\n";
                     }
                 }
