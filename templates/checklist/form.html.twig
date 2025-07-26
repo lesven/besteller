@@ -13,6 +13,11 @@
                 </div>
                 <div class="card-body">
                     <form method="post">
+                        {# Hidden fields für die Übertragung der URL-Parameter #}
+                        <input type="hidden" name="name" value="{{ name }}">
+                        <input type="hidden" name="mitarbeiter_id" value="{{ mitarbeiterId }}">
+                        <input type="hidden" name="email" value="{{ email }}">
+                        
                         {% for group in checklist.groups %}
                             <div class="mb-5">
                                 <h4 class="border-bottom pb-2">{{ group.title }}</h4>

@@ -55,11 +55,24 @@ class SubmissionService
         foreach ($data as $groupTitle => $groupData) {
             $output .= "<h3>{$groupTitle}</h3>\n<ul>\n";
             
-            foreach ($groupData as $itemLabel => $itemValue) {
-                if (is_array($itemValue)) {
-                    $output .= "<li><strong>{$itemLabel}:</strong> " . implode(', ', $itemValue) . "</li>\n";
+            foreach ($groupData as $itemLabel => $itemData) {
+                // Neue Datenstruktur verwenden
+                if (is_array($itemData) && isset($itemData['type'], $itemData['value'])) {
+                    $value = $itemData['value'];
+                    if (is_array($value)) {
+                        // Checkbox-Arrays
+                        $output .= "<li><strong>{$itemLabel}:</strong> " . implode(', ', $value) . "</li>\n";
+                    } else {
+                        // Text und Radio
+                        $output .= "<li><strong>{$itemLabel}:</strong> {$value}</li>\n";
+                    }
                 } else {
-                    $output .= "<li><strong>{$itemLabel}:</strong> {$itemValue}</li>\n";
+                    // Fallback für alte Datenstruktur
+                    if (is_array($itemData)) {
+                        $output .= "<li><strong>{$itemLabel}:</strong> " . implode(', ', $itemData) . "</li>\n";
+                    } else {
+                        $output .= "<li><strong>{$itemLabel}:</strong> {$itemData}</li>\n";
+                    }
                 }
             }
             

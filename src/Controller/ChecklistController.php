@@ -163,11 +163,16 @@ class ChecklistController extends AbstractController
             $submission->setData($submissionData);
             $submission->setSubmittedAt(new \DateTimeImmutable());
 
+            // Erst Submission speichern
             $this->entityManager->persist($submission);
             $this->entityManager->flush();
 
-            // E-Mail senden
-            $this->emailService->generateAndSendEmail($submission);
+            // Dann E-Mails senden und generierte E-Mail speichern
+            $generatedEmail = $this->emailService->generateAndSendEmail($submission);
+            $submission->setGeneratedEmail($generatedEmail);
+            
+            // Aktualisierte Submission speichern
+            $this->entityManager->flush();
 
             return $this->render('checklist/success.html.twig', [
                 'checklist' => $checklist,
