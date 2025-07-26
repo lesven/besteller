@@ -48,30 +48,34 @@ class UserController extends AbstractController
      */
     public function new(Request $request): Response
     {
-        if ($request->isMethod('POST')) {
-            $email = trim((string) $request->request->get('email'));
-            $password = (string) $request->request->get('password');
-
-            if (strlen($password) < 16) {
-                $this->addFlash('error', 'Das Passwort muss mindestens 16 Zeichen lang sein.');
-            } elseif ($this->entityManager->getRepository(User::class)->findOneBy(['email' => $email])) {
-                $this->addFlash('error', 'Ein Benutzer mit dieser E-Mail existiert bereits.');
-            } else {
-                $user = new User();
-                $user->setEmail($email);
-                $user->setRoles(['ROLE_ADMIN']);
-                $user->setPassword($this->passwordHasher->hashPassword($user, $password));
-
-                $this->entityManager->persist($user);
-                $this->entityManager->flush();
-
-                $this->addFlash('success', 'Benutzer wurde erfolgreich erstellt.');
-
-                return $this->redirectToRoute('admin_users');
-            }
+        if (!$request->isMethod('POST')) {
+            return $this->render('admin/user/new.html.twig');
         }
 
-        return $this->render('admin/user/new.html.twig');
+        $email = trim((string) $request->request->get('email'));
+        $password = (string) $request->request->get('password');
+
+        if (strlen($password) < 16) {
+            $this->addFlash('error', 'Das Passwort muss mindestens 16 Zeichen lang sein.');
+            return $this->render('admin/user/new.html.twig');
+        }
+
+        if ($this->entityManager->getRepository(User::class)->findOneBy(['email' => $email])) {
+            $this->addFlash('error', 'Ein Benutzer mit dieser E-Mail existiert bereits.');
+            return $this->render('admin/user/new.html.twig');
+        }
+
+        $user = new User();
+        $user->setEmail($email);
+        $user->setRoles(['ROLE_ADMIN']);
+        $user->setPassword($this->passwordHasher->hashPassword($user, $password));
+
+        $this->entityManager->persist($user);
+        $this->entityManager->flush();
+
+        $this->addFlash('success', 'Benutzer wurde erfolgreich erstellt.');
+
+        return $this->redirectToRoute('admin_users');
     }
 
     /**
@@ -84,37 +88,39 @@ class UserController extends AbstractController
      */
     public function edit(Request $request, User $user): Response
     {
-        if ($request->isMethod('POST')) {
-            $email = trim((string) $request->request->get('email'));
-            $password = (string) $request->request->get('password');
-
-            if ($password !== '' && strlen($password) < 16) {
-                $this->addFlash('error', 'Das Passwort muss mindestens 16 Zeichen lang sein.');
-            } else {
-                $existing = $this->entityManager->getRepository(User::class)->findOneBy(['email' => $email]);
-                if ($existing && $existing->getId() !== $user->getId()) {
-                    $this->addFlash('error', 'Ein Benutzer mit dieser E-Mail existiert bereits.');
-                } else {
-                    $user->setEmail($email);
-
-                    if ($password !== '') {
-                        $user->setPassword(
-                            $this->passwordHasher->hashPassword($user, $password)
-                        );
-                    }
-
-                    $this->entityManager->flush();
-
-                    $this->addFlash('success', 'Benutzer wurde erfolgreich aktualisiert.');
-
-                    return $this->redirectToRoute('admin_users');
-                }
-            }
+        if (!$request->isMethod('POST')) {
+            return $this->render('admin/user/edit.html.twig', [
+                'user' => $user,
+            ]);
         }
 
-        return $this->render('admin/user/edit.html.twig', [
-            'user' => $user,
-        ]);
+        $email = trim((string) $request->request->get('email'));
+        $password = (string) $request->request->get('password');
+
+        if ($password !== '' && strlen($password) < 16) {
+            $this->addFlash('error', 'Das Passwort muss mindestens 16 Zeichen lang sein.');
+            return $this->render('admin/user/edit.html.twig', ['user' => $user]);
+        }
+
+        $existing = $this->entityManager->getRepository(User::class)->findOneBy(['email' => $email]);
+        if ($existing && $existing->getId() !== $user->getId()) {
+            $this->addFlash('error', 'Ein Benutzer mit dieser E-Mail existiert bereits.');
+            return $this->render('admin/user/edit.html.twig', ['user' => $user]);
+        }
+
+        $user->setEmail($email);
+
+        if ($password !== '') {
+            $user->setPassword(
+                $this->passwordHasher->hashPassword($user, $password)
+            );
+        }
+
+        $this->entityManager->flush();
+
+        $this->addFlash('success', 'Benutzer wurde erfolgreich aktualisiert.');
+
+        return $this->redirectToRoute('admin_users');
     }
 
     /**
