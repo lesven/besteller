@@ -93,6 +93,9 @@ class SubmissionController extends AbstractController
     public function delete(Request $request, Submission $submission): Response
     {
         $checklist = $submission->getChecklist();
+        if (!$checklist) {
+            throw $this->createNotFoundException('Zugehörige Checkliste nicht gefunden.');
+        }
         $checklistId = $checklist->getId();
         $token = $request->request->get('_token');
         $token = is_string($token) ? $token : null;
