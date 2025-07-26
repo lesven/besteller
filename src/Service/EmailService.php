@@ -36,7 +36,7 @@ class EmailService
         $managerEmail = (new Email())
             ->from('noreply@besteller.local')
             ->to($submission->getEmail())
-            ->subject('Bestätigung: Ihre Stückliste wurde erfolgreich übermittelt')
+            ->subject('Bestätigung: Die Bestellung wurde erfolgreich übermittelt')
             ->html($confirmationContent);
             
         $this->mailer->send($managerEmail);
