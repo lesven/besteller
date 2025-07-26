@@ -135,3 +135,25 @@ admin_checklist_email_template_reset:
 admin_email_settings:
     path: /admin/email-settings
     controller: App\Controller\Admin\EmailSettingsController::edit
+
+# Benutzerverwaltung
+admin_users:
+    path: /admin/users
+    controller: App\Controller\Admin\UserController::index
+
+admin_user_new:
+    path: /admin/users/new
+    controller: App\Controller\Admin\UserController::new
+
+admin_user_edit:
+    path: /admin/users/{id}/edit
+    controller: App\Controller\Admin\UserController::edit
+    requirements:
+        id: '\d+'
+
+admin_user_delete:
+    path: /admin/users/{id}/delete
+    controller: App\Controller\Admin\UserController::delete
+    methods: [POST]
+    requirements:
+        id: '\d+'
