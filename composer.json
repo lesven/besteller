@@ -73,6 +73,7 @@
         }
     },
     "require-dev": {
+        "phpmd/phpmd": "^2.15",
         "phpstan/phpstan": "^2.1",
         "symfony/maker-bundle": "^1.0",
         "symfony/web-profiler-bundle": "7.3.*"

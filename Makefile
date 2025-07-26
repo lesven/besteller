@@ -57,7 +57,10 @@ phpstan-baseline: ## Erstellt eine PHPStan Baseline für bestehende Fehler
 	docker compose exec php vendor/bin/phpstan analyse --memory-limit=512M --generate-baseline
 
 phpstan-clear: ## Löscht PHPStan Cache
-	docker compose exec php vendor/bin/phpstan clear-result-cache
+        docker compose exec php vendor/bin/phpstan clear-result-cache
+
+phpmd: ## Prüft den Code mit PHP Mess Detector
+        docker compose exec php vendor/bin/phpmd src text phpmd.xml
 
 logs: ## Zeigt Container Logs
 	docker compose logs -f

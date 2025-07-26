@@ -55,6 +55,7 @@ make shell          # Öffnet Shell im PHP Container
 make migrate        # Führt Migrationen aus
 make clear-cache    # Löscht Symfony Cache
 make phpstan        # Führt statische Analyse aus
+make phpmd         # Prüft den Code mit PHP Mess Detector
 ```
 
 ### Benutzerverwaltung
