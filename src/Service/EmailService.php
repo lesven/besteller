@@ -176,16 +176,16 @@ class EmailService
 <body>
     <div class="header">
         <h1>✓ Stückliste erfolgreich übermittelt</h1>
-        <p>Vielen Dank für Ihre Eingabe, <strong>{{name}}</strong>!</p>
+        <p>Vielen Dank für deine Eingabe, <strong>{{name}}</strong>!</p>
     </div>
     
     <div class="content">
         <div class="success-message">
-            <strong>Ihre Stückliste wurde erfolgreich übermittelt.</strong><br>
+            <strong>Die Bestellung wurde erfolgreich übermittelt.</strong><br>
             Die Bearbeitung erfolgt zeitnah durch unser Team.
         </div>
         
-        <h2>Ihre Angaben im Überblick</h2>
+        <h2>Deine Angaben im Überblick</h2>
         <ul>
             <li><strong>Stückliste:</strong> {{stückliste}}</li>
             <li><strong>Mitarbeiter-ID:</strong> {{mitarbeiter_id}}</li>
@@ -195,8 +195,8 @@ class EmailService
         {{auswahl}}
         
         <p><strong>Nächste Schritte:</strong><br>
-        Ihre Angaben werden nun bearbeitet und die entsprechende Ausstattung wird vorbereitet. 
-        Bei Rückfragen werden wir uns bei Ihnen melden.</p>
+        Deine Angaben werden nun bearbeitet und die entsprechende Ausstattung wird vorbereitet. 
+        Bei Rückfragen werden wir uns bei dir melden.</p>
     </div>
     
     <div class="footer">
