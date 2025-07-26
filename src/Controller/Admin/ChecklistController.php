@@ -88,6 +88,9 @@ class ChecklistController extends AbstractController
     public function delete(Request $request, Checklist $checklist): Response
     {
         if ($this->isCsrfTokenValid('delete' . $checklist->getId(), $request->request->get('_token'))) {
+            foreach ($checklist->getSubmissions() as $submission) {
+                $this->entityManager->remove($submission);
+            }
             $this->entityManager->remove($checklist);
             $this->entityManager->flush();
 
