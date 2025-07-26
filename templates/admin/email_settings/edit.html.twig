@@ -23,11 +23,11 @@
     </div>
     <div class="mb-3">
         <label class="form-label">Benutzername (optional)</label>
-        <input type="text" name="username" class="form-control" value="{{ settings.username }}">
+        <input type="text" name="username" class="form-control" autocomplete="off" value="{{ settings.username }}">
     </div>
     <div class="mb-3">
         <label class="form-label">Passwort (optional)</label>
-        <input type="password" name="password" class="form-control" value="{{ settings.password }}">
+        <input type="password" name="password" class="form-control" autocomplete="off" value="{{ settings.password }}">
     </div>
     <div class="form-check mb-3">
         <input type="checkbox" id="ignore_ssl" name="ignore_ssl" class="form-check-input" {% if settings.ignoreSsl %}checked{% endif %}>
