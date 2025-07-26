@@ -64,6 +64,13 @@ admin_submissions_checklist:
     controller: App\Controller\Admin\SubmissionController::byChecklist
     requirements:
         checklistId: '\d+'
+admin_submission_delete:
+    path: /admin/submissions/{id}/delete
+    controller: App\Controller\Admin\SubmissionController::delete
+    methods: [POST]
+    requirements:
+        id: '\d+'
+
 
 # Gruppen-Verwaltung
 admin_group_create:

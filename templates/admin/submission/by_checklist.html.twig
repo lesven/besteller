@@ -1,0 +1,81 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Einsendungen – {{ checklist.title }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Einsendungen – {{ checklist.title }}</h1>
+    <a href="{{ path('admin_submissions') }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Zurück
+    </a>
+</div>
+
+{% for message in app.flashes('success') %}
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+{% endfor %}
+
+{% if submissions is empty %}
+    <div class="alert alert-info">Noch keine Einsendungen vorhanden.</div>
+{% else %}
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                    <tr>
+                        <th>Datum</th>
+                        <th>Name</th>
+                        <th>Mitarbeiter-ID</th>
+                        <th>E-Mail-Inhalt</th>
+                        <th>Aktionen</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for submission in submissions %}
+                        <tr>
+                            <td>{{ submission.submittedAt|date('d.m.Y H:i') }}</td>
+                            <td>{{ submission.name }}</td>
+                            <td>{{ submission.mitarbeiterId }}</td>
+                            <td><pre class="mb-0">{{ submission.generatedEmail|striptags }}</pre></td>
+                            <td>
+                                <button type="button" class="btn btn-sm btn-outline-danger"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#deleteModal{{ submission.id }}">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    {% for submission in submissions %}
+        <div class="modal fade" id="deleteModal{{ submission.id }}" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Einsendung löschen</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Möchten Sie die Einsendung von <strong>{{ submission.name }}</strong> wirklich löschen?</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+                        <form method="post" action="{{ path('admin_submission_delete', {id: submission.id}) }}" class="d-inline">
+                            <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ submission.id) }}">
+                            <button type="submit" class="btn btn-danger">Löschen</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+{% endif %}
+{% endblock %}

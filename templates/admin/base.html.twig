@@ -46,8 +46,8 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="#">
-                                <i class="fas fa-paper-plane"></i> Einreichungen
+                            <a class="nav-link {% if app.request.get('_route') starts with 'admin_submissions' %}active{% endif %}" href="{{ path('admin_submissions') }}">
+                                <i class='fas fa-paper-plane'></i> Einreichungen
                             </a>
                         </li>
                         <li class="nav-item">
