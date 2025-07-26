@@ -61,7 +61,7 @@ class EmailService
      */
     public function generateAndSendEmail(Submission $submission): string
     {
-        $template = $submission->getChecklist()->getEmailTemplate() ?? $this->getDefaultTemplate();
+        $template = $submission->getChecklist()?->getEmailTemplate() ?? $this->getDefaultTemplate();
         
         // Platzhalter ersetzen
         $emailContent = $this->replacePlaceholders($template, $submission);
@@ -72,8 +72,8 @@ class EmailService
         // E-Mail an Zieladresse (interne Bearbeitung)
         $targetEmail = (new Email())
             ->from($from)
-            ->to($submission->getChecklist()->getTargetEmail())
-            ->subject('Neue Stückliste eingegangen: ' . $submission->getChecklist()->getTitle() . ' - ' . $submission->getName())
+            ->to($submission->getChecklist()?->getTargetEmail() ?? '')
+            ->subject('Neue Stückliste eingegangen: ' . ($submission->getChecklist()?->getTitle() ?? '') . ' - ' . $submission->getName())
             ->html($emailContent);
             
         $this->getMailer()->send($targetEmail);
@@ -116,9 +116,9 @@ class EmailService
         $placeholders = [
             '{{name}}' => $submission->getName(),
             '{{mitarbeiter_id}}' => $submission->getMitarbeiterId(),
-            '{{stückliste}}' => $submission->getChecklist()->getTitle(),
+            '{{stückliste}}' => $submission->getChecklist()?->getTitle() ?? '',
             '{{auswahl}}' => $auswahl,
-            '{{rueckfragen_email}}' => $submission->getChecklist()->getReplyEmail() ?? ''
+            '{{rueckfragen_email}}' => $submission->getChecklist()?->getReplyEmail() ?? ''
         ];
         
         return str_replace(array_keys($placeholders), array_values($placeholders), $template);

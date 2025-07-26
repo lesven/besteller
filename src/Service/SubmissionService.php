@@ -14,7 +14,7 @@ class SubmissionService
      * @param Checklist $checklist Die aktuelle Stückliste
      * @param Request   $request   Der HTTP-Request mit den Formdaten
      *
-     * @return array Die strukturierten Bestelldaten
+     * @return array<string, array<string, mixed>> Die strukturierten Bestelldaten
      */
     public function collectSubmissionData(Checklist $checklist, Request $request): array
     {
@@ -27,7 +27,7 @@ class SubmissionService
                 $fieldName = 'item_' . $item->getId();
 
                 $value = match ($item->getType()) {
-                    GroupItem::TYPE_CHECKBOX => $request->request->all($fieldName) ?? [],
+                    GroupItem::TYPE_CHECKBOX => $request->request->all($fieldName),
                     default => $request->request->get($fieldName),
                 };
 
@@ -50,7 +50,7 @@ class SubmissionService
     /**
      * Formatiert übermittelte Daten für den Versand per E-Mail.
      *
-     * @param array $data Die zuvor gesammelten Bestelldaten
+     * @param array<string, array<string, mixed>> $data Die zuvor gesammelten Bestelldaten
      *
      * @return string HTML-Markup für die E-Mail
      */

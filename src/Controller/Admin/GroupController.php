@@ -38,9 +38,10 @@ class GroupController extends AbstractController
         $group->setChecklist($checklist);
 
         if ($request->isMethod('POST')) {
-            $group->setTitle($request->request->get('title'));
-            $group->setDescription($request->request->get('description'));
-            $group->setSortOrder((int) $request->request->get('sort_order', 0));
+            $group->setTitle($request->request->getString('title'));
+            $desc = trim($request->request->getString('description', ''));
+            $group->setDescription($desc === '' ? null : $desc);
+            $group->setSortOrder($request->request->getInt('sort_order', 0));
 
             $this->entityManager->persist($group);
             $this->entityManager->flush();
@@ -67,15 +68,16 @@ class GroupController extends AbstractController
     public function edit(Request $request, ChecklistGroup $group): Response
     {
         if ($request->isMethod('POST')) {
-            $group->setTitle($request->request->get('title'));
-            $group->setDescription($request->request->get('description'));
-            $group->setSortOrder((int) $request->request->get('sort_order', 0));
+            $group->setTitle($request->request->getString('title'));
+            $desc = trim($request->request->getString('description', ''));
+            $group->setDescription($desc === '' ? null : $desc);
+            $group->setSortOrder($request->request->getInt('sort_order', 0));
 
             $this->entityManager->flush();
 
             $this->addFlash('success', 'Gruppe wurde erfolgreich aktualisiert.');
 
-            return $this->redirectToRoute('admin_checklist_edit', ['id' => $group->getChecklist()->getId()]);
+            return $this->redirectToRoute('admin_checklist_edit', ['id' => $group->getChecklist()?->getId()]);
         }
 
         return $this->render('admin/group/edit.html.twig', [
@@ -93,9 +95,9 @@ class GroupController extends AbstractController
      */
     public function delete(Request $request, ChecklistGroup $group): Response
     {
-        $checklistId = $group->getChecklist()->getId();
+        $checklistId = $group->getChecklist()?->getId();
 
-        if ($this->isCsrfTokenValid('delete' . $group->getId(), $request->request->get('_token'))) {
+        if ($this->isCsrfTokenValid('delete' . $group->getId(), $request->request->getString('_token'))) {
             $this->entityManager->remove($group);
             $this->entityManager->flush();
 
@@ -119,19 +121,24 @@ class GroupController extends AbstractController
         $item->setGroup($group);
 
         if ($request->isMethod('POST')) {
-            $item->setLabel($request->request->get('label'));
-            $item->setType($request->request->get('type'));
-            $item->setSortOrder((int) $request->request->get('sort_order', 0));
+            $item->setLabel($request->request->getString('label'));
+            $item->setType($request->request->getString('type'));
+            $item->setSortOrder($request->request->getInt('sort_order', 0));
 
             // Handle options für Checkbox/Radio
             if (in_array($item->getType(), [GroupItem::TYPE_CHECKBOX, GroupItem::TYPE_RADIO])) {
-                $lines = array_filter(array_map('trim', explode("\n", $request->request->get('options', ''))));
+                $lines = array_filter(
+                    array_map(
+                        'trim',
+                        explode("\n", $request->request->getString('options', ''))
+                    )
+                );
                 $options = [];
                 foreach ($lines as $line) {
                     $active = false;
                     if (preg_match('/\(aktiv\)$/i', $line)) {
                         $active = true;
-                        $line = trim(preg_replace('/\(aktiv\)$/i', '', $line));
+                        $line = trim((string) preg_replace('/\(aktiv\)$/i', '', $line));
                     }
                     $options[] = ['label' => $line, 'active' => $active];
                 }
@@ -143,7 +150,7 @@ class GroupController extends AbstractController
 
             $this->addFlash('success', 'Element wurde erfolgreich hinzugefügt.');
 
-            return $this->redirectToRoute('admin_checklist_edit', ['id' => $group->getChecklist()->getId()]);
+            return $this->redirectToRoute('admin_checklist_edit', ['id' => $group->getChecklist()?->getId()]);
         }
 
         return $this->render('admin/group/add_item.html.twig', [
@@ -163,19 +170,24 @@ class GroupController extends AbstractController
     public function editItem(Request $request, GroupItem $item): Response
     {
         if ($request->isMethod('POST')) {
-            $item->setLabel($request->request->get('label'));
-            $item->setType($request->request->get('type'));
-            $item->setSortOrder((int) $request->request->get('sort_order', 0));
+            $item->setLabel($request->request->getString('label'));
+            $item->setType($request->request->getString('type'));
+            $item->setSortOrder($request->request->getInt('sort_order', 0));
 
             // Handle options für Checkbox/Radio
             if (in_array($item->getType(), [GroupItem::TYPE_CHECKBOX, GroupItem::TYPE_RADIO])) {
-                $lines = array_filter(array_map('trim', explode("\n", $request->request->get('options', ''))));
+                $lines = array_filter(
+                    array_map(
+                        'trim',
+                        explode("\n", $request->request->getString('options', ''))
+                    )
+                );
                 $options = [];
                 foreach ($lines as $line) {
                     $active = false;
                     if (preg_match('/\(aktiv\)$/i', $line)) {
                         $active = true;
-                        $line = trim(preg_replace('/\(aktiv\)$/i', '', $line));
+                        $line = trim((string) preg_replace('/\(aktiv\)$/i', '', $line));
                     }
                     $options[] = ['label' => $line, 'active' => $active];
                 }
@@ -186,7 +198,7 @@ class GroupController extends AbstractController
 
             $this->addFlash('success', 'Element wurde erfolgreich aktualisiert.');
 
-            return $this->redirectToRoute('admin_checklist_edit', ['id' => $item->getGroup()->getChecklist()->getId()]);
+            return $this->redirectToRoute('admin_checklist_edit', ['id' => $item->getGroup()?->getChecklist()?->getId()]);
         }
 
         return $this->render('admin/group/edit_item.html.twig', [
@@ -204,9 +216,9 @@ class GroupController extends AbstractController
      */
     public function deleteItem(Request $request, GroupItem $item): Response
     {
-        $checklistId = $item->getGroup()->getChecklist()->getId();
+        $checklistId = $item->getGroup()?->getChecklist()?->getId();
 
-        if ($this->isCsrfTokenValid('delete' . $item->getId(), $request->request->get('_token'))) {
+        if ($this->isCsrfTokenValid('delete' . $item->getId(), $request->request->getString('_token'))) {
             $this->entityManager->remove($item);
             $this->entityManager->flush();
 

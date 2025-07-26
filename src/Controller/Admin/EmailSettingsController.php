@@ -39,12 +39,17 @@ class EmailSettingsController extends AbstractController
         }
 
         if ($request->isMethod('POST')) {
-            $settings->setHost($request->request->get('host'));
-            $settings->setPort((int) $request->request->get('port'));
-            $settings->setUsername($request->request->get('username') ?: null);
-            $settings->setPassword($request->request->get('password') ?: null);
+            $settings->setHost($request->request->getString('host'));
+            $settings->setPort($request->request->getInt('port'));
+
+            $username = trim($request->request->getString('username', ''));
+            $settings->setUsername($username === '' ? null : $username);
+
+            $password = trim($request->request->getString('password', ''));
+            $settings->setPassword($password === '' ? null : $password);
+
             $settings->setIgnoreSsl($request->request->getBoolean('ignore_ssl'));
-            $settings->setSenderEmail($request->request->get('sender_email'));
+            $settings->setSenderEmail($request->request->getString('sender_email'));
 
             $this->entityManager->flush();
 

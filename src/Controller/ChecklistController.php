@@ -37,6 +37,9 @@ class ChecklistController extends AbstractController
         return $checklist;
     }
 
+    /**
+     * @return list{string, string, string}
+     */
     private function getRequestValues(Request $request, bool $useQuery = true): array
     {
         $source = $useQuery ? $request->query : $request->request;

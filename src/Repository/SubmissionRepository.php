@@ -18,7 +18,7 @@ class SubmissionRepository extends ServiceEntityRepository
     }
 
     /**
-     * @return Submission[]
+     * @return list<Submission>
      */
     public function findByChecklist(Checklist $checklist, ?string $search = null): array
     {
