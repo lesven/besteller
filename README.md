@@ -137,6 +137,17 @@ Die folgenden Platzhalter stehen im HTML-Template zur Verfügung:
 - Username Passwort optional
 - ignorieren von SSL Zertifikaten
 
+#### US-10: Rückfragen ermöglichen
+**Als** Admin  
+**möchte ich** bei jeder Liste auch eine E-Mail für Rückfragen hinterlegen können
+**damit** ich in der E-Mail an die Führungskraft auch sowas schreiben kann wie "zu rückfragen zu dieser Bestellung wende dich an x@x.de"
+
+**Akzeptanzkriterien:**
+- optionales E-Mail Feld
+- email wird auf validität geprüft
+- das neue Feld steht bei den Email Variablen zur Verfügung
+- das Standard Mail Template hat die neuen Möglichkeiten schon integriert
+
 
 
 ## Nicht-funktionale Anforderungen
