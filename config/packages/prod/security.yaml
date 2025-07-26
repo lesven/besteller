@@ -1,0 +1,15 @@
+# Production-specific security configuration for HTTPS
+security:
+    firewalls:
+        main:
+            form_login:
+                login_path: app_login
+                check_path: app_login
+                enable_csrf: true
+                # Force HTTPS for login in production
+                require_previous_session: false
+            logout:
+                path: app_logout
+                target: app_login
+                # Clear session completely on logout
+                invalidate_session: true

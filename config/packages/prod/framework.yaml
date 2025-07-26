@@ -1,0 +1,11 @@
+# Production-specific framework configuration for HTTPS environments
+framework:
+    session:
+        cookie_secure: true
+        cookie_samesite: 'strict'
+        cookie_httponly: true
+        cookie_lifetime: 3600
+
+    # Configure trusted proxies for production HTTPS setup
+    trusted_proxies: ~
+    trusted_headers: ['x-forwarded-for', 'x-forwarded-host', 'x-forwarded-proto', 'x-forwarded-port', 'x-forwarded-prefix']
