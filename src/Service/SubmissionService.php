@@ -19,7 +19,7 @@ class SubmissionService
                 $fieldName = 'item_' . $item->getId();
 
                 $value = match ($item->getType()) {
-                    GroupItem::TYPE_CHECKBOX => $request->request->all($fieldName),
+                    GroupItem::TYPE_CHECKBOX => $request->request->all($fieldName) ?? [],
                     default => $request->request->get($fieldName),
                 };
 
