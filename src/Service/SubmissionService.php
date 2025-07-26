@@ -70,7 +70,11 @@ class SubmissionService
                         $output .= "<li><strong>{$itemLabel}:</strong> " . implode(', ', $value) . "</li>\n";
                     } else {
                         // Text und Radio
-                        $value = nl2br($value);
+                        if (is_scalar($value)) {
+                            $value = nl2br((string) $value);
+                        } else {
+                            $value = nl2br('');
+                        }
                         $output .= "<li><strong>{$itemLabel}:</strong> {$value}</li>\n";
                     }
                 } else {
@@ -78,7 +82,11 @@ class SubmissionService
                     if (is_array($itemData)) {
                         $output .= "<li><strong>{$itemLabel}:</strong> " . implode(', ', $itemData) . "</li>\n";
                     } else {
-                        $itemData = nl2br($itemData);
+                        if (is_scalar($itemData)) {
+                            $itemData = nl2br((string) $itemData);
+                        } else {
+                            $itemData = nl2br('');
+                        }
                         $output .= "<li><strong>{$itemLabel}:</strong> {$itemData}</li>\n";
                     }
                 }

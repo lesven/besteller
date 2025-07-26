@@ -31,8 +31,11 @@ class SubmissionRepository extends ServiceEntityRepository
                ->setParameter('search', '%' . strtolower($search) . '%');
         }
 
-        return $qb->orderBy('s.submittedAt', 'DESC')
+        /** @var list<Submission> $result */
+        $result = $qb->orderBy('s.submittedAt', 'DESC')
             ->getQuery()
             ->getResult();
+
+        return $result;
     }
 }
