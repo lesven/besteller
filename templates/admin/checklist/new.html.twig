@@ -42,19 +42,6 @@
                         <div class="form-text">E-Mail-Adresse, an die ausgefüllte Formulare gesendet werden</div>
                     </div>
 
-                    <div class="mb-4">
-                        <label for="email_template" class="form-label">E-Mail-Template (optional)</label>
-                        <textarea class="form-control" 
-                                  id="email_template" 
-                                  name="email_template" 
-                                  rows="5"
-                                  placeholder="Vorlage für die E-Mail-Benachrichtigung...">{{ checklist.emailTemplate ?? '' }}</textarea>
-                        <div class="form-text">
-                            Optional: Benutzerdefinierte Vorlage für E-Mail-Benachrichtigungen. 
-                            Leer lassen für Standard-Template.
-                        </div>
-                    </div>
-
                     <div class="d-flex gap-2">
                         <button type="submit" class="btn btn-primary">
                             <i class="fas fa-save"></i> Checkliste erstellen

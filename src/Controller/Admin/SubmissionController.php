@@ -30,18 +30,20 @@ class SubmissionController extends AbstractController
         ]);
     }
 
-    public function byChecklist(int $checklistId): Response
+    public function byChecklist(Request $request, int $checklistId): Response
     {
         $checklist = $this->checklistRepository->find($checklistId);
         if (!$checklist) {
             throw $this->createNotFoundException('Stückliste nicht gefunden');
         }
 
-        $submissions = $this->submissionRepository->findByChecklist($checklist);
+        $search = $request->query->get('q');
+        $submissions = $this->submissionRepository->findByChecklist($checklist, $search);
 
         return $this->render('admin/submission/by_checklist.html.twig', [
             'checklist' => $checklist,
             'submissions' => $submissions,
+            'search' => $search,
         ]);
     }
 
