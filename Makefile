@@ -26,7 +26,7 @@ build: ## Baut Docker Container
 	docker compose build
 
 start: ## Startet die Anwendung
-	APP_ENV=$(APP_ENV) APP_DEBUG=$(APP_DEBUG) docker compose up -d
+	docker compose up -d
 
 stop: ## Stoppt die Anwendung
 	docker compose down
