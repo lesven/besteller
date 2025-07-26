@@ -8,6 +8,8 @@ security:
                 enable_csrf: true
                 # Force HTTPS for login in production
                 require_previous_session: false
+                default_target_path: /admin
+                always_use_default_target_path: true
             logout:
                 path: app_logout
                 target: app_login
