@@ -9,12 +9,14 @@
         <a href="{{ path('admin_checklist_email_template', {'id': checklist.id}) }}" class="btn btn-outline-info">
             <i class="fas fa-envelope"></i> E-Mail-Template verwalten
         </a>
-        <a href="{{ path('admin_checklist_link_template', {'id': checklist.id}) }}" class="btn btn-outline-info">
-            <i class="fas fa-link"></i> Link-Template
-        </a>
         <a href="{{ path('admin_checklist_send_link', {'id': checklist.id}) }}" class="btn btn-outline-success">
-            <i class="fas fa-paper-plane"></i> Link senden
+            <i class="fas fa-paper-plane"></i> Checkliste versenden
         </a>
+        
+        <a href="{{ path('admin_checklist_link_template', {'id': checklist.id}) }}" class="btn btn-outline-info">
+            <i class="fas fa-link"></i> Versand-Template bearbeiten
+        </a>
+        
         <a href="{{ path('admin_checklists') }}" class="btn btn-secondary">
             <i class="fas fa-arrow-left"></i> Zurück zur Übersicht
         </a>
