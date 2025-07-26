@@ -65,31 +65,28 @@ class SubmissionService
                 // Neue Datenstruktur verwenden
                 if (is_array($itemData) && isset($itemData['type'], $itemData['value'])) {
                     $value = $itemData['value'];
+
                     if (is_array($value)) {
                         // Checkbox-Arrays
                         $output .= "<li><strong>{$itemLabel}:</strong> " . implode(', ', $value) . "</li>\n";
-                    } else {
-                        // Text und Radio
-                        if (is_scalar($value)) {
-                            $value = nl2br((string) $value);
-                        } else {
-                            $value = nl2br('');
-                        }
-                        $output .= "<li><strong>{$itemLabel}:</strong> {$value}</li>\n";
+                        continue;
                     }
-                } else {
-                    // Fallback für alte Datenstruktur
-                    if (is_array($itemData)) {
-                        $output .= "<li><strong>{$itemLabel}:</strong> " . implode(', ', $itemData) . "</li>\n";
-                    } else {
-                        if (is_scalar($itemData)) {
-                            $itemData = nl2br((string) $itemData);
-                        } else {
-                            $itemData = nl2br('');
-                        }
-                        $output .= "<li><strong>{$itemLabel}:</strong> {$itemData}</li>\n";
-                    }
+
+                    // Text und Radio
+                    $value = is_scalar($value) ? nl2br((string) $value) : nl2br('');
+                    $output .= "<li><strong>{$itemLabel}:</strong> {$value}</li>\n";
+                    continue;
                 }
+
+                // Fallback für alte Datenstruktur
+                if (is_array($itemData)) {
+                    $output .= "<li><strong>{$itemLabel}:</strong> " . implode(', ', $itemData) . "</li>\n";
+                    continue;
+                }
+
+                $itemData = is_scalar($itemData) ? nl2br((string) $itemData) : nl2br('');
+
+                $output .= "<li><strong>{$itemLabel}:</strong> {$itemData}</li>\n";
             }
             
             $output .= "</ul>\n";
