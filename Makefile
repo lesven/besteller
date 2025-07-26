@@ -35,8 +35,8 @@ restart: ## Neustart der Anwendung
 	docker compose restart
 
 install: ## Installiert Symfony und Abhängigkeiten
-	docker compose exec php composer install $(if $(filter $(ENV),prod),--no-dev --optimize-autoloader,)
-	docker compose exec php bin/console doctrine:migrations:migrate --no-interaction
+	docker compose exec -e APP_ENV=$(ENV) -e APP_DEBUG=$(APP_DEBUG) php composer install $(if $(filter $(ENV),prod),--no-dev --optimize-autoloader,)
+	docker compose exec -e APP_ENV=$(ENV) -e APP_DEBUG=$(APP_DEBUG) php bin/console doctrine:migrations:migrate --no-interaction
 
 migrate: ## Führt Datenbank-Migrationen aus
 	docker compose exec php bin/console doctrine:migrations:migrate --no-interaction
