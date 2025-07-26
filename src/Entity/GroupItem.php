@@ -85,10 +85,10 @@ class GroupItem
     /**
      * Speichert eine Liste von Optionen (nur Labels, alle inaktiv)
      */
-    public function setOptionsArray(array $options): static
+    public function setOptionsArray(array $options, bool $active = false): static
     {
         $structured = array_map(
-            fn(string $label) => ['label' => $label, 'active' => false],
+            fn(string $label) => ['label' => $label, 'active' => $active],
             $options
         );
         $this->options = json_encode($structured);
