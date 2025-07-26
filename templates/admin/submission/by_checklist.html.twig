@@ -40,8 +40,7 @@
                             <td>{{ submission.name }}</td>
                             <td>{{ submission.mitarbeiterId }}</td>
                             <td>
-                                <iframe srcdoc="{{ submission.generatedEmail|e('html_attr') }}"
-                                        style="width: 600px; height: 400px; border: 1px solid #dee2e6;"></iframe>
+                                <a href="{{ path('admin_submission_html', {id: submission.id}) }}" target="_blank">Anzeigen</a>
                             </td>
                             <td>
                                 <button type="button" class="btn btn-sm btn-outline-danger"

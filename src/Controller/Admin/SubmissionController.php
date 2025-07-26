@@ -45,6 +45,13 @@ class SubmissionController extends AbstractController
         ]);
     }
 
+    public function viewHtml(Submission $submission): Response
+    {
+        return new Response($submission->getGeneratedEmail(), 200, [
+            'Content-Type' => 'text/html'
+        ]);
+    }
+
     public function delete(Request $request, Submission $submission): Response
     {
         $checklistId = $submission->getChecklist()->getId();

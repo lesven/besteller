@@ -88,7 +88,7 @@ Ziel dieser Anwendung ist die digitale Erfassung von benötigter Ausstattung fü
 **damit** ich den Überblick über übermittelte Daten habe.
 
 **Akzeptanzkriterien:**
- - Liste pro Stückliste mit Datum, Name, Mitarbeiter-ID und gerendertem E-Mail-Inhalt in einem iFrame mit fester Breite
+ - Liste pro Stückliste mit Datum, Name, Mitarbeiter-ID und E-Mail-Inhalt über einen Link in neuem Fenster
 - Einsendung löschen können um sie erneut absendbar zu machen
 - Keine Downloadfunktion erforderlich
 

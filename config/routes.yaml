@@ -64,6 +64,11 @@ admin_submissions_checklist:
     controller: App\Controller\Admin\SubmissionController::byChecklist
     requirements:
         checklistId: '\d+'
+admin_submission_html:
+    path: /admin/submissions/{id}/html
+    controller: App\Controller\Admin\SubmissionController::viewHtml
+    requirements:
+        id: '\d+'
 admin_submission_delete:
     path: /admin/submissions/{id}/delete
     controller: App\Controller\Admin\SubmissionController::delete
