@@ -21,11 +21,11 @@ services:
     volumes:
       - ./:/var/www/html
     environment:
-      - APP_ENV=dev
-      - APP_DEBUG=1
-      - APP_SECRET=dev-secret-key-for-development-only
-      - DATABASE_URL=mysql://besteller:besteller@db:3306/besteller?serverVersion=10.11.2-MariaDB&charset=utf8mb4
-      - MAILER_DSN=smtp://mailhog:1025
+      APP_ENV: ${APP_ENV:-dev}
+      APP_DEBUG: ${APP_DEBUG:-1}
+      APP_SECRET: ${APP_SECRET:-dev-secret-key-for-development-only}
+      DATABASE_URL: ${DATABASE_URL:-mysql://besteller:besteller@db:3306/besteller?serverVersion=10.11.2-MariaDB&charset=utf8mb4}
+      MAILER_DSN: ${MAILER_DSN:-smtp://mailhog:1025}
     depends_on:
       - db
     networks:
