@@ -28,6 +28,9 @@ class Submission
     #[ORM\Column(type: 'string', length: 255)]
     private ?string $email = null;
 
+    /**
+     * @var array<string, array<string, mixed>>
+     */
     #[ORM\Column(type: 'json')]
     private array $data = [];
 
@@ -91,11 +94,17 @@ class Submission
         return $this;
     }
 
+    /**
+     * @return array<string, array<string, mixed>>
+     */
     public function getData(): array
     {
         return $this->data;
     }
 
+    /**
+     * @param array<string, array<string, mixed>> $data
+     */
     public function setData(array $data): static
     {
         $this->data = $data;

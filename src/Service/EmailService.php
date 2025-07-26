@@ -84,7 +84,7 @@ class EmailService
         
         $managerEmail = (new Email())
             ->from($from)
-            ->to($submission->getEmail())
+            ->to($submission->getEmail() ?? '')
             ->subject('Bestätigung: Die Bestellung wurde erfolgreich übermittelt')
             ->html($confirmationContent);
             
@@ -112,7 +112,8 @@ class EmailService
     private function replacePlaceholders(string $template, Submission $submission): string
     {
         $auswahl = $this->submissionService->formatSubmissionForEmail($submission->getData());
-        
+
+        /** @var array<string, string> $placeholders */
         $placeholders = [
             '{{name}}' => $submission->getName(),
             '{{mitarbeiter_id}}' => $submission->getMitarbeiterId(),
@@ -294,6 +295,7 @@ class EmailService
     ): void {
         $template = $checklist->getLinkEmailTemplate() ?? $this->getDefaultLinkTemplate();
 
+        /** @var array<string, string> $placeholders */
         $placeholders = [
             '{{empfaenger_name}}' => $recipientName,
             '{{person_name}}' => $personName ?? '',
