@@ -14,8 +14,9 @@
 
 <div class="alert alert-info">
     <i class="fas fa-info-circle"></i>
-    <strong>Checkliste:</strong> {{ checklist.title }} | 
-    <strong>Ziel-E-Mail:</strong> {{ checklist.targetEmail }}
+    <strong>Checkliste:</strong> {{ checklist.title }} |
+    <strong>Ziel-E-Mail:</strong> {{ checklist.targetEmail }} |
+    <strong>Rückfragen:</strong> {{ checklist.replyEmail ?? '–' }}
 </div>
 
 {% for type, messages in app.flashes %}
@@ -122,6 +123,7 @@
                     <li>E-Mail-Clients unterstützen nur begrenztes CSS</li>
                     <li>Testen Sie das Template mit verschiedenen E-Mail-Clients</li>
                     <li>Der Platzhalter <code>{{ '{{auswahl}}' }}</code> enthält bereits HTML-formatierte Listen</li>
+                    <li>Nutzen Sie <code>{{ '{{rueckfragen_email}}' }}</code> für die Rückfragen-Adresse</li>
                 </ul>
             </div>
         </div>
@@ -207,7 +209,8 @@ function previewTemplate() {
                 <li><strong>Office Suite:</strong> Microsoft Office 365</li>
                 <li><strong>Development Tools:</strong> IntelliJ IDEA, VS Code</li>
             </ul>
-        `);
+        `)
+        .replace(/\{\{rueckfragen_email\}\}/g, 'kontakt@example.com');
     
     const frame = document.getElementById('previewFrame');
     frame.srcdoc = previewContent;

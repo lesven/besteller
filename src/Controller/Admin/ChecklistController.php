@@ -39,6 +39,12 @@ class ChecklistController extends AbstractController
         if ($request->isMethod('POST')) {
             $checklist->setTitle($request->request->get('title'));
             $checklist->setTargetEmail($request->request->get('target_email'));
+            $reply = trim((string) $request->request->get('reply_email'));
+            if ($reply !== '' && !filter_var($reply, FILTER_VALIDATE_EMAIL)) {
+                $this->addFlash('error', 'Bitte eine gültige Rückfragen-E-Mail eingeben.');
+                return $this->redirectToRoute('admin_checklist_new');
+            }
+            $checklist->setReplyEmail($reply !== '' ? $reply : null);
             $checklist->setEmailTemplate($request->request->get('email_template'));
 
             $this->entityManager->persist($checklist);
@@ -59,6 +65,12 @@ class ChecklistController extends AbstractController
         if ($request->isMethod('POST')) {
             $checklist->setTitle($request->request->get('title'));
             $checklist->setTargetEmail($request->request->get('target_email'));
+            $reply = trim((string) $request->request->get('reply_email'));
+            if ($reply !== '' && !filter_var($reply, FILTER_VALIDATE_EMAIL)) {
+                $this->addFlash('error', 'Bitte eine gültige Rückfragen-E-Mail eingeben.');
+                return $this->redirectToRoute('admin_checklist_edit', ['id' => $checklist->getId()]);
+            }
+            $checklist->setReplyEmail($reply !== '' ? $reply : null);
             $checklist->setEmailTemplate($request->request->get('email_template'));
 
             $this->entityManager->flush();
@@ -138,7 +150,8 @@ class ChecklistController extends AbstractController
                 '{{name}}' => 'Name/Vorname der Person (aus Link)',
                 '{{mitarbeiter_id}}' => 'Mitarbeitenden-ID (aus Link)',
                 '{{stückliste}}' => 'Name der Stückliste',
-                '{{auswahl}}' => 'Strukturierte Ausgabe aller getätigten Auswahlen nach Gruppe'
+                '{{auswahl}}' => 'Strukturierte Ausgabe aller getätigten Auswahlen nach Gruppe',
+                '{{rueckfragen_email}}' => 'Hinterlegte Rückfragen-Adresse'
             ]
         ]);
     }

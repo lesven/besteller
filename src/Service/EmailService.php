@@ -88,7 +88,8 @@ class EmailService
             '{{name}}' => $submission->getName(),
             '{{mitarbeiter_id}}' => $submission->getMitarbeiterId(),
             '{{stückliste}}' => $submission->getChecklist()->getTitle(),
-            '{{auswahl}}' => $auswahl
+            '{{auswahl}}' => $auswahl,
+            '{{rueckfragen_email}}' => $submission->getChecklist()->getReplyEmail() ?? ''
         ];
         
         return str_replace(array_keys($placeholders), array_values($placeholders), $template);
@@ -169,6 +170,7 @@ class EmailService
         
         <h2>Ausgewählte Ausstattung</h2>
         {{auswahl}}
+        <p>Bei Rückfragen zu dieser Bestellung wende dich an {{rueckfragen_email}}.</p>
     </div>
     
     <div class="footer">
@@ -223,8 +225,8 @@ class EmailService
         {{auswahl}}
         
         <p><strong>Nächste Schritte:</strong><br>
-        Deine Angaben werden nun bearbeitet und die entsprechende Ausstattung wird vorbereitet. 
-        Bei Rückfragen werden wir uns bei dir melden.</p>
+        Deine Angaben werden nun bearbeitet und die entsprechende Ausstattung wird vorbereitet.
+        Bei Rückfragen wende dich an {{rueckfragen_email}}.</p>
     </div>
     
     <div class="footer">
