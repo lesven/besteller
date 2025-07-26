@@ -55,6 +55,12 @@ admin_checklist_delete:
     requirements:
         id: '\d+'
 
+admin_checklist_duplicate:
+    path: /admin/checklists/{id}/duplicate
+    controller: App\Controller\Admin\ChecklistController::duplicate
+    requirements:
+        id: '\d+'
+
 admin_submissions:
     path: /admin/submissions
     controller: App\Controller\Admin\SubmissionController::index

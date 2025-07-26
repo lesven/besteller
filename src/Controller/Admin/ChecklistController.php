@@ -177,10 +177,45 @@ class ChecklistController extends AbstractController
         if ($this->isCsrfTokenValid('reset_template' . $checklist->getId(), $request->request->get('_token'))) {
             $checklist->setEmailTemplate(null); // Dies wird das Standard-Template verwenden
             $this->entityManager->flush();
-            
+
             $this->addFlash('success', 'E-Mail-Template wurde auf Standard zurückgesetzt.');
         }
-        
+
         return $this->redirectToRoute('admin_checklist_email_template', ['id' => $checklist->getId()]);
+    }
+
+    public function duplicate(Checklist $checklist): Response
+    {
+        $newChecklist = new Checklist();
+        $newChecklist->setTitle('Duplikat von ' . $checklist->getTitle());
+        $newChecklist->setTargetEmail($checklist->getTargetEmail());
+        $newChecklist->setReplyEmail($checklist->getReplyEmail());
+        $newChecklist->setEmailTemplate($checklist->getEmailTemplate());
+
+        foreach ($checklist->getGroups() as $group) {
+            $newGroup = new \App\Entity\ChecklistGroup();
+            $newGroup->setTitle($group->getTitle());
+            $newGroup->setDescription($group->getDescription());
+            $newGroup->setSortOrder($group->getSortOrder());
+            $newGroup->setChecklist($newChecklist);
+
+            foreach ($group->getItems() as $item) {
+                $newItem = new \App\Entity\GroupItem();
+                $newItem->setLabel($item->getLabel());
+                $newItem->setType($item->getType());
+                $newItem->setOptions($item->getOptions());
+                $newItem->setSortOrder($item->getSortOrder());
+                $newGroup->addItem($newItem);
+            }
+
+            $newChecklist->addGroup($newGroup);
+        }
+
+        $this->entityManager->persist($newChecklist);
+        $this->entityManager->flush();
+
+        $this->addFlash('success', 'Checkliste wurde erfolgreich dupliziert.');
+
+        return $this->redirectToRoute('admin_checklists');
     }
 }
