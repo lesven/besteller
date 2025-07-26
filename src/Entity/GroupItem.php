@@ -112,7 +112,7 @@ class GroupItem
         }
 
         // Altes Format: einfache Liste von Strings
-        if (!empty($decoded) && is_string($decoded[0])) {
+        if (!empty($decoded) && array_key_exists(0, $decoded) && is_string($decoded[0])) {
             return array_map(
                 fn(string $label) => ['label' => $label, 'active' => false],
                 $decoded
