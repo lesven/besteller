@@ -193,51 +193,6 @@ class ChecklistController extends AbstractController
         return $this->redirectToRoute('admin_checklist_email_template', ['id' => $checklist->getId()]);
     }
 
-    /**
-     * Lädt das aktuelle E-Mail-Template als Datei herunter.
-     *
-     * @param Checklist $checklist Die betreffende Checkliste
-     *
-     * @return Response Download der Template-Datei
-     */
-    public function downloadEmailTemplate(Checklist $checklist): Response
-    {
-        $template = $checklist->getEmailTemplate() ?? $this->emailService->getDefaultTemplate();
-        
-        $response = new Response($template);
-        $response->headers->set('Content-Type', 'text/html');
-        $response->headers->set('Content-Disposition', 
-            $response->headers->makeDisposition(
-                ResponseHeaderBag::DISPOSITION_ATTACHMENT,
-                'email-template-' . $checklist->getId() . '.html'
-            )
-        );
-        
-        return $response;
-    }
-
-    /**
-     * Setzt das E-Mail-Template auf den Standard zurück.
-     *
-     * @param Request   $request   Aktuelle HTTP-Anfrage
-     * @param Checklist $checklist Die betreffende Checkliste
-     *
-     * @return Response Weiterleitung nach dem Zurücksetzen
-     */
-    public function resetEmailTemplate(Request $request, Checklist $checklist): Response
-    {
-        $tokenParam = $request->request->get('_token');
-        $token = is_string($tokenParam) ? $tokenParam : null;
-
-        if ($this->isCsrfTokenValid('reset_template' . $checklist->getId(), $token)) {
-            $checklist->setEmailTemplate(null); // Dies wird das Standard-Template verwenden
-            $this->entityManager->flush();
-
-            $this->addFlash('success', 'E-Mail-Template wurde auf Standard zurückgesetzt.');
-        }
-
-        return $this->redirectToRoute('admin_checklist_email_template', ['id' => $checklist->getId()]);
-    }
 
     /**
      * Dupliziert eine vorhandene Checkliste inklusive Gruppen und Items.

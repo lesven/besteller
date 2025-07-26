@@ -132,13 +132,13 @@ admin_checklist_email_template:
 
 admin_checklist_email_template_download:
     path: /admin/checklists/{id}/email-template/download
-    controller: App\Controller\Admin\ChecklistController::downloadEmailTemplate
+    controller: App\Controller\Admin\ChecklistTemplateController::downloadEmailTemplate
     requirements:
         id: '\d+'
 
 admin_checklist_email_template_reset:
     path: /admin/checklists/{id}/email-template/reset
-    controller: App\Controller\Admin\ChecklistController::resetEmailTemplate
+    controller: App\Controller\Admin\ChecklistTemplateController::resetEmailTemplate
     methods: [POST]
     requirements:
         id: '\d+'
