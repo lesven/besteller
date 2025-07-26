@@ -61,15 +61,21 @@ class ChecklistController extends AbstractController
         $checklist = new Checklist();
 
         if ($request->isMethod('POST')) {
-            $checklist->setTitle($request->request->get('title'));
-            $checklist->setTargetEmail($request->request->get('target_email'));
+            $title = (string) $request->request->get('title', '');
+            $targetEmail = (string) $request->request->get('target_email', '');
+
+            $checklist->setTitle($title);
+            $checklist->setTargetEmail($targetEmail);
             $reply = trim((string) $request->request->get('reply_email'));
             if ($reply !== '' && !filter_var($reply, FILTER_VALIDATE_EMAIL)) {
                 $this->addFlash('error', 'Bitte eine gültige Rückfragen-E-Mail eingeben.');
                 return $this->redirectToRoute('admin_checklist_new');
             }
             $checklist->setReplyEmail($reply !== '' ? $reply : null);
-            $checklist->setEmailTemplate($request->request->get('email_template'));
+
+            $templateParam = $request->request->get('email_template');
+            $template = is_string($templateParam) ? $templateParam : null;
+            $checklist->setEmailTemplate($template);
 
             $this->entityManager->persist($checklist);
             $this->entityManager->flush();
@@ -95,15 +101,21 @@ class ChecklistController extends AbstractController
     public function edit(Request $request, Checklist $checklist): Response
     {
         if ($request->isMethod('POST')) {
-            $checklist->setTitle($request->request->get('title'));
-            $checklist->setTargetEmail($request->request->get('target_email'));
+            $title = (string) $request->request->get('title', '');
+            $targetEmail = (string) $request->request->get('target_email', '');
+
+            $checklist->setTitle($title);
+            $checklist->setTargetEmail($targetEmail);
             $reply = trim((string) $request->request->get('reply_email'));
             if ($reply !== '' && !filter_var($reply, FILTER_VALIDATE_EMAIL)) {
                 $this->addFlash('error', 'Bitte eine gültige Rückfragen-E-Mail eingeben.');
                 return $this->redirectToRoute('admin_checklist_edit', ['id' => $checklist->getId()]);
             }
             $checklist->setReplyEmail($reply !== '' ? $reply : null);
-            $checklist->setEmailTemplate($request->request->get('email_template'));
+
+            $templateParam = $request->request->get('email_template');
+            $template = is_string($templateParam) ? $templateParam : null;
+            $checklist->setEmailTemplate($template);
 
             $this->entityManager->flush();
 
@@ -127,7 +139,10 @@ class ChecklistController extends AbstractController
      */
     public function delete(Request $request, Checklist $checklist): Response
     {
-        if ($this->isCsrfTokenValid('delete' . $checklist->getId(), $request->request->get('_token'))) {
+        $tokenParam = $request->request->get('_token');
+        $token = is_string($tokenParam) ? $tokenParam : null;
+
+        if ($this->isCsrfTokenValid('delete' . $checklist->getId(), $token)) {
             foreach ($checklist->getSubmissions() as $submission) {
                 $this->entityManager->remove($submission);
             }
@@ -211,7 +226,10 @@ class ChecklistController extends AbstractController
      */
     public function resetEmailTemplate(Request $request, Checklist $checklist): Response
     {
-        if ($this->isCsrfTokenValid('reset_template' . $checklist->getId(), $request->request->get('_token'))) {
+        $tokenParam = $request->request->get('_token');
+        $token = is_string($tokenParam) ? $tokenParam : null;
+
+        if ($this->isCsrfTokenValid('reset_template' . $checklist->getId(), $token)) {
             $checklist->setEmailTemplate(null); // Dies wird das Standard-Template verwenden
             $this->entityManager->flush();
 
@@ -296,9 +314,10 @@ class ChecklistController extends AbstractController
     public function linkEmailTemplate(Request $request, Checklist $checklist): Response
     {
         if ($request->isMethod('POST')) {
-            /** @var UploadedFile $uploadedFile */
+            /** @var UploadedFile|null $uploadedFile */
             $uploadedFile = $request->files->get('template_file');
-            $templateContent = $request->request->get('template_content');
+            $templateRaw = $request->request->get('template_content');
+            $templateContent = is_string($templateRaw) ? $templateRaw : null;
 
             if ($uploadedFile) {
                 $mimeType = $uploadedFile->getMimeType();
@@ -314,15 +333,17 @@ class ChecklistController extends AbstractController
                     return $this->redirectToRoute('admin_checklist_link_template', ['id' => $checklist->getId()]);
                 }
 
-                $templateContent = file_get_contents($uploadedFile->getPathname());
+                $fileContent = file_get_contents($uploadedFile->getPathname());
 
-                if ($templateContent === false) {
+                if ($fileContent === false) {
                     $this->addFlash('error', 'Die hochgeladene Datei konnte nicht gelesen werden.');
                     return $this->redirectToRoute('admin_checklist_link_template', ['id' => $checklist->getId()]);
                 }
+
+                $templateContent = $fileContent;
             }
 
-            if ($templateContent) {
+            if ($templateContent !== null && $templateContent !== '') {
                 $checklist->setLinkEmailTemplate($templateContent);
                 $this->entityManager->flush();
 
@@ -347,7 +368,8 @@ class ChecklistController extends AbstractController
     {
         /** @var UploadedFile|null $uploadedFile */
         $uploadedFile = $request->files->get('template_file');
-        $templateContent = $request->request->get('template_content');
+        $templateRaw = $request->request->get('template_content');
+        $templateContent = is_string($templateRaw) ? $templateRaw : null;
 
         if ($uploadedFile) {
             $mimeType = $uploadedFile->getMimeType();
@@ -363,15 +385,17 @@ class ChecklistController extends AbstractController
                 return $this->redirectToRoute($route, ['id' => $checklist->getId()]);
             }
 
-            $templateContent = file_get_contents($uploadedFile->getPathname());
+            $fileContent = file_get_contents($uploadedFile->getPathname());
 
-            if ($templateContent === false) {
+            if ($fileContent === false) {
                 $this->addFlash('error', 'Die hochgeladene Datei konnte nicht gelesen werden.');
                 return $this->redirectToRoute($route, ['id' => $checklist->getId()]);
             }
+
+            $templateContent = $fileContent;
         }
 
-        if (!$templateContent) {
+        if ($templateContent === null || $templateContent === '') {
             $this->addFlash('error', 'Bitte geben Sie Template-Inhalt ein oder laden eine Datei hoch.');
             return $this->redirectToRoute($route, ['id' => $checklist->getId()]);
         }
