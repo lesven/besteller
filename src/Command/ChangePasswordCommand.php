@@ -51,7 +51,16 @@ class ChangePasswordCommand extends Command
     {
         $io = new SymfonyStyle($input, $output);
         $email = $input->getArgument('email');
+        if (!is_string($email)) {
+            $io->error('Ungültige E-Mail-Adresse.');
+            return Command::FAILURE;
+        }
+
         $password = $input->getArgument('password');
+        if (!is_string($password)) {
+            $io->error('Ungültiges Passwort.');
+            return Command::FAILURE;
+        }
 
         // Passwort-Validierung
         if (strlen($password) < 16) {
