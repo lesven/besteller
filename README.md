@@ -101,6 +101,17 @@ Ziel dieser Anwendung ist die digitale Erfassung von benötigter Ausstattung fü
 - Vorschau des aktuellen Templates als reiner HTML-Text in einer Textbox
 - Upload ersetzt das bisherige Template
 
+#### US-8: E-Mail Einstellungen verwalten
+**Als** Admin
+**möchte ich** die Konfiguration des E-Mail Servers im Backend vornehmen können
+**damit** ich einen beliebigen SMTP Server hinterlegen kann.
+
+**Akzeptanzkriterien:**
+- Server IP Adresse
+- Server Port
+- Username Passwort optional
+- ignorieren von SSL Zertifikaten
+
 ---
 
 ## Platzhalter im E-Mail-Template
