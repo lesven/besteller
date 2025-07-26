@@ -26,10 +26,13 @@ class ChecklistRepository extends ServiceEntityRepository
      */
     public function findAll(): array
     {
-        return $this->createQueryBuilder('c')
+        /** @var list<Checklist> $result */
+        $result = $this->createQueryBuilder('c')
             ->orderBy('c.title', 'ASC')
             ->getQuery()
             ->getResult();
+
+        return $result;
     }
 
     /**

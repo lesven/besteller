@@ -44,11 +44,11 @@ class ChecklistController extends AbstractController
     {
         $source = $useQuery ? $request->query : $request->request;
 
-        $name = $source->get('name');
-        $mitarbeiterId = $source->get('mitarbeiter_id');
-        $email = $source->get('email');
+        $name = (string) $source->get('name', '');
+        $mitarbeiterId = (string) $source->get('mitarbeiter_id', '');
+        $email = (string) $source->get('email', '');
 
-        if (!$name || !$mitarbeiterId || !$email) {
+        if ($name === '' || $mitarbeiterId === '' || $email === '') {
             throw new NotFoundHttpException('Ungültige Parameter');
         }
 

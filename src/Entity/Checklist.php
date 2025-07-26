@@ -13,6 +13,7 @@ class Checklist
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
+    /** @phpstan-ignore-next-line */
     private ?int $id = null;
 
     #[ORM\Column(type: 'string', length: 255)]
@@ -30,9 +31,11 @@ class Checklist
     #[ORM\Column(type: 'text', nullable: true)]
     private ?string $linkEmailTemplate = null;
 
+    /** @var Collection<int, ChecklistGroup> */
     #[ORM\OneToMany(mappedBy: 'checklist', targetEntity: ChecklistGroup::class, cascade: ['persist', 'remove'], orphanRemoval: true)]
     private Collection $groups;
 
+    /** @var Collection<int, Submission> */
     #[ORM\OneToMany(mappedBy: 'checklist', targetEntity: Submission::class)]
     private Collection $submissions;
 
