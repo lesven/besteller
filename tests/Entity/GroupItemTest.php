@@ -23,10 +23,10 @@ class GroupItemTest extends TestCase
         ], $item->getOptionsWithActive());
     }
 
-    public function testSetOptionsArrayWithActiveTrue(): void
+    public function testSetActiveOptionsArray(): void
     {
         $item = new GroupItem();
-        $item->setOptionsArray(['A', 'B'], true);
+        $item->setActiveOptionsArray(['A', 'B']);
         $this->assertSame([
             ['label' => 'A', 'active' => true],
             ['label' => 'B', 'active' => true],
