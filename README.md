@@ -20,7 +20,7 @@ Ziel dieser Anwendung ist die digitale Erfassung von benötigter Ausstattung fü
 
 **Akzeptanzkriterien:**
 - Der Link enthält:
-  - `stückliste_id`
+  - `checklist_id`
   - `name`
   - `mitarbeiter_id`
   - `email` (E-Mail der Führungskraft)

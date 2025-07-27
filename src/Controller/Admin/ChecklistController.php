@@ -231,7 +231,7 @@ class ChecklistController extends AbstractController
                 $this->addFlash('error', 'Bitte Empfängerdaten und Personen-ID vollständig angeben.');
             } else {
                 $link = $this->urlGenerator->generate('checklist_form', [
-                    'stückliste_id' => $checklist->getId(),
+                    'checklist_id' => $checklist->getId(),
                     'name' => $personName ?? $recipientName,
                     'mitarbeiter_id' => $mitarbeiterId,
                     'email' => $recipientEmail,

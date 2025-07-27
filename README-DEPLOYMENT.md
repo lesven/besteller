@@ -127,7 +127,7 @@ besteller/
 
 ### Link-Format für Führungskräfte
 ```
-http://localhost:8081/checklist/{stückliste_id}?name=Max%20Mustermann&mitarbeiter_id=12345&email=max@example.com
+http://localhost:8081/checklist/{checklist_id}?name=Max%20Mustermann&mitarbeiter_id=12345&email=max@example.com
 ```
 
 ### E-Mail-Template Platzhalter

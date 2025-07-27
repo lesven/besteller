@@ -168,13 +168,13 @@ class ChecklistController extends AbstractController
      */
     public function form(Request $request): Response
     {
-        $stücklisteId = $request->query->get('stückliste_id');
-        if (!$stücklisteId) {
+        $checklistIdParam = $request->query->get('checklist_id');
+        if (!$checklistIdParam) {
             throw new NotFoundHttpException('Ungültige Parameter');
         }
 
         [$name, $mitarbeiterId, $email] = $this->getRequestValuesFromQuery($request);
-        $checklist = $this->getChecklistOr404((int) $stücklisteId);
+        $checklist = $this->getChecklistOr404((int) $checklistIdParam);
 
         $existingSubmission = $this->findExistingSubmission($checklist, $mitarbeiterId);
 
