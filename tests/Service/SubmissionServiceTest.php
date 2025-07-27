@@ -64,6 +64,8 @@ class SubmissionServiceTest extends TestCase
         $html = $service->formatSubmissionForEmail($data);
         $this->assertStringContainsString('<h3>Group</h3>', $html);
         $this->assertStringContainsString('<strong>Text:</strong> Foo', $html);
-        $this->assertStringContainsString('<strong>Options:</strong> A, B', $html);
+        $this->assertStringContainsString('<strong>Options:</strong><ul>', $html);
+        $this->assertStringContainsString('<li>A</li>', $html);
+        $this->assertStringContainsString('<li>B</li>', $html);
     }
 }
