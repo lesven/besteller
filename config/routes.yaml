@@ -29,6 +29,15 @@ checklist_form:
     path: /form
     controller: App\Controller\ChecklistController::form
 
+checklist_selection:
+    path: /auswahl
+    controller: App\Controller\ChecklistController::form
+
+api_generate_link:
+    path: /api/generate-link
+    controller: App\Controller\ApiController::generateLink
+    methods: [POST]
+
 # Admin routes
 admin_dashboard:
     path: /admin
