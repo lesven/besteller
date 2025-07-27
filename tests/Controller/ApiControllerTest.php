@@ -91,4 +91,75 @@ class ApiControllerTest extends TestCase
         $response = $controller->generateLink($request);
         $this->assertSame(Response::HTTP_UNAUTHORIZED, $response->getStatusCode());
     }
+
+    public function testSendLinkCallsServiceAndReturnsStatus(): void
+    {
+        $url = 'https://example.com/form?checklist_id=1&name=Alice&id=123&email=b@example.com';
+        $urlGenerator = $this->createMock(UrlGeneratorInterface::class);
+        $urlGenerator->expects($this->once())
+            ->method('generate')
+            ->with(
+                'checklist_form',
+                [
+                    'checklist_id' => null,
+                    'name' => 'Alice',
+                    'mitarbeiter_id' => '123',
+                    'email' => 'b@example.com',
+                ],
+                UrlGeneratorInterface::ABSOLUTE_URL
+            )
+            ->willReturn($url);
+
+        $parameterBag = $this->createMock(ParameterBagInterface::class);
+        $parameterBag->expects($this->once())
+            ->method('get')
+            ->willReturnCallback(fn($k) => $k === 'API_TOKEN' ? '' : null);
+
+        $checklist = new \App\Entity\Checklist();
+        $repo = $this->createMock(\App\Repository\ChecklistRepository::class);
+        $repo->expects($this->once())
+            ->method('find')
+            ->with(1)
+            ->willReturn($checklist);
+
+        $emailService = $this->createMock(\App\Service\EmailService::class);
+        $emailService->expects($this->once())
+            ->method('sendLinkEmail')
+            ->with($checklist, 'Bob', 'b@example.com', '123', 'Alice', 'Intro', $url);
+
+        $request = new Request([], [], [], [], [], [], json_encode([
+            'checklist_id' => 1,
+            'recipient_name' => 'Bob',
+            'recipient_email' => 'b@example.com',
+            'mitarbeiter_id' => '123',
+            'person_name' => 'Alice',
+            'intro' => 'Intro',
+        ]));
+
+        $controller = new ApiController($urlGenerator, $parameterBag);
+        $response = $controller->sendLink($request, $repo, $emailService);
+
+        $this->assertInstanceOf(JsonResponse::class, $response);
+        $this->assertSame(Response::HTTP_OK, $response->getStatusCode());
+        $data = json_decode($response->getContent(), true);
+        $this->assertSame('sent', $data['status']);
+    }
+
+    public function testSendLinkValidatesParameters(): void
+    {
+        $urlGenerator = $this->createMock(UrlGeneratorInterface::class);
+        $parameterBag = $this->createMock(ParameterBagInterface::class);
+        $parameterBag->expects($this->once())
+            ->method('get')
+            ->willReturnCallback(fn($k) => $k === 'API_TOKEN' ? '' : null);
+
+        $repo = $this->createMock(\App\Repository\ChecklistRepository::class);
+        $emailService = $this->createMock(\App\Service\EmailService::class);
+
+        $controller = new ApiController($urlGenerator, $parameterBag);
+        $request = new Request([], [], [], [], [], [], json_encode(['foo' => 'bar']));
+        $response = $controller->sendLink($request, $repo, $emailService);
+
+        $this->assertSame(Response::HTTP_BAD_REQUEST, $response->getStatusCode());
+    }
 }

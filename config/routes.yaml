@@ -38,6 +38,11 @@ api_generate_link:
     controller: App\Controller\ApiController::generateLink
     methods: [POST]
 
+api_send_link:
+    path: /api/send-link
+    controller: App\Controller\ApiController::sendLink
+    methods: [POST]
+
 # Admin routes
 admin_dashboard:
     path: /admin

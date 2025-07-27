@@ -232,3 +232,30 @@ Die Antwort enthält den öffentlichen Link zur Auswahlseite:
   "link": "https://besteller.example.com/auswahl?list=123&name=Max%20Muster&id=abc-123&email=chef@example.com"
 }
 ```
+
+## Beispiel: Link per E-Mail versenden
+
+Mit einem POST-Request an `/api/send-link` kann der Link inklusive E-Mail direkt
+an eine Führungskraft geschickt werden. Beispiel:
+
+```bash
+curl -X POST https://besteller.example.com/api/send-link \
+     -H 'Content-Type: application/json' \
+     -d '{
+           "checklist_id": 123,
+           "recipient_name": "Teamleiter",
+           "recipient_email": "manager@example.com",
+           "mitarbeiter_id": "abc-123",
+           "person_name": "Max Muster",
+           "intro": "Bitte füllen Sie die Liste zeitnah aus."
+         }'
+```
+
+Die Antwort bestätigt den Versand und enthält den generierten Link:
+
+```json
+{
+  "status": "sent",
+  "link": "https://besteller.example.com/form?checklist_id=123&name=Max%20Muster&id=abc-123&email=manager@example.com"
+}
+```
