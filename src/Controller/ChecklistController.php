@@ -46,7 +46,7 @@ class ChecklistController extends AbstractController
     private function extractRequestValues(ParameterBag $source): array
     {
         $name = $source->getString('name', '');
-        $mitarbeiterId = $source->getString('mitarbeiter_id', '');
+        $mitarbeiterId = $source->getString('mitarbeiter_id', $source->getString('id', ''));
         $email = $source->getString('email', '');
 
         if ($name === '' || $mitarbeiterId === '' || $email === '') {
@@ -172,6 +172,9 @@ class ChecklistController extends AbstractController
     public function form(Request $request): Response
     {
         $checklistIdParam = $request->query->get('checklist_id');
+        if (!$checklistIdParam) {
+            $checklistIdParam = $request->query->get('list');
+        }
         if (!$checklistIdParam) {
             throw new NotFoundHttpException('Ungültige Parameter');
         }

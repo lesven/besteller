@@ -195,3 +195,26 @@ Die folgenden Platzhalter stehen im HTML-Template zur Verfügung:
 - **Frontend:** Bootstrap für UI-Komponenten
 - **Backend:** Symfony Commands zur Userverwaltung
 - **Keine API-Anbindung oder externes SSO erforderlich**
+
+## Beispiel: Link über die API generieren
+
+Mit einem POST-Request an `/api/generate-link` kann ein gültiger Link zu einer vorhandenen Stückliste erstellt werden. Beispielaufruf:
+
+```bash
+curl -X POST https://besteller.example.com/api/generate-link \
+     -H 'Content-Type: application/json' \
+     -d '{
+           "stückliste_id": 123,
+           "mitarbeiter_name": "Max Muster",
+           "mitarbeiter_id": "abc-123",
+           "email_empfänger": "chef@example.com"
+         }'
+```
+
+Die Antwort enthält den öffentlichen Link zur Auswahlseite:
+
+```json
+{
+  "link": "https://besteller.example.com/auswahl?list=123&name=Max%20Muster&id=abc-123&email=chef@example.com"
+}
+```
