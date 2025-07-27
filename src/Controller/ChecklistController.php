@@ -7,9 +7,11 @@ use App\Entity\Submission;
 use App\Service\EmailService;
 use App\Service\SubmissionService;
 use Doctrine\ORM\EntityManagerInterface;
+use DateTimeImmutable;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\ParameterBag;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class ChecklistController extends AbstractController
@@ -27,9 +29,9 @@ class ChecklistController extends AbstractController
         private EmailService $emailService
     ) {}
 
-    private function getChecklistOr404(int $id): Checklist
+    private function getChecklistOr404(int $checklistId): Checklist
     {
-        $checklist = $this->entityManager->getRepository(Checklist::class)->find($id);
+        $checklist = $this->entityManager->getRepository(Checklist::class)->find($checklistId);
         if (!$checklist) {
             throw new NotFoundHttpException('Stückliste nicht gefunden');
         }
@@ -40,19 +42,33 @@ class ChecklistController extends AbstractController
     /**
      * @return list{string, string, string}
      */
-    private function getRequestValues(Request $request, bool $useQuery = true): array
+    private function extractRequestValues(ParameterBag $source): array
     {
-        $source = $useQuery ? $request->query : $request->request;
-
-        $name = (string) $source->get('name', '');
-        $mitarbeiterId = (string) $source->get('mitarbeiter_id', '');
-        $email = (string) $source->get('email', '');
+        $name = $source->getString('name', '');
+        $mitarbeiterId = $source->getString('mitarbeiter_id', '');
+        $email = $source->getString('email', '');
 
         if ($name === '' || $mitarbeiterId === '' || $email === '') {
             throw new NotFoundHttpException('Ungültige Parameter');
         }
 
         return [$name, $mitarbeiterId, $email];
+    }
+
+    /**
+     * @return list{string, string, string}
+     */
+    private function getRequestValuesFromQuery(Request $request): array
+    {
+        return $this->extractRequestValues($request->query);
+    }
+
+    /**
+     * @return list{string, string, string}
+     */
+    private function getRequestValuesFromRequest(Request $request): array
+    {
+        return $this->extractRequestValues($request->request);
     }
 
     private function findExistingSubmission(Checklist $checklist, string $mitarbeiterId): ?Submission
@@ -66,15 +82,15 @@ class ChecklistController extends AbstractController
     /**
      * Zeigt eine Stückliste anhand der ID an und prüft Parameter.
      *
-     * @param int     $id      ID der Stückliste
+     * @param int     $checklistId      ID der Stückliste
      * @param Request $request Aktuelle HTTP-Anfrage
      *
      * @return Response HTML-Seite der Stückliste
      */
-    public function show(int $id, Request $request): Response
+    public function show(int $checklistId, Request $request): Response
     {
-        $checklist = $this->getChecklistOr404($id);
-        [$name, $mitarbeiterId, $email] = $this->getRequestValues($request);
+        $checklist = $this->getChecklistOr404($checklistId);
+        [$name, $mitarbeiterId, $email] = $this->getRequestValuesFromQuery($request);
 
         $existingSubmission = $this->findExistingSubmission($checklist, $mitarbeiterId);
 
@@ -97,21 +113,21 @@ class ChecklistController extends AbstractController
     /**
      * Verarbeitet eine eingereichte Stückliste und speichert sie.
      *
-     * @param int     $id      ID der Stückliste
+     * @param int     $checklistId      ID der Stückliste
      * @param Request $request Aktuelle HTTP-Anfrage
      *
      * @return Response Erfolgsmeldung nach dem Speichern
      */
-    public function submit(int $id, Request $request): Response
+    public function submit(int $checklistId, Request $request): Response
     {
-        $checklist = $this->getChecklistOr404($id);
-        [$name, $mitarbeiterId, $email] = $this->getRequestValues($request, false);
+        $checklist = $this->getChecklistOr404($checklistId);
+        [$name, $mitarbeiterId, $email] = $this->getRequestValuesFromRequest($request);
 
         $existingSubmission = $this->findExistingSubmission($checklist, $mitarbeiterId);
 
         if ($existingSubmission) {
             return $this->redirectToRoute('checklist_show', [
-                'id' => $id,
+                'id' => $checklistId,
                 'name' => $name,
                 'mitarbeiter_id' => $mitarbeiterId,
                 'email' => $email
@@ -157,7 +173,7 @@ class ChecklistController extends AbstractController
             throw new NotFoundHttpException('Ungültige Parameter');
         }
 
-        [$name, $mitarbeiterId, $email] = $this->getRequestValues($request);
+        [$name, $mitarbeiterId, $email] = $this->getRequestValuesFromQuery($request);
         $checklist = $this->getChecklistOr404((int) $stücklisteId);
 
         $existingSubmission = $this->findExistingSubmission($checklist, $mitarbeiterId);
@@ -182,7 +198,7 @@ class ChecklistController extends AbstractController
                 $submission->setMitarbeiterId($mitarbeiterId);
                 $submission->setEmail($email);
                 $submission->setData($submissionData);
-                $submission->setSubmittedAt(new \DateTimeImmutable());
+                $submission->setSubmittedAt(new DateTimeImmutable());
 
                 // Erst Submission speichern
                 $this->entityManager->persist($submission);
