@@ -12,6 +12,7 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 class CreateUserCommandTest extends TestCase
 {
+    private const MIN_PASSWORD_LENGTH = 16;
     public function testExecuteCreatesUser(): void
     {
         $repository = $this->createMock(ObjectRepository::class);
@@ -30,7 +31,7 @@ class CreateUserCommandTest extends TestCase
 
         $status = $tester->execute([
             'email' => 'new@example.com',
-            'password' => str_repeat('a', 16),
+            'password' => str_repeat('a', self::MIN_PASSWORD_LENGTH),
         ]);
 
         $this->assertSame(Command::SUCCESS, $status);
@@ -53,7 +54,7 @@ class CreateUserCommandTest extends TestCase
 
         $status = $tester->execute([
             'email' => 'existing@example.com',
-            'password' => str_repeat('b', 16),
+            'password' => str_repeat('b', self::MIN_PASSWORD_LENGTH),
         ]);
 
         $this->assertSame(Command::FAILURE, $status);
