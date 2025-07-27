@@ -6,8 +6,8 @@ use App\Entity\Checklist;
 use App\Entity\Submission;
 use App\Service\EmailService;
 use App\Service\SubmissionService;
+use App\Service\SubmissionFactory;
 use Doctrine\ORM\EntityManagerInterface;
-use DateTimeImmutable;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -26,7 +26,8 @@ class ChecklistController extends AbstractController
     public function __construct(
         private EntityManagerInterface $entityManager,
         private SubmissionService $submissionService,
-        private EmailService $emailService
+        private EmailService $emailService,
+        private SubmissionFactory $submissionFactory
     ) {}
 
     private function getChecklistOr404(int $checklistId): Checklist
@@ -138,12 +139,14 @@ class ChecklistController extends AbstractController
         $submissionData = $this->submissionService->collectSubmissionData($checklist, $request);
 
         // Submission erstellen
-        $submission = new Submission();
-        $submission->setChecklist($checklist);
-        $submission->setName($name);
-        $submission->setMitarbeiterId($mitarbeiterId);
-        $submission->setEmail($email);
-        $submission->setData($submissionData);
+        $submission = $this->submissionFactory->createSubmission(
+            $checklist,
+            $name,
+            $mitarbeiterId,
+            $email,
+            $submissionData,
+            false
+        );
 
         // E-Mail generieren und versenden
         $generatedEmail = $this->emailService->generateAndSendEmail($submission);
@@ -192,17 +195,14 @@ class ChecklistController extends AbstractController
             try {
                 $submissionData = $this->submissionService->collectSubmissionData($checklist, $request);
                 
-                $submission = new Submission();
-                $submission->setChecklist($checklist);
-                $submission->setName($name);
-                $submission->setMitarbeiterId($mitarbeiterId);
-                $submission->setEmail($email);
-                $submission->setData($submissionData);
-                $submission->setSubmittedAt(new DateTimeImmutable());
-
-                // Erst Submission speichern
-                $this->entityManager->persist($submission);
-                $this->entityManager->flush();
+                $submission = $this->submissionFactory->createSubmission(
+                    $checklist,
+                    $name,
+                    $mitarbeiterId,
+                    $email,
+                    $submissionData,
+                    true
+                );
 
                 // Dann E-Mails senden und generierte E-Mail speichern
                 try {
