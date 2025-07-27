@@ -29,9 +29,6 @@
         </include>
     </coverage>
 
-    <listeners>
-    </listeners>
-
     <extensions>
     </extensions>
 </phpunit>
