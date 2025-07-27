@@ -7,16 +7,19 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 
 class ApiController extends AbstractController
 {
-    public function __construct(private UrlGeneratorInterface $urlGenerator)
-    {
+    public function __construct(
+        private UrlGeneratorInterface $urlGenerator,
+        private ParameterBagInterface $parameterBag
+    ) {
     }
 
     public function generateLink(Request $request): JsonResponse
     {
-        $configuredTokenRaw = $_ENV['API_TOKEN'] ?? null;
+        $configuredTokenRaw = $this->parameterBag->get('API_TOKEN') ?? null;
         $configuredToken = is_string($configuredTokenRaw) ? $configuredTokenRaw : '';
         if ($configuredToken !== '') {
             $auth = $request->headers->get('Authorization', '');
