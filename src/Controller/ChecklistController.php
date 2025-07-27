@@ -45,9 +45,9 @@ class ChecklistController extends AbstractController
      */
     private function extractRequestValues(ParameterBag $source): array
     {
-        $name = $source->getString('name', '');
-        $mitarbeiterId = $source->getString('mitarbeiter_id', $source->getString('id', ''));
-        $email = $source->getString('email', '');
+        $name = urldecode($source->getString('name', ''));
+        $mitarbeiterId = urldecode($source->getString('mitarbeiter_id', $source->getString('id', '')));
+        $email = urldecode($source->getString('email', ''));
 
         if ($name === '' || $mitarbeiterId === '' || $email === '') {
             throw new NotFoundHttpException('Ungültige Parameter');
