@@ -45,7 +45,7 @@ clear-cache: ## Löscht den Symfony Cache
 	docker compose exec php bin/console cache:clear
 
 test: ## Führt Tests aus
-	docker compose exec php bin/phpunit
+	docker compose exec php vendor/bin/phpunit
 
 phpstan: ## Führt statische Analyse mit PHPStan aus
 	docker compose exec php vendor/bin/phpstan analyse --memory-limit=512M
