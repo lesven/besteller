@@ -257,7 +257,7 @@ class EmailService
             <li><strong>Mitarbeiter-ID:</strong> {{mitarbeiter_id}}</li>
         </ul>
         
-        <h2>Ihre Auswahl</h2>
+        <h2>Deine Auswahl</h2>
         {{auswahl}}
         
         <p><strong>Nächste Schritte:</strong><br>
