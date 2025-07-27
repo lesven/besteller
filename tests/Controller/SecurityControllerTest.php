@@ -25,7 +25,7 @@ class SecurityControllerTest extends TestCase
             ->method('getUser')
             ->willReturn($this->createMock(UserInterface::class));
 
-        $response = new \Symfony\Component\HttpFoundation\RedirectResponse('/admin');
+        $response = new RedirectResponse('/admin');
         $controller->expects($this->once())
             ->method('redirectToRoute')
             ->with('admin_dashboard')
