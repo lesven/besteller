@@ -67,8 +67,13 @@ class SubmissionService
                     $value = $itemData['value'];
 
                     if (is_array($value)) {
-                        // Checkbox-Arrays
-                        $output .= "<li><strong>{$itemLabel}:</strong> " . implode(', ', $value) . "</li>\n";
+                        // Checkbox-Arrays als Unterliste ausgeben
+                        $output .= "<li><strong>{$itemLabel}:</strong><ul>\n";
+                        foreach ($value as $val) {
+                            $val = is_scalar($val) ? nl2br((string) $val) : nl2br('');
+                            $output .= "<li>{$val}</li>\n";
+                        }
+                        $output .= "</ul></li>\n";
                         continue;
                     }
 
@@ -80,7 +85,12 @@ class SubmissionService
 
                 // Fallback für alte Datenstruktur
                 if (is_array($itemData)) {
-                    $output .= "<li><strong>{$itemLabel}:</strong> " . implode(', ', $itemData) . "</li>\n";
+                    $output .= "<li><strong>{$itemLabel}:</strong><ul>\n";
+                    foreach ($itemData as $val) {
+                        $val = is_scalar($val) ? nl2br((string) $val) : nl2br('');
+                        $output .= "<li>{$val}</li>\n";
+                    }
+                    $output .= "</ul></li>\n";
                     continue;
                 }
 
