@@ -171,6 +171,20 @@ Die folgenden Platzhalter stehen im HTML-Template zur Verfügung:
 - ein eigenes Email Template für den Versand ist hinterlegt
 - eine individuelle Einleitungs für die Email kann beim Versand hinterlegt werden
 
+#### US-13: Versand eines Stücklisten links über eine externe Software ermöglichen
+**Als** externe Software  
+**möchte ich** über einen API Aufruf einen Link zu einer Stückliste versenden können
+**damit** ich Bestellugnen aus einem anderen Programm heraus starten kann und nicht manuell im Bestellprogramm den Versand starten muss
+
+**Akzeptanzkriterien:**
+- Empfängername und Empfängeremail müssen übergeben werden
+- PersonenID muss übergeben werden
+- Personenname für die die Bestellung übergeben hinterlegt werden
+- es wird das Template der jeweiligen Checkliste genutzt
+- eine individuelle Einleitungs für die Email kann beim Versand über die API übergeben  werden
+- Aufruf ist ein Curl aufruf
+
+
 
 ## Nicht-funktionale Anforderungen
 
