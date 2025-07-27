@@ -95,10 +95,10 @@ class ApiController extends AbstractController
 
         $emailService->sendLinkEmail(
             $checklist,
-            $data['recipient_name'],
+            urldecode($data['recipient_name']),
             $data['recipient_email'],
             $data['mitarbeiter_id'],
-            $personName,
+            $personName ? urldecode($personName) : null,
             $intro,
             $link
         );
