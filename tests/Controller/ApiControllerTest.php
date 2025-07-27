@@ -7,6 +7,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 
 class ApiControllerTest extends TestCase
 {
@@ -28,6 +29,13 @@ class ApiControllerTest extends TestCase
             )
             ->willReturn($url);
 
+        $parameterBag = $this->createMock(ParameterBagInterface::class);
+        $parameterBag->expects($this->once())
+            ->method('get')
+            ->willReturnCallback(function($key) {
+                return $key === 'API_TOKEN' ? '' : null;
+            });
+
         $request = new Request([], [], [], [], [], [], json_encode([
             'stückliste_id' => 123,
             'mitarbeiter_name' => 'Max Muster',
@@ -35,7 +43,7 @@ class ApiControllerTest extends TestCase
             'email_empfänger' => 'chef@example.com',
         ]));
 
-        $controller = new ApiController($urlGenerator);
+        $controller = new ApiController($urlGenerator, $parameterBag);
         $response = $controller->generateLink($request);
 
         $this->assertInstanceOf(JsonResponse::class, $response);
@@ -47,7 +55,14 @@ class ApiControllerTest extends TestCase
     public function testGenerateLinkRequiresParameters(): void
     {
         $urlGenerator = $this->createMock(UrlGeneratorInterface::class);
-        $controller = new ApiController($urlGenerator);
+        $parameterBag = $this->createMock(ParameterBagInterface::class);
+        $parameterBag->expects($this->once())
+            ->method('get')
+            ->willReturnCallback(function($key) {
+                return $key === 'API_TOKEN' ? '' : null;
+            });
+            
+        $controller = new ApiController($urlGenerator, $parameterBag);
         $request = new Request([], [], [], [], [], [], json_encode(['foo' => 'bar']));
 
         $response = $controller->generateLink($request);
@@ -56,9 +71,15 @@ class ApiControllerTest extends TestCase
 
     public function testGenerateLinkChecksBearerToken(): void
     {
-        $_ENV['API_TOKEN'] = 'secret';
         $urlGenerator = $this->createMock(UrlGeneratorInterface::class);
-        $controller = new ApiController($urlGenerator);
+        $parameterBag = $this->createMock(ParameterBagInterface::class);
+        $parameterBag->expects($this->once())
+            ->method('get')
+            ->willReturnCallback(function($key) {
+                return $key === 'API_TOKEN' ? 'secret' : null;
+            });
+            
+        $controller = new ApiController($urlGenerator, $parameterBag);
         $request = new Request([], [], [], [], [], [], json_encode([
             'stückliste_id' => 1,
             'mitarbeiter_name' => 'A',
@@ -69,6 +90,5 @@ class ApiControllerTest extends TestCase
 
         $response = $controller->generateLink($request);
         $this->assertSame(Response::HTTP_UNAUTHORIZED, $response->getStatusCode());
-        unset($_ENV['API_TOKEN']);
     }
 }
