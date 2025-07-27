@@ -25,6 +25,19 @@ class GroupController extends AbstractController
     }
 
     /**
+     * Bereinigt einen Wert durch Trimmen und konvertiert leere Strings zu null.
+     *
+     * @param string $value Der zu bereinigende Wert
+     *
+     * @return string|null Der bereinigte Wert oder null wenn leer
+     */
+    private function sanitizeValue(string $value): ?string
+    {
+        $trimmed = trim($value);
+        return $trimmed === '' ? null : $trimmed;
+    }
+
+    /**
      * Erstellt eine neue Gruppe innerhalb einer Checkliste.
      *
      * @param Request   $request   Aktuelle HTTP-Anfrage
@@ -39,8 +52,7 @@ class GroupController extends AbstractController
 
         if ($request->isMethod('POST')) {
             $group->setTitle($request->request->getString('title'));
-            $desc = trim($request->request->getString('description', ''));
-            $group->setDescription($desc === '' ? null : $desc);
+            $group->setDescription($this->sanitizeValue($request->request->getString('description', '')));
             $group->setSortOrder($request->request->getInt('sort_order', 0));
 
             $this->entityManager->persist($group);
@@ -69,8 +81,7 @@ class GroupController extends AbstractController
     {
         if ($request->isMethod('POST')) {
             $group->setTitle($request->request->getString('title'));
-            $desc = trim($request->request->getString('description', ''));
-            $group->setDescription($desc === '' ? null : $desc);
+            $group->setDescription($this->sanitizeValue($request->request->getString('description', '')));
             $group->setSortOrder($request->request->getInt('sort_order', 0));
 
             $this->entityManager->flush();
