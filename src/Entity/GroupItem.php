@@ -14,9 +14,9 @@ class GroupItem
 
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column(type: 'integer')]
+    #[ORM\Column(name: 'id', type: 'integer')]
     /** @phpstan-ignore-next-line */
-    private ?int $id = null;
+    private ?int $identifier = null;
 
     #[ORM\Column(type: 'string', length: 255)]
     private ?string $label = null;
@@ -36,7 +36,7 @@ class GroupItem
 
     public function getId(): ?int
     {
-        return $this->id;
+        return $this->identifier;
     }
 
     public function getLabel(): ?string
@@ -130,10 +130,25 @@ class GroupItem
      *
      * @param list<string> $options
      */
-    public function setOptionsArray(array $options, bool $active = false): static
+    public function setOptionsArray(array $options): static
     {
         $structured = array_map(
-            fn(string $label) => ['label' => $label, 'active' => $active],
+            fn(string $label) => ['label' => $label, 'active' => false],
+            $options
+        );
+        $this->options = json_encode($structured, JSON_THROW_ON_ERROR);
+        return $this;
+    }
+
+    /**
+     * Speichert eine Liste von Optionen und setzt sie aktiv
+     *
+     * @param list<string> $options
+     */
+    public function setActiveOptionsArray(array $options): static
+    {
+        $structured = array_map(
+            fn(string $label) => ['label' => $label, 'active' => true],
             $options
         );
         $this->options = json_encode($structured, JSON_THROW_ON_ERROR);
@@ -152,7 +167,7 @@ class GroupItem
             return [];
         }
 
-        return array_values(array_map([self::class, 'normalizeOption'], $decoded));
+        return array_values(array_map(fn($opt) => self::normalizeOption($opt), $decoded));
     }
 
     /**
