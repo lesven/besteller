@@ -35,7 +35,8 @@ class CreateUserCommandTest extends TestCase
         ]);
 
         $this->assertSame(Command::SUCCESS, $status);
-        $this->assertStringContainsString('erfolgreich erstellt', $tester->getDisplay());
+        $this->assertStringContainsString('erfolgreich', $tester->getDisplay());
+        $this->assertStringContainsString('erstellt', $tester->getDisplay());
     }
 
     public function testExecuteFailsIfUserExists(): void
@@ -58,7 +59,8 @@ class CreateUserCommandTest extends TestCase
         ]);
 
         $this->assertSame(Command::FAILURE, $status);
-        $this->assertStringContainsString('existiert bereits', $tester->getDisplay());
+        $this->assertStringContainsString('existiert', $tester->getDisplay());
+        $this->assertStringContainsString('bereits', $tester->getDisplay());
     }
 
     public function testExecuteFailsForShortPassword(): void

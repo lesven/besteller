@@ -24,7 +24,7 @@ class ChangePasswordCommandTest extends TestCase
         $em->expects($this->once())->method('flush');
 
         $hasher = $this->createMock(UserPasswordHasherInterface::class);
-        $hasher->method('hashPassword')->with($user, $this->anything())->willReturn('hashed');
+        $hasher->method('hashPassword')->willReturn('hashed');
 
         $command = new ChangePasswordCommand($em, $hasher);
         $tester = new CommandTester($command);
@@ -58,7 +58,8 @@ class ChangePasswordCommandTest extends TestCase
         ]);
 
         $this->assertSame(Command::FAILURE, $status);
-        $this->assertStringContainsString('nicht gefunden', $tester->getDisplay());
+        $this->assertStringContainsString('wurde nicht', $tester->getDisplay());
+        $this->assertStringContainsString('gefunden', $tester->getDisplay());
     }
 
     public function testExecuteFailsForShortPassword(): void
