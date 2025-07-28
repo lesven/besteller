@@ -77,3 +77,16 @@ create-user: ## Erstellt einen Admin-Benutzer (EMAIL und PASSWORD als Parameter)
 
 change-password: ## Ändert Passwort eines Benutzers (EMAIL und PASSWORD als Parameter)
 	docker compose exec php bin/console app:user:change-password $(EMAIL) $(PASSWORD)
+
+first-user: ## Erstellt den ersten Admin-Benutzer (EMAIL und PASSWORD als Parameter)
+	docker compose exec php bin/console app:user:first $(EMAIL) $(PASSWORD)
+
+initial-install:
+	docker compose down
+	docker compose build --no-cache
+	docker compose up -d
+	@$(MAKE) install
+	docker compose exec php composer install --no-interaction --optimize-autoloader
+	@$(MAKE) clear-cache
+	@$(MAKE) migrate
+	@$(MAKE) create-user
