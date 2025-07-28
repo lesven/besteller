@@ -86,7 +86,6 @@ initial-install:
 	docker compose build --no-cache
 	docker compose up -d
 	@$(MAKE) install
-	docker compose exec php composer install --no-interaction --optimize-autoloader
 	@$(MAKE) clear-cache
 	@$(MAKE) migrate
 	@$(MAKE) create-user
