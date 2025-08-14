@@ -15,7 +15,7 @@ class SubmissionServiceTest extends TestCase
         $item = new GroupItem();
         $item->setLabel($label);
         $item->setType($type);
-        $ref = new \ReflectionProperty(GroupItem::class, 'identifier');
+    $ref = new \ReflectionProperty(GroupItem::class, 'id');
         $ref->setAccessible(True);
         $ref->setValue($item, $id);
         return $item;

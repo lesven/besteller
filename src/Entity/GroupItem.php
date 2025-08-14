@@ -16,7 +16,7 @@ class GroupItem
     #[ORM\GeneratedValue]
     #[ORM\Column(name: 'id', type: 'integer')]
     /** @phpstan-ignore-next-line */
-    private ?int $identifier = null;
+    private ?int $id = null;
 
     #[ORM\Column(type: 'string', length: 255)]
     private ?string $label = null;
@@ -36,7 +36,7 @@ class GroupItem
 
     public function getId(): ?int
     {
-        return $this->identifier;
+    return $this->id;
     }
 
     public function getLabel(): ?string
