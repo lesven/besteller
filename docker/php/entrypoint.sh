@@ -8,16 +8,24 @@ done
 
 echo "Database is ready!"
 
-# Install composer dependencies
+# Start PHP-FPM in the background
+php-fpm -D
+
+# Install composer dependencies if vendor directory doesn't exist
 if [ ! -d "vendor" ]; then
-    composer install --no-dev --optimize-autoloader
+    echo "Installing composer dependencies..."
+    composer install --no-interaction
 fi
 
 # Run migrations
+echo "Running migrations..."
 php bin/console doctrine:migrations:migrate --no-interaction
 
-# Create admin user if it doesn't exist
+# Create admin user if it doesn't exist (ignore errors if user exists)
+echo "Creating admin user..."
 php bin/console app:user:create admin@besteller.local AdminPassword123456 || true
 
-# Start PHP-FPM
-php-fpm
+echo "Setup complete. PHP-FPM is running."
+
+# Keep container running
+tail -f /dev/null

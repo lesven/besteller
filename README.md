@@ -184,7 +184,13 @@ Die folgenden Platzhalter stehen im HTML-Template zur Verfügung:
 - eine individuelle Einleitungs für die Email kann beim Versand über die API übergeben  werden
 - Aufruf ist ein Curl aufruf
 
+#### US-14: Beispiellink soll immer unique sein
+**Als** Administrator
+**möchte ich** dass der Beispiellink zu einer Stücklist eimmer funktioniert und nicht schon einmal genutzt wurde
+**damit** ich immer problemlos den link testen kann
 
+**akzeptanzkriterien**
+ - mitarbeiter_id soll eine GUID sein die bei jeden Aufruf von admin_checklist_edit neu generiert wird damit ich immmer einen uniqen link habe
 
 ## Nicht-funktionale Anforderungen
 
