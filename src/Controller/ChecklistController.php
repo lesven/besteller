@@ -54,8 +54,8 @@ class ChecklistController extends AbstractController
     /**
      * Extrahiert die Werte Name, Mitarbeiter-ID und E-Mail aus einer ParameterBag.
      *
-     * @param ParameterBag $source Quelle der Parameter
-     * @return array Enthält Name, Mitarbeiter-ID und E-Mail
+    * @param ParameterBag $source Quelle der Parameter
+    * @return array{0:string,1:string,2:string} Enthält Name, Mitarbeiter-ID und E-Mail
      */
     private function extractRequestValues(ParameterBag $source): array
     {
@@ -74,7 +74,7 @@ class ChecklistController extends AbstractController
      * Holt die Werte aus der Query der HTTP-Anfrage.
      *
      * @param Request $request HTTP-Anfrage
-     * @return array Enthält Name, Mitarbeiter-ID und E-Mail
+    * @return array{0:string,1:string,2:string} Enthält Name, Mitarbeiter-ID und E-Mail
      */
     private function getRequestValuesFromQuery(Request $request): array
     {
@@ -86,7 +86,7 @@ class ChecklistController extends AbstractController
      * Holt die Werte aus dem Request-Body der HTTP-Anfrage.
      *
      * @param Request $request HTTP-Anfrage
-     * @return array Enthält Name, Mitarbeiter-ID und E-Mail
+    * @return array{0:string,1:string,2:string} Enthält Name, Mitarbeiter-ID und E-Mail
      */
     private function getRequestValuesFromRequest(Request $request): array
     {
