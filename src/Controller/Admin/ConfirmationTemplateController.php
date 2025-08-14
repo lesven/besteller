@@ -84,9 +84,17 @@ class ConfirmationTemplateController extends AbstractController
                 return $this->redirectToRoute($route);
             }
 
-            $fileContent = file_get_contents($uploadedFile->getPathname());
+            // Verwende Symfony's UploadedFile::openFile() für sicheren Dateizugriff
+            $fileObject = $uploadedFile->openFile('r');
+            $fileContent = $fileObject->fread($uploadedFile->getSize());
             if ($fileContent === false) {
                 $this->addFlash('error', 'Die hochgeladene Datei konnte nicht gelesen werden.');
+                return $this->redirectToRoute($route);
+            }
+
+            // Einfache Inhaltsvalidierung: Blockiere verdächtige Inhalte
+            if (str_contains($fileContent, '<script>') || str_contains($fileContent, 'javascript:')) {
+                $this->addFlash('error', 'Die hochgeladene Datei enthält nicht erlaubte Inhalte.');
                 return $this->redirectToRoute($route);
             }
 
