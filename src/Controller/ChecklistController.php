@@ -31,6 +31,12 @@ class ChecklistController extends AbstractController
         private SubmissionFactory $submissionFactory
     ) {}
 
+    /**
+     * Holt eine Stückliste anhand der ID oder wirft eine Exception, falls nicht gefunden.
+     *
+     * @param int $checklistId ID der Stückliste
+     * @return Checklist Gefundene Stückliste
+     */
     private function getChecklistOr404(int $checklistId): Checklist
     {
         $checklist = $this->entityManager->getRepository(Checklist::class)->find($checklistId);
@@ -42,7 +48,10 @@ class ChecklistController extends AbstractController
     }
 
     /**
-     * @return list{string, string, string}
+     * Extrahiert die Werte Name, Mitarbeiter-ID und E-Mail aus einer ParameterBag.
+     *
+     * @param ParameterBag $source Quelle der Parameter
+     * @return array Enthält Name, Mitarbeiter-ID und E-Mail
      */
     private function extractRequestValues(ParameterBag $source): array
     {
@@ -56,23 +65,37 @@ class ChecklistController extends AbstractController
 
         return [$name, $mitarbeiterId, $email];
     }
-
+     
     /**
-     * @return list{string, string, string}
+     * Holt die Werte aus der Query der HTTP-Anfrage.
+     *
+     * @param Request $request HTTP-Anfrage
+     * @return array Enthält Name, Mitarbeiter-ID und E-Mail
      */
     private function getRequestValuesFromQuery(Request $request): array
     {
         return $this->extractRequestValues($request->query);
     }
 
+  
     /**
-     * @return list{string, string, string}
+     * Holt die Werte aus dem Request-Body der HTTP-Anfrage.
+     *
+     * @param Request $request HTTP-Anfrage
+     * @return array Enthält Name, Mitarbeiter-ID und E-Mail
      */
     private function getRequestValuesFromRequest(Request $request): array
     {
         return $this->extractRequestValues($request->request);
     }
 
+    /**
+     * Sucht eine bereits existierende Submission für die Stückliste und Mitarbeiter-ID.
+     *
+     * @param Checklist $checklist Stückliste
+     * @param string $mitarbeiterId Mitarbeiter-ID
+     * @return Submission|null Gefundene Submission oder null
+     */
     private function findExistingSubmission(Checklist $checklist, string $mitarbeiterId): ?Submission
     {
         /** @var SubmissionRepository $repo */
@@ -84,9 +107,8 @@ class ChecklistController extends AbstractController
     /**
      * Zeigt eine Stückliste anhand der ID an und prüft Parameter.
      *
-     * @param int     $checklistId      ID der Stückliste
+     * @param int $checklistId ID der Stückliste
      * @param Request $request Aktuelle HTTP-Anfrage
-     *
      * @return Response HTML-Seite der Stückliste
      */
     public function show(int $checklistId, Request $request): Response
@@ -112,12 +134,12 @@ class ChecklistController extends AbstractController
         ]);
     }
 
+
     /**
      * Verarbeitet eine eingereichte Stückliste und speichert sie.
      *
-     * @param int     $checklistId      ID der Stückliste
+     * @param int $checklistId ID der Stückliste
      * @param Request $request Aktuelle HTTP-Anfrage
-     *
      * @return Response Erfolgsmeldung nach dem Speichern
      */
     public function submit(int $checklistId, Request $request): Response
@@ -163,42 +185,39 @@ class ChecklistController extends AbstractController
         ]);
     }
 
+  
     /**
      * Zeigt das Formular zur Stückliste und verarbeitet Eingaben.
      *
      * @param Request $request Aktuelle HTTP-Anfrage
-     *
      * @return Response Formularseite oder Erfolgsmeldung
      */
     public function form(Request $request): Response
     {
-        $checklistIdParam = $request->query->get('checklist_id');
-        if (!$checklistIdParam) {
-            $checklistIdParam = $request->query->get('list');
-        }
+        // Parameter extrahieren und validieren
+        $checklistIdParam = $request->query->get('checklist_id') ?? $request->query->get('list');
         if (!$checklistIdParam) {
             throw new NotFoundHttpException('Ungültige Parameter');
         }
 
         [$name, $mitarbeiterId, $email] = $this->getRequestValuesFromQuery($request);
         $checklist = $this->getChecklistOr404((int) $checklistIdParam);
-
         $existingSubmission = $this->findExistingSubmission($checklist, $mitarbeiterId);
 
-        if ($existingSubmission) {
-            return $this->render('checklist/already_submitted.html.twig', [
-                'checklist' => $checklist,
-                'name' => $name,
-                'mitarbeiterId' => $mitarbeiterId,
-                'email' => $email
-            ]);
-        }
+        $template = 'checklist/form.html.twig';
+        $templateVars = [
+            'checklist' => $checklist,
+            'name' => $name,
+            'mitarbeiterId' => $mitarbeiterId,
+            'email' => $email
+        ];
 
-        // Formular verarbeiten
-        if ($request->isMethod('POST')) {
+        // Wenn bereits eine Submission existiert, zeige die entsprechende Seite
+        if ($existingSubmission) {
+            $template = 'checklist/already_submitted.html.twig';
+        } elseif ($request->isMethod('POST')) {
             try {
                 $submissionData = $this->submissionService->collectSubmissionData($checklist, $request);
-                
                 $submission = $this->submissionFactory->createSubmission(
                     $checklist,
                     $name,
@@ -207,44 +226,24 @@ class ChecklistController extends AbstractController
                     $submissionData,
                     true
                 );
-
-                // Dann E-Mails senden und generierte E-Mail speichern
                 try {
                     $generatedEmail = $this->emailService->generateAndSendEmail($submission);
                     $submission->setGeneratedEmail($generatedEmail);
-                    
-                    // Aktualisierte Submission speichern
                     $this->entityManager->flush();
                 } catch (\Exception $e) {
-                    // E-Mail-Versendung fehlgeschlagen, aber Submission ist gespeichert
-                    // Log den Fehler für Admin-Review
                     error_log('E-Mail-Versendung fehlgeschlagen für Submission ' . $submission->getId() . ': ' . $e->getMessage());
                 }
-
-                return $this->render('checklist/success.html.twig', [
+                $template = 'checklist/success.html.twig';
+                $templateVars = [
                     'checklist' => $checklist,
                     'name' => $name
-                ]);
-                
+                ];
             } catch (\Exception $e) {
-                // Submission fehlgeschlagen
                 $this->addFlash('error', 'Es ist ein Fehler beim Übermitteln der Stückliste aufgetreten. Bitte versuchen Sie es erneut.');
-                
-                return $this->render('checklist/form.html.twig', [
-                    'checklist' => $checklist,
-                    'name' => $name,
-                    'mitarbeiterId' => $mitarbeiterId,
-                    'email' => $email
-                ]);
             }
         }
 
-        return $this->render('checklist/form.html.twig', [
-            'checklist' => $checklist,
-            'name' => $name,
-            'mitarbeiterId' => $mitarbeiterId,
-            'email' => $email
-        ]);
+        return $this->render($template, $templateVars);
     }
 
 }
