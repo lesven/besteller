@@ -3,6 +3,7 @@
 namespace App\Controller\Admin;
 
 use App\Entity\Checklist;
+use App\Entity\Submission;
 use App\Repository\ChecklistRepository;
 use App\Service\EmailService;
 use App\Service\ChecklistDuplicationService;
@@ -247,29 +248,43 @@ class ChecklistController extends AbstractController
             $personName = trim((string) $request->request->get('person_name')) ?: null;
             $intro = (string) $request->request->get('intro');
 
-            if (!$recipientName || !filter_var($recipientEmail, FILTER_VALIDATE_EMAIL) || !$mitarbeiterId) {
-                $this->addFlash('error', 'Bitte Empfängerdaten und Personen-ID vollständig angeben.');
+            if (
+                !$recipientName ||
+                !filter_var($recipientEmail, FILTER_VALIDATE_EMAIL) ||
+                !$mitarbeiterId ||
+                !preg_match('/^[A-Za-z0-9-]+$/', $mitarbeiterId)
+            ) {
+                $this->addFlash('error', 'Bitte Empfängerdaten und gültige Personen-ID vollständig angeben.');
             } else {
-                $link = $this->urlGenerator->generate('checklist_form', [
-                    'checklist_id' => $checklist->getId(),
-                    'name' => $personName ?? $recipientName,
-                    'mitarbeiter_id' => $mitarbeiterId,
-                    'email' => $recipientEmail,
-                ], UrlGeneratorInterface::ABSOLUTE_URL);
+                $existingSubmission = $this->entityManager->getRepository(Submission::class)->findOneBy([
+                    'checklist' => $checklist,
+                    'mitarbeiterId' => $mitarbeiterId,
+                ]);
 
-                $this->emailService->sendLinkEmail(
-                    $checklist,
-                    $recipientName,
-                    $recipientEmail,
-                    $mitarbeiterId,
-                    $personName,
-                    $intro,
-                    $link
-                );
+                if ($existingSubmission) {
+                    $this->addFlash('error', 'Für diese Personen-ID wurde bereits eine Bestellung übermittelt.');
+                } else {
+                    $link = $this->urlGenerator->generate('checklist_form', [
+                        'checklist_id' => $checklist->getId(),
+                        'name' => $personName ?? $recipientName,
+                        'mitarbeiter_id' => $mitarbeiterId,
+                        'email' => $recipientEmail,
+                    ], UrlGeneratorInterface::ABSOLUTE_URL);
 
-                $this->addFlash('success', 'Link wurde erfolgreich versendet.');
+                    $this->emailService->sendLinkEmail(
+                        $checklist,
+                        $recipientName,
+                        $recipientEmail,
+                        $mitarbeiterId,
+                        $personName,
+                        $intro,
+                        $link
+                    );
 
-                return $this->redirectToRoute('admin_checklists');
+                    $this->addFlash('success', 'Link wurde erfolgreich versendet.');
+
+                    return $this->redirectToRoute('admin_checklists');
+                }
             }
         }
 

@@ -136,8 +136,13 @@ class ApiControllerTest extends TestCase
             'intro' => 'Intro',
         ]));
 
+        $submissionRepo = $this->createMock(\App\Repository\SubmissionRepository::class);
+        $submissionRepo->expects($this->once())
+            ->method('findOneBy')
+            ->willReturn(null);
+
         $controller = new ApiController($urlGenerator, $parameterBag);
-        $response = $controller->sendLink($request, $repo, $emailService);
+        $response = $controller->sendLink($request, $repo, $emailService, $submissionRepo);
 
         $this->assertInstanceOf(JsonResponse::class, $response);
         $this->assertSame(Response::HTTP_OK, $response->getStatusCode());
@@ -155,10 +160,11 @@ class ApiControllerTest extends TestCase
 
         $repo = $this->createMock(\App\Repository\ChecklistRepository::class);
         $emailService = $this->createMock(\App\Service\EmailService::class);
+        $submissionRepo = $this->createMock(\App\Repository\SubmissionRepository::class);
 
         $controller = new ApiController($urlGenerator, $parameterBag);
         $request = new Request([], [], [], [], [], [], json_encode(['foo' => 'bar']));
-        $response = $controller->sendLink($request, $repo, $emailService);
+        $response = $controller->sendLink($request, $repo, $emailService, $submissionRepo);
 
         $this->assertSame(Response::HTTP_BAD_REQUEST, $response->getStatusCode());
     }
