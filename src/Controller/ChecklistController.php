@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Checklist;
 use App\Entity\Submission;
+use App\Repository\SubmissionRepository;
 use App\Service\EmailService;
 use App\Service\SubmissionService;
 use App\Service\SubmissionFactory;
@@ -74,10 +75,10 @@ class ChecklistController extends AbstractController
 
     private function findExistingSubmission(Checklist $checklist, string $mitarbeiterId): ?Submission
     {
-        return $this->entityManager->getRepository(Submission::class)->findOneBy([
-            'checklist' => $checklist,
-            'mitarbeiterId' => $mitarbeiterId,
-        ]);
+        /** @var SubmissionRepository $repo */
+        $repo = $this->entityManager->getRepository(Submission::class);
+
+        return $repo->findOneByChecklistAndMitarbeiterId($checklist, $mitarbeiterId);
     }
 
     /**

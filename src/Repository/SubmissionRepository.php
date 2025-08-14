@@ -17,6 +17,14 @@ class SubmissionRepository extends ServiceEntityRepository
         parent::__construct($registry, Submission::class);
     }
 
+    public function findOneByChecklistAndMitarbeiterId(Checklist $checklist, string $mitarbeiterId): ?Submission
+    {
+        return $this->findOneBy([
+            'checklist' => $checklist,
+            'mitarbeiterId' => $mitarbeiterId,
+        ]);
+    }
+
     /**
      * @return list<Submission>
      */
