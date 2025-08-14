@@ -161,6 +161,14 @@ admin_email_settings:
     path: /admin/email-settings
     controller: App\Controller\Admin\EmailSettingsController::edit
 
+admin_confirmation_template:
+    path: /admin/confirmation-template
+    controller: App\Controller\Admin\ConfirmationTemplateController::edit
+
+admin_confirmation_template_download:
+    path: /admin/confirmation-template/download
+    controller: App\Controller\Admin\ConfirmationTemplateController::download
+
 # Benutzerverwaltung
 admin_users:
     path: /admin/users

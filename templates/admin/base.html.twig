@@ -53,6 +53,11 @@
                             </a>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link {% if app.request.get('_route') starts with 'admin_confirmation_template' %}active{% endif %}" href="{{ path('admin_confirmation_template') }}">
+                                <i class="fas fa-check"></i> Best\u00E4tigungs-Mail Template
+                            </a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link {% if app.request.get('_route') starts with 'admin_user' %}active{% endif %}" href="{{ path('admin_users') }}">
                                 <i class="fas fa-users"></i> Benutzer
                             </a>

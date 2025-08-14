@@ -79,7 +79,7 @@ class EmailService
         $this->getMailer()->send($targetEmail);
         
         // E-Mail an Führungskraft (Bestätigung)
-        $confirmationTemplate = $this->getConfirmationTemplate();
+        $confirmationTemplate = $settings?->getConfirmationEmailTemplate() ?? $this->getConfirmationTemplate();
         $confirmationContent = $this->replacePlaceholders($confirmationTemplate, $submission);
         
         $managerEmail = (new Email())
@@ -217,7 +217,7 @@ class EmailService
     /**
      * Liefert das Standardtemplate für die Bestätigungs-E-Mail an die Führungskraft.
      */
-    private function getConfirmationTemplate(): string
+    public function getConfirmationTemplate(): string
     {
         return '
 <!DOCTYPE html>
