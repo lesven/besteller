@@ -45,6 +45,8 @@ class ApiController extends AbstractController
         if (!is_array($data)) {
             return 'Ungültiges JSON';
         }
+    /** @var array<string,mixed> $data */
+    // PHPStan: $data keys are strings and values mixed
         foreach ($requiredFields as $field) {
             if (empty($data[$field])) {
                 return 'Fehlende Parameter';
@@ -59,6 +61,52 @@ class ApiController extends AbstractController
     private function isValidMitarbeiterId(string $id): bool
     {
         return preg_match('/^[A-Za-z0-9-]+$/', $id) === 1;
+    }
+
+    /**
+     * Extrahiert und validiert die benötigten Parameter für generateLink.
+     *
+     * @param array<string,mixed> $data Decodierte JSON-Daten
+     * @return array{checklistId:int,mitarbeiterId:string,mitarbeiterName:string,emailEmpfaenger:string}
+     * @throws \InvalidArgumentException Bei fehlenden oder ungültigen Parametern
+     */
+    private function extractGenerateLinkParams(array $data): array
+    {
+        if (!isset($data['mitarbeiter_id']) || !is_string($data['mitarbeiter_id'])) {
+            throw new \InvalidArgumentException('Ungültige Personen-ID');
+        }
+        if (!isset($data['mitarbeiter_name']) || !is_string($data['mitarbeiter_name'])) {
+            throw new \InvalidArgumentException('Ungültiger Name');
+        }
+        if (!isset($data['email_empfänger']) || !is_string($data['email_empfänger'])) {
+            throw new \InvalidArgumentException('Ungültige E-Mail');
+        }
+        if (!isset($data['stückliste_id']) || (!is_int($data['stückliste_id']) && !is_string($data['stückliste_id']) && !is_float($data['stückliste_id']))) {
+            throw new \InvalidArgumentException('Ungültige Stücklisten-ID');
+        }
+
+        $mitarbeiterId = $data['mitarbeiter_id'];
+        if (!$this->isValidMitarbeiterId($mitarbeiterId)) {
+            throw new \InvalidArgumentException('Ungültige Personen-ID');
+        }
+
+        $mitarbeiterName = $data['mitarbeiter_name'];
+        $emailEmpfaenger = $data['email_empfänger'];
+
+        if (is_int($data['stückliste_id'])) {
+            $checklistId = $data['stückliste_id'];
+        } elseif (is_string($data['stückliste_id']) || is_float($data['stückliste_id'])) {
+            $checklistId = (int) $data['stückliste_id'];
+        } else {
+            $checklistId = (int) $data['stückliste_id'];
+        }
+
+        return [
+            'checklistId' => $checklistId,
+            'mitarbeiterId' => $mitarbeiterId,
+            'mitarbeiterName' => $mitarbeiterName,
+            'emailEmpfaenger' => $emailEmpfaenger,
+        ];
     }
     public function __construct(
         private UrlGeneratorInterface $urlGenerator,
@@ -85,17 +133,23 @@ class ApiController extends AbstractController
             return $this->errorResponse($data, Response::HTTP_BAD_REQUEST);
         }
 
-        // 3. Mitarbeiter-ID validieren
-        if (!$this->isValidMitarbeiterId($data['mitarbeiter_id'])) {
-            return $this->errorResponse('Ungültige Personen-ID', Response::HTTP_BAD_REQUEST);
+        try {
+            $params = $this->extractGenerateLinkParams($data);
+        } catch (\InvalidArgumentException $e) {
+            return $this->errorResponse($e->getMessage(), Response::HTTP_BAD_REQUEST);
         }
+
+        $mitarbeiterId = $params['mitarbeiterId'];
+        $mitarbeiterName = $params['mitarbeiterName'];
+        $emailEmpfaenger = $params['emailEmpfaenger'];
+        $checklistId = $params['checklistId'];
 
         // 4. Link generieren
         $link = $this->urlGenerator->generate('checklist_selection', [
-            'list' => $data['stückliste_id'],
-            'name' => $data['mitarbeiter_name'],
-            'id' => $data['mitarbeiter_id'],
-            'email' => $data['email_empfänger'],
+            'list' => $checklistId,
+            'name' => $mitarbeiterName,
+            'id' => $mitarbeiterId,
+            'email' => $emailEmpfaenger,
         ], UrlGeneratorInterface::ABSOLUTE_URL);
 
         // 5. Erfolg zurückgeben
@@ -119,19 +173,34 @@ class ApiController extends AbstractController
         }
 
         // 2. JSON und Pflichtfelder validieren
+
         $required = ['checklist_id', 'recipient_name', 'recipient_email', 'mitarbeiter_id'];
         $data = $this->validateJson($request, $required);
         if (is_string($data)) {
             return $this->errorResponse($data, Response::HTTP_BAD_REQUEST);
         }
 
-        // 3. Mitarbeiter-ID validieren
-        if (!$this->isValidMitarbeiterId($data['mitarbeiter_id'])) {
+        // Type-safety for expected fields
+        if (!isset($data['mitarbeiter_id']) || !is_string($data['mitarbeiter_id'])) {
+            return $this->errorResponse('Ungültige Personen-ID', Response::HTTP_BAD_REQUEST);
+        }
+        if (!isset($data['recipient_name']) || !is_string($data['recipient_name'])) {
+            return $this->errorResponse('Ungültiger Empfängername', Response::HTTP_BAD_REQUEST);
+        }
+        if (!isset($data['recipient_email']) || !is_string($data['recipient_email'])) {
+            return $this->errorResponse('Ungültige Empfänger-E-Mail', Response::HTTP_BAD_REQUEST);
+        }
+        if (!isset($data['checklist_id']) || (!is_int($data['checklist_id']) && !is_string($data['checklist_id']) && !is_float($data['checklist_id']))) {
+            return $this->errorResponse('Ungültige Checklist-ID', Response::HTTP_BAD_REQUEST);
+        }
+
+        $mitarbeiterId = $data['mitarbeiter_id'];
+        if (!$this->isValidMitarbeiterId($mitarbeiterId)) {
             return $this->errorResponse('Ungültige Personen-ID', Response::HTTP_BAD_REQUEST);
         }
 
-        // 4. Checkliste holen
-        $checklist = $checklistRepository->find((int) $data['checklist_id']);
+        $checklistId = is_int($data['checklist_id']) ? $data['checklist_id'] : (int) $data['checklist_id'];
+        $checklist = $checklistRepository->find($checklistId);
         if (!$checklist) {
             return $this->errorResponse('Checklist not found', Response::HTTP_NOT_FOUND);
         }
@@ -139,7 +208,7 @@ class ApiController extends AbstractController
         // 5. Prüfen, ob Bestellung existiert
         $existingSubmission = $submissionRepository->findOneByChecklistAndMitarbeiterId(
             $checklist,
-            $data['mitarbeiter_id']
+            $mitarbeiterId
         );
         if ($existingSubmission) {
             return $this->errorResponse('Für diese Personen-ID wurde bereits eine Bestellung übermittelt.', Response::HTTP_CONFLICT);
@@ -151,20 +220,24 @@ class ApiController extends AbstractController
             : null;
         $intro = isset($data['intro']) && is_string($data['intro']) ? $data['intro'] : '';
 
+        // assign validated recipient vars
+        $recipientName = $data['recipient_name'];
+        $recipientEmail = $data['recipient_email'];
+
         // 7. Link generieren
         $link = $this->urlGenerator->generate('checklist_form', [
             'checklist_id' => $checklist->getId(),
-            'name' => $personName ?? $data['recipient_name'],
-            'mitarbeiter_id' => $data['mitarbeiter_id'],
-            'email' => $data['recipient_email'],
+            'name' => $personName ?? $recipientName,
+            'mitarbeiter_id' => $mitarbeiterId,
+            'email' => $recipientEmail,
         ], UrlGeneratorInterface::ABSOLUTE_URL);
 
         // 8. E-Mail versenden
         $emailService->sendLinkEmail(
             $checklist,
-            urldecode($data['recipient_name']),
-            $data['recipient_email'],
-            $data['mitarbeiter_id'],
+            urldecode($recipientName),
+            $recipientEmail,
+            $mitarbeiterId,
             $personName ? urldecode($personName) : null,
             $intro,
             $link
