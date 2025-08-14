@@ -4,6 +4,7 @@ namespace App\Controller\Admin;
 
 use App\Entity\Checklist;
 use App\Entity\Submission;
+use App\Repository\SubmissionRepository;
 use App\Repository\ChecklistRepository;
 use App\Service\EmailService;
 use App\Service\ChecklistDuplicationService;
@@ -256,10 +257,9 @@ class ChecklistController extends AbstractController
             ) {
                 $this->addFlash('error', 'Bitte Empfängerdaten und gültige Personen-ID vollständig angeben.');
             } else {
-                $existingSubmission = $this->entityManager->getRepository(Submission::class)->findOneBy([
-                    'checklist' => $checklist,
-                    'mitarbeiterId' => $mitarbeiterId,
-                ]);
+                /** @var SubmissionRepository $repo */
+                $repo = $this->entityManager->getRepository(Submission::class);
+                $existingSubmission = $repo->findOneByChecklistAndMitarbeiterId($checklist, $mitarbeiterId);
 
                 if ($existingSubmission) {
                     $this->addFlash('error', 'Für diese Personen-ID wurde bereits eine Bestellung übermittelt.');

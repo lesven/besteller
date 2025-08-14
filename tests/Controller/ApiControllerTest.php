@@ -138,7 +138,8 @@ class ApiControllerTest extends TestCase
 
         $submissionRepo = $this->createMock(\App\Repository\SubmissionRepository::class);
         $submissionRepo->expects($this->once())
-            ->method('findOneBy')
+            ->method('findOneByChecklistAndMitarbeiterId')
+            ->with($checklist, '123')
             ->willReturn(null);
 
         $controller = new ApiController($urlGenerator, $parameterBag);
@@ -148,6 +149,44 @@ class ApiControllerTest extends TestCase
         $this->assertSame(Response::HTTP_OK, $response->getStatusCode());
         $data = json_decode($response->getContent(), true);
         $this->assertSame('sent', $data['status']);
+    }
+
+    public function testSendLinkReturnsConflictOnDuplicate(): void
+    {
+        $urlGenerator = $this->createMock(UrlGeneratorInterface::class);
+        $parameterBag = $this->createMock(ParameterBagInterface::class);
+        $parameterBag->expects($this->once())
+            ->method('get')
+            ->willReturnCallback(fn($k) => $k === 'API_TOKEN' ? '' : null);
+
+        $checklist = new \App\Entity\Checklist();
+        $repo = $this->createMock(\App\Repository\ChecklistRepository::class);
+        $repo->expects($this->once())
+            ->method('find')
+            ->with(1)
+            ->willReturn($checklist);
+
+        $emailService = $this->createMock(\App\Service\EmailService::class);
+        $emailService->expects($this->never())
+            ->method('sendLinkEmail');
+
+        $submissionRepo = $this->createMock(\App\Repository\SubmissionRepository::class);
+        $submissionRepo->expects($this->once())
+            ->method('findOneByChecklistAndMitarbeiterId')
+            ->with($checklist, '123')
+            ->willReturn(new \App\Entity\Submission());
+
+        $request = new Request([], [], [], [], [], [], json_encode([
+            'checklist_id' => 1,
+            'recipient_name' => 'Bob',
+            'recipient_email' => 'b@example.com',
+            'mitarbeiter_id' => '123',
+        ]));
+
+        $controller = new ApiController($urlGenerator, $parameterBag);
+        $response = $controller->sendLink($request, $repo, $emailService, $submissionRepo);
+
+        $this->assertSame(Response::HTTP_CONFLICT, $response->getStatusCode());
     }
 
     public function testSendLinkValidatesParameters(): void

@@ -90,10 +90,10 @@ class ApiController extends AbstractController
             return new JsonResponse(['error' => 'Checklist not found'], Response::HTTP_NOT_FOUND);
         }
 
-        $existingSubmission = $submissionRepository->findOneBy([
-            'checklist' => $checklist,
-            'mitarbeiterId' => $data['mitarbeiter_id'],
-        ]);
+        $existingSubmission = $submissionRepository->findOneByChecklistAndMitarbeiterId(
+            $checklist,
+            $data['mitarbeiter_id']
+        );
         if ($existingSubmission) {
             return new JsonResponse(
                 ['error' => 'Für diese Personen-ID wurde bereits eine Bestellung übermittelt.'],
