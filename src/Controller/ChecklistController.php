@@ -9,6 +9,7 @@ use App\Service\EmailService;
 use App\Service\SubmissionService;
 use App\Service\SubmissionFactory;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -23,12 +24,15 @@ class ChecklistController extends AbstractController
      * @param EntityManagerInterface $entityManager  Datenbankzugriff
      * @param SubmissionService      $submissionService Service zum Sammeln der Formularwerte
      * @param EmailService           $emailService     Versand der E-Mails
+     * @param SubmissionFactory      $submissionFactory Factory für Submissions
+     * @param LoggerInterface        $logger           Logger für Fehlermeldungen
      */
     public function __construct(
         private EntityManagerInterface $entityManager,
         private SubmissionService $submissionService,
         private EmailService $emailService,
-        private SubmissionFactory $submissionFactory
+        private SubmissionFactory $submissionFactory,
+        private LoggerInterface $logger
     ) {}
 
     /**
@@ -231,7 +235,7 @@ class ChecklistController extends AbstractController
                     $submission->setGeneratedEmail($generatedEmail);
                     $this->entityManager->flush();
                 } catch (\Exception $e) {
-                    error_log('E-Mail-Versendung fehlgeschlagen für Submission ' . $submission->getId() . ': ' . $e->getMessage());
+                    $this->logger->error('E-Mail-Versendung fehlgeschlagen für Submission ' . $submission->getId() . ': ' . $e->getMessage());
                 }
                 $template = 'checklist/success.html.twig';
                 $templateVars = [
