@@ -22,6 +22,7 @@ class CreateUserCommand extends Command
      * @param EntityManagerInterface      $entityManager Datenbankzugriff
      * @param UserPasswordHasherInterface $passwordHasher Dienst zum Hashen des Passworts
      */
+    // Konfiguriert den Befehl, legt Name, Beschreibung und Argumente fest
     public function __construct(
         private EntityManagerInterface $entityManager,
         private UserPasswordHasherInterface $passwordHasher
@@ -37,6 +38,7 @@ class CreateUserCommand extends Command
         $this
             ->addArgument('email', InputArgument::REQUIRED, 'E-Mail-Adresse des Benutzers')
             ->addArgument('password', InputArgument::REQUIRED, 'Passwort (mindestens 16 Zeichen)');
+    // Führt den Befehl aus, erstellt und speichert einen neuen Benutzer
     }
 
     /**
