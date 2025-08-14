@@ -35,6 +35,9 @@ class ApiController extends AbstractController
 
     /**
      * Hilfsmethode: Validiert die JSON-Daten und Pflichtfelder
+     *
+     * @param string[] $requiredFields Liste der Pflichtfelder
+     * @return array<string,mixed>|string Decodierte JSON-Daten oder Fehlermeldung
      */
     private function validateJson(Request $request, array $requiredFields): array|string
     {
