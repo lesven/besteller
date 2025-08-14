@@ -262,7 +262,7 @@ class ChecklistController extends AbstractController
                 $existingSubmission = $repo->findOneByChecklistAndMitarbeiterId($checklist, $mitarbeiterId);
 
                 if ($existingSubmission) {
-                    $this->addFlash('error', 'Für diese Personen-ID wurde bereits eine Bestellung übermittelt.');
+                    $this->addFlash('error', 'Für diese Personen-ID/Listen Kombination wurde bereits eine Bestellung übermittelt.');
                 } else {
                     $link = $this->urlGenerator->generate('checklist_form', [
                         'checklist_id' => $checklist->getId(),
