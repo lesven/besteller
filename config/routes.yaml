@@ -186,7 +186,7 @@ admin_user_delete:
 # Link sending routes
 admin_checklist_send_link:
     path: /admin/checklists/{id}/send-link
-    controller: App\Controller\Admin\ChecklistController::sendLink
+    controller: App\Controller\Admin\ChecklistLinkController::sendLink
     requirements:
         id: '\d+'
 

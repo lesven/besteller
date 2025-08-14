@@ -32,7 +32,6 @@ class ChecklistController extends AbstractController
         private EntityManagerInterface $entityManager,
         private ChecklistRepository $checklistRepository,
         private EmailService $emailService,
-        private UrlGeneratorInterface $urlGenerator,
         private ChecklistDuplicationService $duplicationService
     ) {
     }
@@ -230,67 +229,6 @@ class ChecklistController extends AbstractController
         $this->addFlash('success', 'Checkliste wurde erfolgreich dupliziert.');
 
         return $this->redirectToRoute('admin_checklists');
-    }
-
-    /**
-     * Versendet einen personalisierten Link zur Stückliste.
-     *
-     * @param Request   $request   Aktuelle HTTP-Anfrage
-     * @param Checklist $checklist Die betreffende Checkliste
-     *
-     * @return Response Formular oder Weiterleitung
-     */
-    public function sendLink(Request $request, Checklist $checklist): Response
-    {
-        if ($request->isMethod('POST')) {
-            $recipientName = trim((string) $request->request->get('recipient_name'));
-            $recipientEmail = trim((string) $request->request->get('recipient_email'));
-            $mitarbeiterId = trim((string) $request->request->get('mitarbeiter_id'));
-            $personName = trim((string) $request->request->get('person_name')) ?: null;
-            $intro = (string) $request->request->get('intro');
-
-            if (
-                !$recipientName ||
-                !filter_var($recipientEmail, FILTER_VALIDATE_EMAIL) ||
-                !$mitarbeiterId ||
-                !preg_match('/^[A-Za-z0-9-]+$/', $mitarbeiterId)
-            ) {
-                $this->addFlash('error', 'Bitte Empfängerdaten und gültige Personen-ID vollständig angeben.');
-            } else {
-                /** @var SubmissionRepository $repo */
-                $repo = $this->entityManager->getRepository(Submission::class);
-                $existingSubmission = $repo->findOneByChecklistAndMitarbeiterId($checklist, $mitarbeiterId);
-
-                if ($existingSubmission) {
-                    $this->addFlash('error', 'Für diese Personen-ID/Listen Kombination wurde bereits eine Bestellung übermittelt.');
-                } else {
-                    $link = $this->urlGenerator->generate('checklist_form', [
-                        'checklist_id' => $checklist->getId(),
-                        'name' => $personName ?? $recipientName,
-                        'mitarbeiter_id' => $mitarbeiterId,
-                        'email' => $recipientEmail,
-                    ], UrlGeneratorInterface::ABSOLUTE_URL);
-
-                    $this->emailService->sendLinkEmail(
-                        $checklist,
-                        $recipientName,
-                        $recipientEmail,
-                        $mitarbeiterId,
-                        $personName,
-                        $intro,
-                        $link
-                    );
-
-                    $this->addFlash('success', 'Link wurde erfolgreich versendet.');
-
-                    return $this->redirectToRoute('admin_checklists');
-                }
-            }
-        }
-
-        return $this->render('admin/checklist/send_link.html.twig', [
-            'checklist' => $checklist,
-        ]);
     }
 
     /**
