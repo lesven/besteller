@@ -294,8 +294,9 @@ class ChecklistController extends AbstractController
                 return $this->redirectToRoute($route, ['id' => $checklist->getId()]);
             }
 
-            // Einfache Inhaltsvalidierung: Blockiere verdächtige Inhalte
-            if (str_contains($fileContent, '<script>') || str_contains($fileContent, 'javascript:')) {
+            // Einfache Inhaltsvalidierung: Blockiere verdächtige Inhalte (case-insensitive)
+            $contentLower = strtolower($fileContent);
+            if (str_contains($contentLower, '<script') || str_contains($contentLower, 'javascript:') || str_contains($contentLower, 'onclick=') || str_contains($contentLower, 'onload=')) {
                 $this->addFlash('error', 'Die hochgeladene Datei enthält nicht erlaubte Inhalte.');
                 return $this->redirectToRoute($route, ['id' => $checklist->getId()]);
             }
