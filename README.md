@@ -218,11 +218,20 @@ Die folgenden Platzhalter stehen im HTML-Template zur Verfügung:
 
 #### US-17: Versand von ungültigen und doppelten IDs verhindern
 **Als** Administrator
-**möchte ich** dass Versand einer BEstellmail geprüft wird ob die Personen-ID gültig und frei ist
+**möchte ich** dass Versand einer Bestellmail geprüft wird ob die Personen-ID gültig und frei ist
 **damit ich** nicht aus Versehen einen Link versende der nicht funktioniert
 
 **akzeptanzkriterien**
- - wenn es die ID bereits in der Datenbank gibt kommt eine fehlermeldung
+ - wenn es die Kombination Personen-ID für die gewählte checklist_id bereits in der Datenbank gibt kommt eine fehlermeldung
+
+#### US-18: Automatisch zufällige Personen-Id erzeugen
+**Als** Administrator
+**möchte ich** beim Versand eine zufällige Personenid erzeugen können 
+**damit ich** mir nicht selber was pseudozufälliges aussuchen muss wenn es mal keine nummer gibt
+
+**akzeptanzkriterien**
+ - wenn das Feld personenId leer gelassen wird, soll eine UUID genommen werden
+
 
 ## Nicht-funktionale Anforderungen
 
