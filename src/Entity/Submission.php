@@ -2,10 +2,11 @@
 
 namespace App\Entity;
 
+use App\Repository\SubmissionRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 
-#[ORM\Entity]
+#[ORM\Entity(repositoryClass: SubmissionRepository::class)]
 #[ORM\Table(name: 'submissions')]
 #[UniqueEntity(fields: ['checklist', 'mitarbeiterId'], message: 'Für diese Person wurde die Stückliste bereits ausgefüllt.')]
 class Submission
