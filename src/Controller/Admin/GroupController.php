@@ -38,6 +38,67 @@ class GroupController extends AbstractController
     }
 
     /**
+     * Mappt Formulardaten auf eine ChecklistGroup-Entität.
+     * Alle Inline-Kommentare auf Deutsch gemäß Repo-Richtlinien.
+     *
+     * @param Request $request Die aktuelle Anfrage mit Formdaten
+     * @param ChecklistGroup $group Die zu befüllende Gruppe
+     */
+    private function handleGroupForm(Request $request, ChecklistGroup $group): void
+    {
+        // Titel direkt übernehmen
+        $group->setTitle($request->request->getString('title'));
+
+        // Beschreibung säubern (leer -> null)
+        $group->setDescription($this->sanitizeValue($request->request->getString('description', '')));
+
+        // Sortierung als Integer
+        $group->setSortOrder($request->request->getInt('sort_order', 0));
+    }
+
+    /**
+     * Mappt Formulardaten auf ein GroupItem und parst Optionen falls nötig.
+     *
+     * @param Request $request Die aktuelle Anfrage
+     * @param GroupItem $item Das zu befüllende Item
+     */
+    private function handleItemForm(Request $request, GroupItem $item): void
+    {
+        $item->setLabel($request->request->getString('label'));
+        $item->setType($request->request->getString('type'));
+        $item->setSortOrder($request->request->getInt('sort_order', 0));
+
+        // Für Checkbox/Radio: Optionen parsen
+        if (in_array($item->getType(), [GroupItem::TYPE_CHECKBOX, GroupItem::TYPE_RADIO])) {
+            $options = $this->parseOptions($request->request->getString('options', ''));
+            $item->setOptionsWithActive($options);
+        }
+    }
+
+    /**
+     * Parst eine mehrzeilige Options-Eingabe in ein Array mit label/active.
+     * Zeilen, die mit "(aktiv)" enden, werden als aktiv markiert.
+     *
+     * @param string $raw Raw-Text aus dem Formular
+     * @return array<int,array{label:string,active:bool}> Gefilterte Optionen
+     */
+    private function parseOptions(string $raw): array
+    {
+        $lines = array_filter(array_map('trim', explode("\n", $raw)));
+        $options = [];
+        foreach ($lines as $line) {
+            $active = false;
+            if (preg_match('/\(aktiv\)$/i', $line)) {
+                $active = true;
+                $line = trim(preg_replace('/\(aktiv\)$/i', '', $line) ?? $line);
+            }
+            $options[] = ['label' => $line, 'active' => $active];
+        }
+
+        return $options;
+    }
+
+    /**
      * Erstellt eine neue Gruppe innerhalb einer Checkliste.
      *
      * @param Request   $request   Aktuelle HTTP-Anfrage
@@ -51,9 +112,7 @@ class GroupController extends AbstractController
         $group->setChecklist($checklist);
 
         if ($request->isMethod('POST')) {
-            $group->setTitle($request->request->getString('title'));
-            $group->setDescription($this->sanitizeValue($request->request->getString('description', '')));
-            $group->setSortOrder($request->request->getInt('sort_order', 0));
+            $this->handleGroupForm($request, $group);
 
             $this->entityManager->persist($group);
             $this->entityManager->flush();
@@ -80,9 +139,7 @@ class GroupController extends AbstractController
     public function edit(Request $request, ChecklistGroup $group): Response
     {
         if ($request->isMethod('POST')) {
-            $group->setTitle($request->request->getString('title'));
-            $group->setDescription($this->sanitizeValue($request->request->getString('description', '')));
-            $group->setSortOrder($request->request->getInt('sort_order', 0));
+            $this->handleGroupForm($request, $group);
 
             $this->entityManager->flush();
 
@@ -132,29 +189,7 @@ class GroupController extends AbstractController
         $item->setGroup($group);
 
         if ($request->isMethod('POST')) {
-            $item->setLabel($request->request->getString('label'));
-            $item->setType($request->request->getString('type'));
-            $item->setSortOrder($request->request->getInt('sort_order', 0));
-
-            // Handle options für Checkbox/Radio
-            if (in_array($item->getType(), [GroupItem::TYPE_CHECKBOX, GroupItem::TYPE_RADIO])) {
-                $lines = array_filter(
-                    array_map(
-                        'trim',
-                        explode("\n", $request->request->getString('options', ''))
-                    )
-                );
-                $options = [];
-                foreach ($lines as $line) {
-                    $active = false;
-                    if (preg_match('/\(aktiv\)$/i', $line)) {
-                        $active = true;
-                        $line = trim(preg_replace('/\(aktiv\)$/i', '', $line) ?? $line);
-                    }
-                    $options[] = ['label' => $line, 'active' => $active];
-                }
-                $item->setOptionsWithActive($options);
-            }
+            $this->handleItemForm($request, $item);
 
             $this->entityManager->persist($item);
             $this->entityManager->flush();
@@ -181,29 +216,7 @@ class GroupController extends AbstractController
     public function editItem(Request $request, GroupItem $item): Response
     {
         if ($request->isMethod('POST')) {
-            $item->setLabel($request->request->getString('label'));
-            $item->setType($request->request->getString('type'));
-            $item->setSortOrder($request->request->getInt('sort_order', 0));
-
-            // Handle options für Checkbox/Radio
-            if (in_array($item->getType(), [GroupItem::TYPE_CHECKBOX, GroupItem::TYPE_RADIO])) {
-                $lines = array_filter(
-                    array_map(
-                        'trim',
-                        explode("\n", $request->request->getString('options', ''))
-                    )
-                );
-                $options = [];
-                foreach ($lines as $line) {
-                    $active = false;
-                    if (preg_match('/\(aktiv\)$/i', $line)) {
-                        $active = true;
-                        $line = trim(preg_replace('/\(aktiv\)$/i', '', $line) ?? $line);
-                    }
-                    $options[] = ['label' => $line, 'active' => $active];
-                }
-                $item->setOptionsWithActive($options);
-            }
+            $this->handleItemForm($request, $item);
 
             $this->entityManager->flush();
 
