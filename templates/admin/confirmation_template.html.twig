@@ -25,14 +25,15 @@
 {% endfor %}
 
 <form method="post" enctype="multipart/form-data">
-    <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+    {# CSRF-Token generieren; Token-ID verwendet den Routennamen #}
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token('admin_confirmation_template') }}">
     <div class="mb-3">
-        <label class="form-label">HTML-Datei hochladen</label>
-        <input type="file" name="template_file" accept=".html,.htm" class="form-control">
+        <label for="template_file" class="form-label">HTML-Datei hochladen</label>
+        <input id="template_file" type="file" name="template_file" accept=".html,.htm" class="form-control">
     </div>
     <div class="mb-3">
-        <label class="form-label">Template-Inhalt</label>
-        <textarea name="template_content" class="form-control" rows="15">{{ currentTemplate }}</textarea>
+        <label for="template_content" class="form-label">Template-Inhalt</label>
+        <textarea id="template_content" name="template_content" class="form-control" rows="15">{{ currentTemplate }}</textarea>
     </div>
     <button type="submit" class="btn btn-primary">Speichern</button>
 </form>
