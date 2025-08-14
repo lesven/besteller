@@ -53,8 +53,6 @@ class ApiController extends AbstractController
     /**
      * Hilfsmethode: Validiert die Mitarbeiter-ID
      */
-    private function isValidMitarbeiterId($id): bool
-    {
     private function isValidMitarbeiterId(string $id): bool
     {
         return preg_match('/^[A-Za-z0-9-]+$/', $id) === 1;
