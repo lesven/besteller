@@ -45,14 +45,18 @@ class ApiController extends AbstractController
         if (!is_array($data)) {
             return 'Ungültiges JSON';
         }
-    /** @var array<string,mixed> $data */
-    // PHPStan: $data keys are strings and values mixed
+
+        // präzise Typinformation für PHPStan
+        /** @var array<string,mixed> $typedData */
+        $typedData = $data;
+
         foreach ($requiredFields as $field) {
-            if (empty($data[$field])) {
+            if (empty($typedData[$field])) {
                 return 'Fehlende Parameter';
             }
         }
-        return $data;
+
+        return $typedData;
     }
 
     /**
