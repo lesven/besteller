@@ -66,7 +66,8 @@ class ChecklistController extends AbstractController
         return [$name, $mitarbeiterId, $email];
     }
      
-    /* Holt die Werte aus der Query der HTTP-Anfrage.
+    /**
+     * Holt die Werte aus der Query der HTTP-Anfrage.
      *
      * @param Request $request HTTP-Anfrage
      * @return array Enthält Name, Mitarbeiter-ID und E-Mail
