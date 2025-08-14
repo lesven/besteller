@@ -23,10 +23,10 @@ class ChecklistController extends AbstractController
     /**
      * Konstruktor für benötigte Services im Admin-Bereich.
      *
-     * @param EntityManagerInterface $entityManager     Zugriff auf die Datenbank
-     * @param ChecklistRepository    $checklistRepository Repository für Checklisten
-     * @param EmailService           $emailService        Service zum E-Mail-Versand
-     * @param UrlGeneratorInterface  $urlGenerator        Erzeugt absolute Links
+    * @param EntityManagerInterface    $entityManager      Zugriff auf die Datenbank
+    * @param ChecklistRepository       $checklistRepository Repository für Checklisten
+    * @param EmailService              $emailService       Service zum E-Mail-Versand
+    * @param ChecklistDuplicationService $duplicationService Service zum Duplizieren von Checklisten
      */
     public function __construct(
         private EntityManagerInterface $entityManager,
