@@ -40,6 +40,10 @@ class ApiController extends AbstractController
             }
         }
 
+        if (!preg_match('/^[A-Za-z0-9-]+$/', (string) $data['mitarbeiter_id'])) {
+            return new JsonResponse(['error' => 'Ungültige Personen-ID'], Response::HTTP_BAD_REQUEST);
+        }
+
         $link = $this->urlGenerator->generate('checklist_selection', [
             'list' => $data['stückliste_id'],
             'name' => $data['mitarbeiter_name'],
@@ -53,7 +57,8 @@ class ApiController extends AbstractController
     public function sendLink(
         Request $request,
         \App\Repository\ChecklistRepository $checklistRepository,
-        \App\Service\EmailService $emailService
+        \App\Service\EmailService $emailService,
+        \App\Repository\SubmissionRepository $submissionRepository
     ): JsonResponse {
         $configuredTokenRaw = $this->parameterBag->get('API_TOKEN') ?? null;
         $configuredToken = is_string($configuredTokenRaw) ? $configuredTokenRaw : '';
@@ -76,9 +81,24 @@ class ApiController extends AbstractController
             }
         }
 
+        if (!preg_match('/^[A-Za-z0-9-]+$/', (string) $data['mitarbeiter_id'])) {
+            return new JsonResponse(['error' => 'Ungültige Personen-ID'], Response::HTTP_BAD_REQUEST);
+        }
+
         $checklist = $checklistRepository->find((int) $data['checklist_id']);
         if (!$checklist) {
             return new JsonResponse(['error' => 'Checklist not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        $existingSubmission = $submissionRepository->findOneBy([
+            'checklist' => $checklist,
+            'mitarbeiterId' => $data['mitarbeiter_id'],
+        ]);
+        if ($existingSubmission) {
+            return new JsonResponse(
+                ['error' => 'Für diese Personen-ID wurde bereits eine Bestellung übermittelt.'],
+                Response::HTTP_CONFLICT
+            );
         }
 
         $personName = isset($data['person_name']) && is_string($data['person_name'])
