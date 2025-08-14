@@ -48,9 +48,6 @@ class ChecklistController extends AbstractController
     }
 
     /**
-     * @return list{string, string, string}
-     */
-    /**
      * Extrahiert die Werte Name, Mitarbeiter-ID und E-Mail aus einer ParameterBag.
      *
      * @param ParameterBag $source Quelle der Parameter
@@ -68,12 +65,8 @@ class ChecklistController extends AbstractController
 
         return [$name, $mitarbeiterId, $email];
     }
-
-    /**
-     * @return list{string, string, string}
-     */
-    /**
-     * Holt die Werte aus der Query der HTTP-Anfrage.
+     
+    /* Holt die Werte aus der Query der HTTP-Anfrage.
      *
      * @param Request $request HTTP-Anfrage
      * @return array Enthält Name, Mitarbeiter-ID und E-Mail
@@ -83,9 +76,7 @@ class ChecklistController extends AbstractController
         return $this->extractRequestValues($request->query);
     }
 
-    /**
-     * @return list{string, string, string}
-     */
+  
     /**
      * Holt die Werte aus dem Request-Body der HTTP-Anfrage.
      *
@@ -112,14 +103,6 @@ class ChecklistController extends AbstractController
         return $repo->findOneByChecklistAndMitarbeiterId($checklist, $mitarbeiterId);
     }
 
-    /**
-     * Zeigt eine Stückliste anhand der ID an und prüft Parameter.
-     *
-     * @param int     $checklistId      ID der Stückliste
-     * @param Request $request Aktuelle HTTP-Anfrage
-     *
-     * @return Response HTML-Seite der Stückliste
-     */
     /**
      * Zeigt eine Stückliste anhand der ID an und prüft Parameter.
      *
@@ -150,14 +133,7 @@ class ChecklistController extends AbstractController
         ]);
     }
 
-    /**
-     * Verarbeitet eine eingereichte Stückliste und speichert sie.
-     *
-     * @param int     $checklistId      ID der Stückliste
-     * @param Request $request Aktuelle HTTP-Anfrage
-     *
-     * @return Response Erfolgsmeldung nach dem Speichern
-     */
+
     /**
      * Verarbeitet eine eingereichte Stückliste und speichert sie.
      *
@@ -208,13 +184,7 @@ class ChecklistController extends AbstractController
         ]);
     }
 
-    /**
-     * Zeigt das Formular zur Stückliste und verarbeitet Eingaben.
-     *
-     * @param Request $request Aktuelle HTTP-Anfrage
-     *
-     * @return Response Formularseite oder Erfolgsmeldung
-     */
+  
     /**
      * Zeigt das Formular zur Stückliste und verarbeitet Eingaben.
      *
