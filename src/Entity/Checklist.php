@@ -33,6 +33,7 @@ class Checklist
 
     /** @var Collection<int, ChecklistGroup> */
     #[ORM\OneToMany(mappedBy: 'checklist', targetEntity: ChecklistGroup::class, cascade: ['persist', 'remove'], orphanRemoval: true)]
+    #[ORM\OrderBy(['sortOrder' => 'ASC', 'id' => 'ASC'])]
     private Collection $groups;
 
     /** @var Collection<int, Submission> */
