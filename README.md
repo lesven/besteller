@@ -206,6 +206,23 @@ Die folgenden Platzhalter stehen im HTML-Template zur Verfügung:
 - muss bei den einsendungen mit gespeichert werden
 - soll unter admin_submissions_checklist angezeigt werden
 
+ #### US-16: Es Soll möglich sein das Email Template für den Vorgesetzten anzupassen
+**Als** Administrator
+**möchte ich** dass E-Mail Template für die Bestätigungsmail an den Vorgesetzen anpassen können
+**damit ich** da jederzeit passende Informationen reinmachen kann ohne Programmieraufwand zu haben
+
+**akzeptanzkriterien**
+ - das Standardtemplate aus getConfirmationTemplate bleibt erhalten
+ - wie bei den anderen Mailtemapltes unter admin_checklist_link_template kann ich direkt bearbeiten oder eine Datei hochladen
+ - ich kan ndas aktuelle Temaplte runterladen
+
+#### US-17: Versand von ungültigen und doppelten IDs verhindern
+**Als** Administrator
+**möchte ich** dass Versand einer BEstellmail geprüft wird ob die Personen-ID gültig und frei ist
+**damit ich** nicht aus Versehen einen Link versende der nicht funktioniert
+
+**akzeptanzkriterien**
+ - wenn es die ID bereits in der Datenbank gibt kommt eine fehlermeldung
 
 ## Nicht-funktionale Anforderungen
 
