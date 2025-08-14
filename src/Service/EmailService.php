@@ -242,7 +242,7 @@ class EmailService
 <body>
     <div class="header">
         <h1>✓ Stückliste erfolgreich übermittelt</h1>
-        <p>Vielen Dank für deine Eingabe, <strong>{{name}}</strong>!</p>
+        <p>Vielen Dank für deine Eingabe, <strong>{{person_name}}</strong>!</p>
     </div>
     
     <div class="content">

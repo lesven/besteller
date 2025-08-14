@@ -192,6 +192,21 @@ Die folgenden Platzhalter stehen im HTML-Template zur Verfügung:
 **akzeptanzkriterien**
  - mitarbeiter_id soll eine GUID sein die bei jeden Aufruf von admin_checklist_edit neu generiert wird damit ich immmer einen uniqen link habe
 
+
+ #### US-15: Es Soll möglich sein einen Firmennamen mit zu übergeben
+**Als** Administrator
+**möchte ich** dass der Link auch einen optionalen Firmennamen enthalten kann 
+**damit ich** unsere Tochtergesellschaften darüber klassifizieren kann
+
+**akzeptanzkriterien**
+ - company_name soll als parameter mit übergeben werden können
+ - der company_name muss über das formular admin_checklist_send_link eintragbar sein
+- company_name ist ein stirng, max 128 Zeichen
+- darf leer sein
+- muss bei den einsendungen mit gespeichert werden
+- soll unter admin_submissions_checklist angezeigt werden
+
+
 ## Nicht-funktionale Anforderungen
 
 | Bereich               | Anforderung                                                                 |
