@@ -1,6 +1,6 @@
 # Makefile für Besteller Symfony Anwendung
 
-.PHONY: help build start stop restart install migrate clear-cache test
+.PHONY: help build start stop restart install migrate clear-cache test test-db-create test-schema test-setup test-functional
 
 # Default environment is development. Override by running `make <target> ENV=prod`
 ENV ?= dev
@@ -50,6 +50,20 @@ clear-cache: ## Löscht den Symfony Cache
 
 test: ## Führt Tests aus
 	docker compose exec php vendor/bin/phpunit
+
+# --- Test helper targets (Docker) -------------------------------------------------
+test-db-create: ## Erstellt die Test-Datenbank und setzt Rechte (MariaDB)
+	docker compose exec db bash -lc "mysql -uroot -proot -e \"CREATE DATABASE IF NOT EXISTS besteller_test CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci; GRANT ALL PRIVILEGES ON besteller_test.* TO 'besteller'@'%' IDENTIFIED BY 'besteller'; FLUSH PRIVILEGES;\""
+
+test-schema: ## Baut das Test-Schema auf: migrations (empfohlen) oder fallback schema:create
+	docker compose exec php bash -lc "php bin/console doctrine:migrations:migrate --env=test --no-interaction || php bin/console doctrine:schema:create --env=test --no-interaction"
+
+test-setup: test-db-create test-schema ## Bereitet die Test-DB vor (DB anlegen + Schema)
+	@echo "Test DB prepared"
+
+test-functional: test-setup ## Führt die funktionalen Tests (Test-DB wird vorbereitet)
+	docker compose exec php bash -lc "vendor/bin/phpunit -c phpunit.xml.dist $${TEST:-tests/}"
+
 
 phpstan: ## Führt statische Analyse mit PHPStan aus
 	docker compose exec php vendor/bin/phpstan analyse --memory-limit=512M
