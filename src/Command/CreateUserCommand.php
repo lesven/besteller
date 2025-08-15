@@ -56,7 +56,7 @@ class CreateUserCommand extends AbstractUserCommand
         $this->entityManager->persist($user);
         $this->entityManager->flush();
 
-        $io->success(sprintf('Admin-Benutzer "%s" wurde erfolgreich erstellt.', $email));
+        $io->success(sprintf('Benutzer "%s" mit Rolle "%s" wurde erfolgreich erstellt.', $email, $role));
 
         return Command::SUCCESS;
     }
