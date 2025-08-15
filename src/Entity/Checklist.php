@@ -31,6 +31,9 @@ class Checklist
     #[ORM\Column(type: 'text', nullable: true)]
     private ?string $linkEmailTemplate = null;
 
+    #[ORM\Column(type: 'text', nullable: true)]
+    private ?string $confirmationEmailTemplate = null;
+
     /** @var Collection<int, ChecklistGroup> */
     #[ORM\OneToMany(mappedBy: 'checklist', targetEntity: ChecklistGroup::class, cascade: ['persist', 'remove'], orphanRemoval: true)]
     #[ORM\OrderBy(['sortOrder' => 'ASC', 'id' => 'ASC'])]
@@ -103,6 +106,17 @@ class Checklist
     public function setLinkEmailTemplate(?string $linkEmailTemplate): static
     {
         $this->linkEmailTemplate = $linkEmailTemplate;
+        return $this;
+    }
+
+    public function getConfirmationEmailTemplate(): ?string
+    {
+        return $this->confirmationEmailTemplate;
+    }
+
+    public function setConfirmationEmailTemplate(?string $confirmationEmailTemplate): static
+    {
+        $this->confirmationEmailTemplate = $confirmationEmailTemplate;
         return $this;
     }
 
