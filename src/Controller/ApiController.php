@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Exception\JsonValidationException;
 use App\Service\EmployeeIdValidatorService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -38,13 +39,14 @@ class ApiController extends AbstractController
      * Hilfsmethode: Validiert die JSON-Daten und Pflichtfelder
      *
      * @param string[] $requiredFields Liste der Pflichtfelder
-     * @return array<string,mixed>|string Decodierte JSON-Daten oder Fehlermeldung
+     * @return array<string,mixed> Decodierte JSON-Daten
+     * @throws JsonValidationException Bei ungültigen JSON-Daten oder fehlenden Pflichtfeldern
      */
-    private function validateJson(Request $request, array $requiredFields): array|string
+    private function validateJson(Request $request, array $requiredFields): array
     {
         $data = json_decode($request->getContent(), true);
         if (!is_array($data)) {
-            return 'Ungültiges JSON';
+            throw new JsonValidationException('Ungültiges JSON');
         }
 
         // präzise Typinformation für PHPStan
@@ -53,7 +55,7 @@ class ApiController extends AbstractController
 
         foreach ($requiredFields as $field) {
             if (empty($typedData[$field])) {
-                return 'Fehlende Parameter';
+                throw new JsonValidationException('Fehlende Parameter');
             }
         }
 
@@ -134,9 +136,10 @@ class ApiController extends AbstractController
 
         // 2. JSON und Pflichtfelder validieren
         $required = ['stückliste_id', 'mitarbeiter_name', 'mitarbeiter_id', 'email_empfänger'];
-        $data = $this->validateJson($request, $required);
-        if (is_string($data)) {
-            return $this->errorResponse($data, Response::HTTP_BAD_REQUEST);
+        try {
+            $data = $this->validateJson($request, $required);
+        } catch (JsonValidationException $e) {
+            return $this->errorResponse($e->getMessage(), Response::HTTP_BAD_REQUEST);
         }
 
         try {
@@ -179,11 +182,11 @@ class ApiController extends AbstractController
         }
 
         // 2. JSON und Pflichtfelder validieren
-
         $required = ['checklist_id', 'recipient_name', 'recipient_email', 'mitarbeiter_id'];
-        $data = $this->validateJson($request, $required);
-        if (is_string($data)) {
-            return $this->errorResponse($data, Response::HTTP_BAD_REQUEST);
+        try {
+            $data = $this->validateJson($request, $required);
+        } catch (JsonValidationException $e) {
+            return $this->errorResponse($e->getMessage(), Response::HTTP_BAD_REQUEST);
         }
 
         // Type-safety for expected fields
