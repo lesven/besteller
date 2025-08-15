@@ -36,6 +36,7 @@
                                 <i class="fas fa-tachometer-alt"></i> Dashboard
                             </a>
                         </li>
+                        {% if is_granted('ROLE_EDITOR') %}
                         <li class="nav-item">
                             <a class="nav-link {% if app.request.get('_route') starts with 'admin_checklist' %}active{% endif %}" 
                                href="{{ path('admin_checklists') }}">
@@ -47,6 +48,8 @@
                                 <i class='fas fa-paper-plane'></i> Einsendungen
                             </a>
                         </li>
+                        {% endif %}
+                        {% if is_granted('ROLE_ADMIN') %}
                         <li class="nav-item">
                             <a class="nav-link {% if app.request.get('_route') starts with 'admin_email_settings' %}active{% endif %}" href="{{ path('admin_email_settings') }}">
                                 <i class="fas fa-envelope"></i> E-Mail Konfiguration
@@ -57,6 +60,7 @@
                                 <i class="fas fa-users"></i> Benutzer
                             </a>
                         </li>
+                        {% endif %}
                     </ul>
                 </div>
             </nav>

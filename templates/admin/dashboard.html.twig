@@ -5,12 +5,15 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1>Admin Dashboard</h1>
+    {% if is_granted('ROLE_EDITOR') %}
     <div>
         <a href="{{ path('admin_checklist_new') }}" class="btn btn-primary">Neue Stückliste</a>
     </div>
+    {% endif %}
 </div>
 
 <div class="row">
+    {% if is_granted('ROLE_EDITOR') %}
     <div class="col-md-6">
         <div class="card">
             <div class="card-header">
@@ -29,7 +32,9 @@
                                 </div>
                                 <div>
                                     <a href="{{ path('admin_checklist_edit', {id: checklist.id}) }}" class="btn btn-sm btn-outline-primary">Bearbeiten</a>
+                                    {% if is_granted('ROLE_EDITOR') %}
                                     <a href="{{ path('admin_submissions_checklist', {checklistId: checklist.id}) }}" class="btn btn-sm btn-outline-secondary">Einsendungen</a>
+                                    {% endif %}
                                 </div>
                             </div>
                         {% endfor %}
@@ -42,7 +47,9 @@
             </div>
         </div>
     </div>
+    {% endif %}
     
+    {% if is_granted('ROLE_EDITOR') %}
     <div class="col-md-6">
         <div class="card">
             <div class="card-header">
@@ -54,7 +61,71 @@
             </div>
         </div>
     </div>
+    {% endif %}
 </div>
+
+<!-- Versand-Bereich für Versender und Administratoren -->
+{% if is_granted('ROLE_SENDER') %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>Stücklisten-Versand</h5>
+            </div>
+            <div class="card-body">
+                <p>Versenden Sie Links zu Stücklisten an Führungskräfte.</p>
+                {% if checklists is not empty %}
+                    <div class="row">
+                        {% for checklist in checklists %}
+                            <div class="col-md-6 mb-3">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h6 class="card-title">{{ checklist.title }}</h6>
+                                        <p class="card-text text-muted">{{ checklist.targetEmail }}</p>
+                                        <a href="{{ path('admin_checklist_send_link', {id: checklist.id}) }}" class="btn btn-primary btn-sm">Link versenden</a>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted">Noch keine Stücklisten zum Versenden vorhanden.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Benutzerverwaltung nur für Administratoren -->
+{% if is_granted('ROLE_ADMIN') %}
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Benutzerverwaltung</h5>
+            </div>
+            <div class="card-body">
+                <p>Verwalten Sie Benutzerkonten und Rollen.</p>
+                <a href="{{ path('admin_users') }}" class="btn btn-outline-info">Benutzer verwalten</a>
+                <a href="{{ path('admin_user_new') }}" class="btn btn-outline-success">Neuen Benutzer anlegen</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>E-Mail-Einstellungen</h5>
+            </div>
+            <div class="card-body">
+                <p>Konfigurieren Sie die SMTP-Einstellungen.</p>
+                <a href="{{ path('admin_email_settings') }}" class="btn btn-outline-warning">E-Mail-Einstellungen</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
 
 <div class="row mt-4">
     <div class="col-12">
@@ -65,16 +136,26 @@
             <div class="card-body">
                 <h6>So verwenden Sie das System:</h6>
                 <ol>
+                    {% if is_granted('ROLE_EDITOR') %}
                     <li><strong>Stückliste erstellen:</strong> Erstellen Sie eine neue Stückliste mit Gruppen und Auswahlmöglichkeiten</li>
-                    <li><strong>Link generieren:</strong> Erstellen Sie einen personalisierten Link für Führungskräfte</li>
                     <li><strong>E-Mail-Template konfigurieren:</strong> Passen Sie das E-Mail-Template an Ihre Bedürfnisse an</li>
                     <li><strong>Einsendungen verwalten:</strong> Überwachen Sie eingehende Einsendungen</li>
+                    {% endif %}
+                    {% if is_granted('ROLE_SENDER') %}
+                    <li><strong>Link versenden:</strong> Erstellen Sie einen personalisierten Link für Führungskräfte</li>
+                    {% endif %}
+                    {% if is_granted('ROLE_ADMIN') %}
+                    <li><strong>Benutzer verwalten:</strong> Erstellen und verwalten Sie Benutzerkonten</li>
+                    <li><strong>E-Mail-Einstellungen:</strong> Konfigurieren Sie SMTP-Server-Einstellungen</li>
+                    {% endif %}
                 </ol>
                 
+                {% if is_granted('ROLE_SENDER') %}
                 <div class="alert alert-info mt-3">
                     <strong>Tipp:</strong> Links für Führungskräfte haben das Format:<br>
                     <code>/checklist/{id}?name=Max%20Mustermann&mitarbeiter_id=12345&email=max@example.com</code>
                 </div>
+                {% endif %}
             </div>
         </div>
     </div>
