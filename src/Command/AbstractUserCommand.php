@@ -39,7 +39,7 @@ abstract class AbstractUserCommand extends Command
     {
         $io = new SymfonyStyle($input, $output);
         $email = $input->getArgument('email');
-        if (!is_string($email)) {
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $io->error('Ungültige E-Mail-Adresse.');
             return Command::FAILURE;
         }
@@ -50,7 +50,7 @@ abstract class AbstractUserCommand extends Command
             return Command::FAILURE;
         }
 
-        if (strlen($password) < 16) {
+        if (mb_strlen($password) < 16) {
             $io->error('Das Passwort muss mindestens 16 Zeichen lang sein.');
             return Command::FAILURE;
         }
