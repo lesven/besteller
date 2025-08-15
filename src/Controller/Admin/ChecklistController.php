@@ -8,6 +8,7 @@ use App\Repository\SubmissionRepository;
 use App\Repository\ChecklistRepository;
 use App\Service\EmailService;
 use App\Service\ChecklistDuplicationService;
+use App\Service\CsrfDeletionHelper;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -20,6 +21,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted('ROLE_ADMIN')]
 class ChecklistController extends AbstractController
 {
+    use CsrfDeletionHelper;
     /**
      * Konstruktor für benötigte Services im Admin-Bereich.
      *
@@ -160,18 +162,16 @@ class ChecklistController extends AbstractController
      */
     public function delete(Request $request, Checklist $checklist): Response
     {
-        $tokenParam = $request->request->get('_token');
-        $token = is_string($tokenParam) ? $tokenParam : null;
-
-        if ($this->isCsrfTokenValid('delete' . $checklist->getId(), $token)) {
-            foreach ($checklist->getSubmissions() as $submission) {
-                $this->entityManager->remove($submission);
+        $this->handleCsrfDeletion(
+            $request,
+            $checklist,
+            'Checkliste wurde erfolgreich gelöscht.',
+            function (Checklist $checklist): void {
+                foreach ($checklist->getSubmissions() as $submission) {
+                    $this->entityManager->remove($submission);
+                }
             }
-            $this->entityManager->remove($checklist);
-            $this->entityManager->flush();
-
-            $this->addFlash('success', 'Checkliste wurde erfolgreich gelöscht.');
-        }
+        );
 
         return $this->redirectToRoute('admin_checklists');
     }
