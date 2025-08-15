@@ -15,7 +15,6 @@ use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
-use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[IsGranted('ROLE_ADMIN')]
@@ -267,7 +266,6 @@ class ChecklistController extends AbstractController
      * Bearbeitet das Bestätigungs-E-Mail-Template für eine Checkliste.
      * Erlaubt das Hochladen einer HTML-Datei oder die direkte Bearbeitung.
      */
-    #[Route('/admin/checklist/{id}/confirmation-template', name: 'admin_checklist_confirmation_template', methods: ['GET', 'POST'])]
     public function confirmationEmailTemplate(Request $request, Checklist $checklist): Response
     {
         if (!$request->isMethod('POST')) {
@@ -301,7 +299,6 @@ class ChecklistController extends AbstractController
     /**
      * Download des Bestätigungs-E-Mail-Templates einer Checkliste.
      */
-    #[Route('/admin/checklist/{id}/confirmation-template/download', name: 'admin_checklist_confirmation_template_download')]
     public function downloadConfirmationTemplate(Checklist $checklist): Response
     {
         $template = $checklist->getConfirmationEmailTemplate() ?? $this->emailService->getConfirmationTemplate();
@@ -321,7 +318,6 @@ class ChecklistController extends AbstractController
     /**
      * Zurücksetzen des Bestätigungs-E-Mail-Templates auf Standard.
      */
-    #[Route('/admin/checklist/{id}/confirmation-template/reset', name: 'admin_checklist_confirmation_template_reset', methods: ['POST'])]
     public function resetConfirmationTemplate(Request $request, Checklist $checklist): Response
     {
         $tokenParam = $request->request->get('_token');
