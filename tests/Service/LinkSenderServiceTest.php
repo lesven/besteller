@@ -5,6 +5,7 @@ namespace App\Tests\Service;
 use App\Entity\Checklist;
 use App\Entity\Submission;
 use App\Service\LinkSenderService;
+use App\Service\EmployeeIdValidatorService;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
@@ -36,7 +37,10 @@ class LinkSenderServiceTest extends TestCase
         $urlGenerator = $this->createMock(UrlGeneratorInterface::class);
         $urlGenerator->method('generate')->willReturn('http://example.com');
 
-        $service = new LinkSenderService($em, $emailService, $urlGenerator);
+        $employeeIdValidator = $this->createMock(EmployeeIdValidatorService::class);
+        $employeeIdValidator->method('isValid')->with('123')->willReturn(true);
+
+        $service = new LinkSenderService($em, $emailService, $urlGenerator, $employeeIdValidator);
 
         $checklist = (new Checklist())->setTitle('List');
 
@@ -59,7 +63,10 @@ class LinkSenderServiceTest extends TestCase
 
         $urlGenerator = $this->createMock(UrlGeneratorInterface::class);
 
-        $service = new LinkSenderService($em, $emailService, $urlGenerator);
+        $employeeIdValidator = $this->createMock(EmployeeIdValidatorService::class);
+        $employeeIdValidator->method('isValid')->with('123')->willReturn(true);
+
+        $service = new LinkSenderService($em, $emailService, $urlGenerator, $employeeIdValidator);
 
         $this->expectException(\RuntimeException::class);
 
