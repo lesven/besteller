@@ -84,3 +84,4 @@ class CreateUserCommandTest extends TestCase
         $this->assertStringContainsString('mindestens 16 Zeichen', $tester->getDisplay());
     }
 }
+
