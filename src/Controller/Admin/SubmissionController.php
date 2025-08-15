@@ -7,6 +7,7 @@ use App\Repository\ChecklistRepository;
 use App\Repository\SubmissionRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use App\Service\CsrfDeletionHelper;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -14,6 +15,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted('ROLE_ADMIN')]
 class SubmissionController extends AbstractController
 {
+    use CsrfDeletionHelper;
     /**
      * Konstruktor stellt benötigte Repositories bereit.
      *
@@ -97,14 +99,8 @@ class SubmissionController extends AbstractController
             throw $this->createNotFoundException(sprintf('Zugehörige Checkliste für Submission #%d nicht gefunden.', $submission->getId()));
         }
         $checklistId = $checklist->getId();
-        $token = $request->request->get('_token');
-        $token = is_string($token) ? $token : null;
 
-        if ($this->isCsrfTokenValid('delete' . $submission->getId(), $token)) {
-            $this->entityManager->remove($submission);
-            $this->entityManager->flush();
-            $this->addFlash('success', 'Einsendung wurde erfolgreich gel\xC3\xB6scht.');
-        }
+        $this->handleCsrfDeletion($request, $submission, 'Einsendung wurde erfolgreich gelöscht.');
 
         return $this->redirectToRoute('admin_submissions_checklist', ['checklistId' => $checklistId]);
     }
