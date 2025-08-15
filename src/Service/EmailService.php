@@ -298,6 +298,7 @@ class EmailService
         /** @var array<string, string> $placeholders */
         $placeholders = [
             '{{empfaenger_name}}' => $recipientName,
+            '{{recipient_name}}' => $recipientName,
             '{{person_name}}' => $personName ?? '',
             '{{mitarbeiter_id}}' => $mitarbeiterId,
             '{{intro}}' => nl2br($intro),
@@ -332,7 +333,7 @@ class EmailService
     <title>Stückliste {{stückliste}}</title>
 </head>
 <body>
-    <p>Hallo {{empfaenger_name}},</p>
+    <p>Hallo {{recipient_name}},</p>
     <p>{{intro}}</p>
     <p>Bitte fülle die Stückliste <strong>{{stückliste}}</strong> für {{person_name}} (ID {{mitarbeiter_id}}) unter folgendem Link aus:</p>
     <p><a href="{{link}}">{{link}}</a></p>
