@@ -69,7 +69,15 @@ class UserController extends AbstractController
 
         $user = new User();
         $user->setEmail($email);
-        $user->setRoles(['ROLE_ADMIN']);
+
+        // Rolle lesen (optional). Erlaubte Rollen: ROLE_ADMIN, ROLE_EDITOR, ROLE_SENDER
+        $requestedRole = (string) $request->request->get('role', 'ROLE_ADMIN');
+        $allowed = ['ROLE_ADMIN', 'ROLE_EDITOR', 'ROLE_SENDER'];
+        if (!in_array($requestedRole, $allowed, true)) {
+            $requestedRole = 'ROLE_ADMIN';
+        }
+
+        $user->setRoles([$requestedRole]);
         $user->setPassword($this->passwordHasher->hashPassword($user, $password));
 
         $this->entityManager->persist($user);
@@ -108,6 +116,25 @@ class UserController extends AbstractController
         if ($existing && $existing->getId() !== $user->getId()) {
             $this->addFlash('error', 'Ein Benutzer mit dieser E-Mail existiert bereits.');
             return $this->render('admin/user/edit.html.twig', ['user' => $user]);
+        }
+
+        // Rolle nur ändern wenn aktueller User nicht sich selbst ist und falls role übergeben
+        $currentUser = $this->getUser();
+        $requestedRole = (string) $request->request->get('role', '');
+        if ($requestedRole !== '') {
+            $allowed = ['ROLE_ADMIN', 'ROLE_EDITOR', 'ROLE_SENDER'];
+            if (!in_array($requestedRole, $allowed, true)) {
+                $this->addFlash('error', 'Ungültige Rolle.');
+                return $this->render('admin/user/edit.html.twig', ['user' => $user]);
+            }
+
+            // Verhindere, dass ein Administrator seine eigene Rolle ändert
+            if ($currentUser instanceof User && $currentUser->getId() === $user->getId()) {
+                $this->addFlash('error', 'Sie können Ihre eigene Rolle nicht ändern.');
+                return $this->render('admin/user/edit.html.twig', ['user' => $user]);
+            }
+
+            $user->setRoles([$requestedRole]);
         }
 
         $user->setEmail($email);

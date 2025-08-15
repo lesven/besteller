@@ -55,12 +55,15 @@ abstract class AbstractUserCommand extends Command
             return Command::FAILURE;
         }
 
-        return $this->handle($io, $email, $password);
+    return $this->handle($io, $email, $password, $input);
     }
 
     /**
      * Führt die befehlspezifische Logik aus.
      */
-    abstract protected function handle(SymfonyStyle $io, string $email, string $password): int;
+    /**
+     * @param InputInterface $input Eingabe-Interface (für Optionen)
+     */
+    abstract protected function handle(SymfonyStyle $io, string $email, string $password, InputInterface $input): int;
 }
 

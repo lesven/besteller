@@ -239,6 +239,27 @@ Die folgenden Platzhalter stehen im HTML-Template zur Verfügung:
 **möchte ich** mit einem einzigen Command die Datenbank zurücksetzen und mit IT-Ausstattungs-Fixtures befüllen
 **damit ich** die Anwendung mit realistischen Testdaten für verschiedene Abteilungen schnell prüfen und weiterentwickeln kann.
 
+**Rollenmatrix:**
+**Funktionsübersicht:**
+
+- Benutzerverwaltung (User anlegen, bearbeiten, löschen): nur Administrator
+- Stücklisten erstellen/bearbeiten/löschen: Administrator, Editor
+- Stücklisten versenden: Administrator, Versender
+- Rollen ändern: nur Administrator (nicht für sich selbst)
+- Einsendungen einsehen/löschen: Administrator, Editor
+- E-Mail-Templates verwalten: Administrator, Editor
+- Zugriff auf API-Endpunkte:
+  - POST /users: nur Administrator
+  - POST /checklists: Administrator, Editor
+  - POST /send: Administrator, Versender
+  - GET /submissions: Administrator, Editor
+
+| Rolle         | Benutzerverwaltung | Stücklisten erstellen/bearbeiten/löschen | Stücklisten versenden | Eigene Rolle ändern |
+|--------------|--------------------|------------------------------------------|----------------------|---------------------|
+| Administrator | ✅                 | ✅                                       | ✅                   | ❌                  |
+| Editor        | ❌                 | ✅                                       | ❌                   | ❌                  |
+| Versender     | ❌                 | ❌                                       | ✅                   | ❌                  |
+
 **Akzeptanzkriterien**
 ***✅ Command-Ausführung***
 
@@ -266,6 +287,23 @@ Die folgenden Platzhalter stehen im HTML-Template zur Verfügung:
 - Marketing: Design-orientierte Ausstattung
 - Sonstige: Standard-Büroausstattung
 
+#### US-20: Nur Administratoren können auf die Benutzerverwaltung zugreifen, Editoren auf die Stücklisten editierung und Versender auf den Versand
+
+**Als Betreiber** möchte ich verschiedene Rollen für die Applikation einbauen
+**damit** nur berechtigte Nutzer Zugriff auf sensible Funktionen haben und die Administration entlastet wird.
+
+
+**Akzeptanzkriterien**
+- Alle bestehenden User sind standardmäßig Admin.
+- Bei Neuanlage kann die Rolle Versender, Editor oder Administrator ausgewählt werden.
+- Administratoren können auf die Benutzerverwaltung zugreifen und alle Funktionen nutzen.
+- Editoren können Stücklisten erstellen, bearbeiten und löschen, aber keine Benutzer verwalten oder versenden.
+- Versender können Stücklisten versenden, aber keine Benutzer verwalten oder Stücklisten bearbeiten.
+- Die Sichtbarkeit von Menüpunkten und Seiten ist abhängig von der Rolle.
+- Der Zugriff auf API-Endpunkte und Controller-Logik ist rollenbasiert eingeschränkt.
+- Nur Administratoren können die Rolle eines Nutzers ändern, aber nicht die eigene Rolle.
+- Jeder Nutzer hat immer genau eine Rolle.
+- Testbarkeit: Ein Nutzer mit jeder Rolle wird angelegt und es wird geprüft, dass jeweils nur die erlaubten Funktionen sichtbar und nutzbar sind (z. B. Editor sieht keine Benutzerverwaltung, Versender kann keine Stücklisten bearbeiten). 
 
 ## Nicht-funktionale Anforderungen
 
@@ -320,6 +358,47 @@ Mit einem POST-Request an `/api/send-link` kann der Link inklusive E-Mail direkt
 an eine Führungskraft geschickt werden. Beispiel:
 
 ```bash
+
+## CLI: Benutzerverwaltung & Rollen
+
+Dieses Repository bietet ein Symfony-Console-Command zum Anlegen von Benutzern. Alle Operationen laufen innerhalb des Docker-Compose Stacks (lokal laufen Dienste nicht direkt auf dem Host).
+
+- Standard: neu angelegte Benutzer erhalten die Rolle `ROLE_ADMIN`, sofern nicht anders angegeben.
+- Verfügbare Rollen: `ROLE_ADMIN`, `ROLE_EDITOR`, `ROLE_SENDER`.
+
+Beispiele (aus dem Projekt-Root):
+
+```bash
+# Tests lokal über Docker-Compose (Makefile alias)
+make test
+
+# Neuen Benutzer anlegen (Standardrolle ADMIN)
+docker compose exec php bin/console app:user:create admin@example.com 'sehrLangesPasswort1234'
+
+# Neuen Benutzer mit spezifischer Rolle anlegen
+docker compose exec php bin/console app:user:create editor@example.com 'sehrLangesPasswort1234' --role=ROLE_EDITOR
+```
+
+Hinweis: Das Passwort muss mindestens 16 Zeichen lang sein.
+
+## Hinweise zur Menü-Sichtbarkeit (Admin UI)
+
+Die Sichtbarkeit von Admin-Menüpunkten sollte mit Twig und Symfony-Access-Control gesteuert werden. Beispiel (Twig):
+
+```twig
+{# Nur Admins sehen die Benutzerverwaltung #}
+{% if is_granted('ROLE_ADMIN') %}
+  <a href="{{ path('admin_users') }}">Benutzerverwaltung</a>
+{% endif %}
+
+{# Editor/sender bezogene Menüpunkte #}
+{% if is_granted('ROLE_EDITOR') %}
+  <a href="{{ path('admin_checklists') }}">Checklisten</a>
+{% endif %}
+```
+
+Das Backend setzt die eigentliche Zugriffskontrolle über `IsGranted`-Attribute und eine Role-Hierarchy (ROLE_ADMIN → ROLE_EDITOR, ROLE_SENDER), sodass Administratoren automatisch Editor-/Sender-Rechte erhalten.
+
 curl -X POST https://besteller.example.com/api/send-link \
      -H 'Content-Type: application/json' \
      -d '{
