@@ -117,6 +117,8 @@ Ziel dieser Anwendung ist die digitale Erfassung von benötigter Ausstattung fü
 
 Die folgenden Platzhalter stehen im HTML-Template zur Verfügung:
 
+### Bestell-E-Mail-Templates (für abgeschickte Stücklisten)
+
 | Platzhalter       | Bedeutung                                               |
 |-------------------|----------------------------------------------------------|
 | `{{name}}`        | Name/Vorname der Person (aus Link)                       |
@@ -124,6 +126,18 @@ Die folgenden Platzhalter stehen im HTML-Template zur Verfügung:
 | `{{stückliste}}`  | Name der Stückliste                                      |
 | `{{auswahl}}`     | Strukturierte Ausgabe aller getätigten Auswahlen nach Gruppe |
 | `{{rueckfragen_email}}` | Hinterlegte Rückfragen-Adresse |
+
+### Link-Versand-Templates (für den Versand von Stücklisten-Links)
+
+| Platzhalter       | Bedeutung                                               |
+|-------------------|----------------------------------------------------------|
+| `{{recipient_name}}` | Name des Empfängers der E-Mail (Führungskraft)       |
+| `{{empfaenger_name}}` | Alias für `{{recipient_name}}` (Rückwärtskompatibilität) |
+| `{{person_name}}`    | Name der Person, für die bestellt wird                |
+| `{{mitarbeiter_id}}` | Mitarbeitenden-ID der zu bestellenden Person         |
+| `{{intro}}`          | Individueller Einleitungstext beim Versand          |
+| `{{link}}`           | Der generierte Link zur Stückliste                  |
+| `{{stückliste}}`     | Name der Stückliste                                  |
 
 ---
 
@@ -304,6 +318,8 @@ Die folgenden Platzhalter stehen im HTML-Template zur Verfügung:
 - Nur Administratoren können die Rolle eines Nutzers ändern, aber nicht die eigene Rolle.
 - Jeder Nutzer hat immer genau eine Rolle.
 - Testbarkeit: Ein Nutzer mit jeder Rolle wird angelegt und es wird geprüft, dass jeweils nur die erlaubten Funktionen sichtbar und nutzbar sind (z. B. Editor sieht keine Benutzerverwaltung, Versender kann keine Stücklisten bearbeiten). 
+- im Dashboard unter /admin sind jeweils nur die Buttons vorhanden die für die jeweilige ROlle sinnvoll sind. Admin und Bearbeiter sieht alle, versender bekommt nur einen zum versand angeboten
+- Mit der Rolle Versender werden ich nach dem erfolgreichen absenden auf das Dashboard weitergeleitet und bekomme dort eine Flashmessage mit der info dass die mail versendet wurde angezeigt 
 
 ## Nicht-funktionale Anforderungen
 
