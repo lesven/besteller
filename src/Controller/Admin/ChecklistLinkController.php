@@ -38,7 +38,12 @@ class ChecklistLinkController extends AbstractController
                 $this->linkSender->sendChecklistLink($checklist, $recipientName, $recipientEmail, $mitarbeiterId, $personName, $intro);
                 $this->addFlash('success', 'Link wurde erfolgreich versendet.');
 
-                return $this->redirectToRoute('admin_checklists');
+                // Versender werden zum Dashboard weitergeleitet, Admins/Editoren zur Stücklisten-Übersicht
+                if ($this->isGranted('ROLE_ADMIN') || $this->isGranted('ROLE_EDITOR')) {
+                    return $this->redirectToRoute('admin_checklists');
+                } else {
+                    return $this->redirectToRoute('admin_dashboard');
+                }
             } catch (\InvalidArgumentException $e) {
                 $this->addFlash('error', $e->getMessage());
             } catch (\RuntimeException $e) {
