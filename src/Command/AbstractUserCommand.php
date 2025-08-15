@@ -60,8 +60,10 @@ abstract class AbstractUserCommand extends Command
 
     /**
      * Führt die befehlspezifische Logik aus.
-     */
-    /**
+     *
+     * @param SymfonyStyle $io SymfonyStyle-Objekt für die Konsolenausgabe
+     * @param string $email E-Mail-Adresse des Benutzers
+     * @param string $password Passwort des Benutzers
      * @param InputInterface $input Eingabe-Interface (für Optionen)
      */
     abstract protected function handle(SymfonyStyle $io, string $email, string $password, InputInterface $input): int;
