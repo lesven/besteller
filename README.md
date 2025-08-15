@@ -234,6 +234,34 @@ Die folgenden Platzhalter stehen im HTML-Template zur Verfügung:
 **akzeptanzkriterien**
  - wenn das Feld personenId leer gelassen wird, soll eine UUID genommen werden
 
+#### US-19: Datenbank fixtures für die Listen
+**Als** Entwickler
+**möchte ich** mit einem einzigen Command die Datenbank zurücksetzen und mit IT-Ausstattungs-Fixtures befüllen
+**damit ich** schnell verschiedene Abteilungs-Szenarien zum Testen zur Verfügung habe.
+
+**Akzeptanzkriterien**
+***✅ Command-Ausführung***
+
+- Command app:database:fixtures löscht automatisch alle bestehenden Daten
+-Command erstellt neue Fixture-Daten in einem Durchgang
+-Command läuft nur in der Entwicklungsumgebung (APP_ENV=dev)
+***✅ Datenstruktur***
+
+- 3 Abteilungen: IT/Entwicklung, Marketing, Sonstige
+- 6 Hardware-Kategorien pro Abteilung: Computer/Laptops, Monitore, Peripherie, Software/Lizenzen, Mobilgeräte, Büroausstattung
+- 3-5 Hardware-Items pro Kategorie
+- 2-7 Varianten pro Hardware-Item
+***✅ Eingabetypen***
+
+- Checklisten-Varianten (Mehrfachauswahl)
+- Radio-Button-Varianten (Einfachauswahl)
+- Freitext-Varianten
+*** ✅ Abteilungs-spezifische Inhalte***
+
+- IT/Entwicklung: Hochwertige Hardware, Entwicklungstools
+- Marketing: Design-orientierte Ausstattung
+- Sonstige: Standard-Büroausstattung
+
 
 ## Nicht-funktionale Anforderungen
 
