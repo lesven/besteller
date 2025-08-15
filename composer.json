@@ -76,8 +76,9 @@
         "phpmd/phpmd": "^2.15",
         "phpstan/phpstan": "^2.1",
         "phpunit/phpunit": "^9.6",
-    "symfony/browser-kit": "7.3.*",
+        "symfony/browser-kit": "7.3.*",
         "symfony/maker-bundle": "^1.0",
+        "symfony/monolog-bundle": "*",
         "symfony/web-profiler-bundle": "7.3.*"
     }
 }
