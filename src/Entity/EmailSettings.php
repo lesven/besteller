@@ -32,9 +32,6 @@ class EmailSettings
     #[ORM\Column(type: 'string', length: 255)]
     private string $senderEmail = 'noreply@besteller.local';
 
-    #[ORM\Column(type: 'text', nullable: true)]
-    private ?string $confirmationEmailTemplate = null;
-
     public function getId(): ?int
     {
         return $this->id;
@@ -103,17 +100,6 @@ class EmailSettings
     public function setSenderEmail(string $senderEmail): static
     {
         $this->senderEmail = $senderEmail;
-        return $this;
-    }
-
-    public function getConfirmationEmailTemplate(): ?string
-    {
-        return $this->confirmationEmailTemplate;
-    }
-
-    public function setConfirmationEmailTemplate(?string $confirmationEmailTemplate): static
-    {
-        $this->confirmationEmailTemplate = $confirmationEmailTemplate;
         return $this;
     }
 }
