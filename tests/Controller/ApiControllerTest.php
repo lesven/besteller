@@ -2,6 +2,7 @@
 namespace App\Tests\Controller;
 
 use App\Controller\ApiController;
+use App\Exception\JsonValidationException;
 use App\Service\EmployeeIdValidatorService;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
@@ -222,5 +223,29 @@ class ApiControllerTest extends TestCase
         $response = $controller->sendLink($request, $repo, $emailService, $submissionRepo);
 
         $this->assertSame(Response::HTTP_BAD_REQUEST, $response->getStatusCode());
+    }
+
+    public function testJsonValidationExceptionHandling(): void
+    {
+        $urlGenerator = $this->createMock(UrlGeneratorInterface::class);
+        $parameterBag = $this->createMock(ParameterBagInterface::class);
+        $parameterBag->method('get')->willReturnCallback(fn($k) => $k === 'API_TOKEN' ? '' : null);
+        $employeeIdValidator = $this->createMock(EmployeeIdValidatorService::class);
+
+        $controller = new ApiController($urlGenerator, $parameterBag, $employeeIdValidator);
+
+        // Test 1: Invalid JSON syntax should return BAD_REQUEST
+        $invalidJsonRequest = new Request([], [], [], [], [], [], '{invalid json');
+        $response = $controller->generateLink($invalidJsonRequest);
+        $this->assertSame(Response::HTTP_BAD_REQUEST, $response->getStatusCode());
+        $responseData = json_decode($response->getContent(), true);
+        $this->assertSame('Ungültiges JSON', $responseData['error']);
+
+        // Test 2: Missing required fields should return BAD_REQUEST
+        $missingFieldsRequest = new Request([], [], [], [], [], [], json_encode(['incomplete' => 'data']));
+        $response = $controller->generateLink($missingFieldsRequest);
+        $this->assertSame(Response::HTTP_BAD_REQUEST, $response->getStatusCode());
+        $responseData = json_decode($response->getContent(), true);
+        $this->assertSame('Fehlende Parameter', $responseData['error']);
     }
 }
