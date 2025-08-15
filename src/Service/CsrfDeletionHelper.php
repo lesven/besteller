@@ -22,7 +22,13 @@ trait CsrfDeletionHelper
         $token = $request->request->get('_token');
         $token = is_string($token) ? $token : null;
 
-        if ($this->isCsrfTokenValid('delete' . $entity->getId(), $token)) {
+        $entityId = $entity->getId();
+        if (empty($entityId)) {
+            $this->addFlash('error', 'Ungültige Entität: Löschung nicht möglich.');
+            return;
+        }
+
+        if ($this->isCsrfTokenValid('delete' . $entityId, $token)) {
             if ($preRemoval !== null) {
                 $preRemoval($entity);
             }
