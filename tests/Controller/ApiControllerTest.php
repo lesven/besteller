@@ -2,6 +2,7 @@
 namespace App\Tests\Controller;
 
 use App\Controller\ApiController;
+use App\Service\EmployeeIdValidatorService;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -36,6 +37,9 @@ class ApiControllerTest extends TestCase
                 return $key === 'API_TOKEN' ? '' : null;
             });
 
+        $employeeIdValidator = $this->createMock(EmployeeIdValidatorService::class);
+        $employeeIdValidator->method('isValid')->with('abc-123')->willReturn(true);
+
         $request = new Request([], [], [], [], [], [], json_encode([
             'stückliste_id' => 123,
             'mitarbeiter_name' => 'Max Muster',
@@ -43,7 +47,7 @@ class ApiControllerTest extends TestCase
             'email_empfänger' => 'chef@example.com',
         ]));
 
-        $controller = new ApiController($urlGenerator, $parameterBag);
+        $controller = new ApiController($urlGenerator, $parameterBag, $employeeIdValidator);
         $response = $controller->generateLink($request);
 
         $this->assertInstanceOf(JsonResponse::class, $response);
@@ -61,8 +65,10 @@ class ApiControllerTest extends TestCase
             ->willReturnCallback(function($key) {
                 return $key === 'API_TOKEN' ? '' : null;
             });
+
+        $employeeIdValidator = $this->createMock(EmployeeIdValidatorService::class);
             
-        $controller = new ApiController($urlGenerator, $parameterBag);
+        $controller = new ApiController($urlGenerator, $parameterBag, $employeeIdValidator);
         $request = new Request([], [], [], [], [], [], json_encode(['foo' => 'bar']));
 
         $response = $controller->generateLink($request);
@@ -78,8 +84,10 @@ class ApiControllerTest extends TestCase
             ->willReturnCallback(function($key) {
                 return $key === 'API_TOKEN' ? 'secret' : null;
             });
+
+        $employeeIdValidator = $this->createMock(EmployeeIdValidatorService::class);
             
-        $controller = new ApiController($urlGenerator, $parameterBag);
+        $controller = new ApiController($urlGenerator, $parameterBag, $employeeIdValidator);
         $request = new Request([], [], [], [], [], [], json_encode([
             'stückliste_id' => 1,
             'mitarbeiter_name' => 'A',
@@ -115,6 +123,9 @@ class ApiControllerTest extends TestCase
             ->method('get')
             ->willReturnCallback(fn($k) => $k === 'API_TOKEN' ? '' : null);
 
+        $employeeIdValidator = $this->createMock(EmployeeIdValidatorService::class);
+        $employeeIdValidator->method('isValid')->with('123')->willReturn(true);
+
         $checklist = new \App\Entity\Checklist();
         $repo = $this->createMock(\App\Repository\ChecklistRepository::class);
         $repo->expects($this->once())
@@ -142,7 +153,7 @@ class ApiControllerTest extends TestCase
             ->with($checklist, '123')
             ->willReturn(null);
 
-        $controller = new ApiController($urlGenerator, $parameterBag);
+        $controller = new ApiController($urlGenerator, $parameterBag, $employeeIdValidator);
         $response = $controller->sendLink($request, $repo, $emailService, $submissionRepo);
 
         $this->assertInstanceOf(JsonResponse::class, $response);
@@ -158,6 +169,9 @@ class ApiControllerTest extends TestCase
         $parameterBag->expects($this->once())
             ->method('get')
             ->willReturnCallback(fn($k) => $k === 'API_TOKEN' ? '' : null);
+
+        $employeeIdValidator = $this->createMock(EmployeeIdValidatorService::class);
+        $employeeIdValidator->method('isValid')->with('123')->willReturn(true);
 
         $checklist = new \App\Entity\Checklist();
         $repo = $this->createMock(\App\Repository\ChecklistRepository::class);
@@ -183,7 +197,7 @@ class ApiControllerTest extends TestCase
             'mitarbeiter_id' => '123',
         ]));
 
-        $controller = new ApiController($urlGenerator, $parameterBag);
+        $controller = new ApiController($urlGenerator, $parameterBag, $employeeIdValidator);
         $response = $controller->sendLink($request, $repo, $emailService, $submissionRepo);
 
         $this->assertSame(Response::HTTP_CONFLICT, $response->getStatusCode());
@@ -197,11 +211,13 @@ class ApiControllerTest extends TestCase
             ->method('get')
             ->willReturnCallback(fn($k) => $k === 'API_TOKEN' ? '' : null);
 
+        $employeeIdValidator = $this->createMock(EmployeeIdValidatorService::class);
+
         $repo = $this->createMock(\App\Repository\ChecklistRepository::class);
         $emailService = $this->createMock(\App\Service\EmailService::class);
         $submissionRepo = $this->createMock(\App\Repository\SubmissionRepository::class);
 
-        $controller = new ApiController($urlGenerator, $parameterBag);
+        $controller = new ApiController($urlGenerator, $parameterBag, $employeeIdValidator);
         $request = new Request([], [], [], [], [], [], json_encode(['foo' => 'bar']));
         $response = $controller->sendLink($request, $repo, $emailService, $submissionRepo);
 

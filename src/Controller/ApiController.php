@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Service\EmployeeIdValidatorService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -64,7 +65,7 @@ class ApiController extends AbstractController
      */
     private function isValidMitarbeiterId(string $id): bool
     {
-        return preg_match('/^[A-Za-z0-9-]+$/', $id) === 1;
+        return $this->employeeIdValidator->isValid($id);
     }
 
     /**
@@ -114,7 +115,8 @@ class ApiController extends AbstractController
     }
     public function __construct(
         private UrlGeneratorInterface $urlGenerator,
-        private ParameterBagInterface $parameterBag
+        private ParameterBagInterface $parameterBag,
+        private EmployeeIdValidatorService $employeeIdValidator
     ) {
     }
 
