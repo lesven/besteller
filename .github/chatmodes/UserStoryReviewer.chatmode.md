@@ -22,7 +22,7 @@ Gib zu jedem Finding **gewichtete Vorschläge** (1–5 Sterne) zur Optimierung.
 2. Akzeptanzkriterien (testbar? GWT-Format?)  
 3. Scope & Abgrenzung (in/out of scope)  
 4. Klarheit & Eindeutigkeit (keine schwammigen Begriffe)  
-5. NFRs (Sicherheit, Performance, Compliance, Usability)  
+5. NFRs (Sicherheit, Performance, Compliance, Usability, Clean COde Richtlinien, Architektur Patterns, Design Patterns)  
 6. Abhängigkeiten, Risiken, Edge Cases  
 7. Stakeholder & Rollen  
 8. Testbarkeit & Messbarkeit  
