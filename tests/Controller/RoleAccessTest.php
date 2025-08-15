@@ -7,6 +7,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 class RoleAccessTest extends WebTestCase
 {
@@ -16,14 +17,14 @@ class RoleAccessTest extends WebTestCase
     protected function setUp(): void
     {
     self::ensureKernelShutdown();
-        // createClient() benötigt framework.test=true; wenn dies nicht gesetzt ist,
-        // wird eine LogicException geworfen — in diesem Fall überspringen wir den Test.
-        try {
-            $this->client = static::createClient();
-        } catch (\LogicException $e) {
-            $this->markTestSkipped('Functional tests require framework.test=true (message: ' . $e->getMessage() . ')');
-            return;
-        }
+    // Ensure the test environment is active for functional tests (useful inside containers/CI)
+    $_SERVER['APP_ENV'] = 'test';
+    $_ENV['APP_ENV'] = 'test';
+    putenv('APP_ENV=test');
+
+    // createClient() benötigt framework.test=true; falls createClient() trotzdem eine
+    // LogicException wirft, soll der Test fehlschlagen, damit die Ursache sichtbar wird.
+    $this->client = static::createClient();
 
         $this->em = $this->client->getContainer()->get('doctrine')->getManager();
 
@@ -56,9 +57,14 @@ class RoleAccessTest extends WebTestCase
     $this->assertSame(200, $client->getResponse()->getStatusCode(), 'Editor should access checklists');
 
         // Access user management (should be forbidden)
-        $client->request('GET', '/admin/users');
-        $status = $client->getResponse()->getStatusCode();
-        $this->assertTrue(in_array($status, [302, 403], true), 'Editor should not access user management (expected redirect or 403)');
+        try {
+            $client->request('GET', '/admin/users');
+            $status = $client->getResponse()->getStatusCode();
+            $this->assertTrue(in_array($status, [302, 403], true), 'Editor should not access user management (expected redirect or 403)');
+        } catch (AccessDeniedHttpException $e) {
+            // explicit assertion for environments that throw an exception instead of returning a response
+            $this->assertInstanceOf(AccessDeniedHttpException::class, $e);
+        }
     }
 
     protected function tearDown(): void
