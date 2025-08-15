@@ -6,6 +6,7 @@ use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
@@ -15,17 +16,12 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 )]
 class ChangePasswordCommand extends AbstractUserCommand
 {
-    public function __construct(
-        EntityManagerInterface $entityManager,
-        UserPasswordHasherInterface $passwordHasher
-    ) {
-        parent::__construct($entityManager, $passwordHasher);
-    }
+    // Konstruktor wird vom AbstractUserCommand geerbt
 
     /**
      * Ändert das Passwort eines vorhandenen Benutzers.
      */
-    protected function handle(SymfonyStyle $io, string $email, string $password): int
+    protected function handle(SymfonyStyle $io, string $email, string $password, InputInterface $input): int
     {
         $user = $this->entityManager->getRepository(User::class)->findOneBy(['email' => $email]);
         if (!$user) {
