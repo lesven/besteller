@@ -233,7 +233,7 @@ class EmailService
 </body>
 </html>
 HTML
-, date('d.m.Y H:i'));
+, date('d.m.Y H:i')); // Dynamischer Zeitstempel im deutschen Format (Tag.Monat.Jahr Stunde:Minute)
     }
     
     /**
@@ -294,7 +294,7 @@ HTML
 </body>
 </html>
 HTML
-, date('d.m.Y H:i'));
+, date('d.m.Y H:i')); // Dynamischer Zeitstempel im deutschen Format (Tag.Monat.Jahr Stunde:Minute)
     }
 
     /**
