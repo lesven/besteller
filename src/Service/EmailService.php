@@ -24,6 +24,11 @@ class EmailService
         private EntityManagerInterface $entityManager
     ) {}
 
+    private function getEmailSettings(): ?EmailSettings
+    {
+        return $this->entityManager->getRepository(EmailSettings::class)->find(1);
+    }
+
     /**
      * Erstellt bei Bedarf einen Mailer mit benutzerdefinierten Einstellungen.
      *
@@ -31,7 +36,7 @@ class EmailService
      */
     private function getMailer(): MailerInterface
     {
-        $settings = $this->entityManager->getRepository(EmailSettings::class)->find(1);
+        $settings = $this->getEmailSettings();
         if (!$settings) {
             return $this->mailer;
         }
@@ -52,6 +57,22 @@ class EmailService
         return new Mailer(Transport::fromDsn($dsn));
     }
 
+    private function sendEmail(
+        MailerInterface $mailer,
+        string $from,
+        string $to,
+        string $subject,
+        string $content
+    ): void {
+        $email = (new Email())
+            ->from($from)
+            ->to($to)
+            ->subject($subject)
+            ->html($content);
+
+        $mailer->send($email);
+    }
+
     /**
      * Erstellt die E-Mail-Inhalte und versendet sie an Zieladresse und Führungskraft.
      *
@@ -62,34 +83,32 @@ class EmailService
     public function generateAndSendEmail(Submission $submission): string
     {
         $template = $submission->getChecklist()?->getEmailTemplate() ?? $this->getDefaultTemplate();
-        
-        // Platzhalter ersetzen
         $emailContent = $this->replacePlaceholders($template, $submission);
 
-        $settings = $this->entityManager->getRepository(EmailSettings::class)->find(1);
+        $settings = $this->getEmailSettings();
         $from = $settings?->getSenderEmail() ?? 'noreply@besteller.local';
+        $mailer = $this->getMailer();
 
-        // E-Mail an Zieladresse (interne Bearbeitung)
-        $targetEmail = (new Email())
-            ->from($from)
-            ->to($submission->getChecklist()?->getTargetEmail() ?? '')
-            ->subject('Neue Stückliste eingegangen: ' . ($submission->getChecklist()?->getTitle() ?? '') . ' - ' . $submission->getName())
-            ->html($emailContent);
-            
-        $this->getMailer()->send($targetEmail);
-        
-        // E-Mail an Führungskraft (Bestätigung)
+        $targetEmailAddress = $submission->getChecklist()?->getTargetEmail() ?? '';
+        $targetSubject = sprintf(
+            'Neue Stückliste eingegangen: %s - %s',
+            $submission->getChecklist()?->getTitle() ?? '',
+            $submission->getName()
+        );
+
+        $this->sendEmail($mailer, $from, $targetEmailAddress, $targetSubject, $emailContent);
+
         $confirmationTemplate = $submission->getChecklist()?->getConfirmationEmailTemplate() ?? $this->getConfirmationTemplate();
         $confirmationContent = $this->replacePlaceholders($confirmationTemplate, $submission);
-        
-        $managerEmail = (new Email())
-            ->from($from)
-            ->to($submission->getEmail() ?? '')
-            ->subject('Bestätigung: Die Bestellung wurde erfolgreich übermittelt')
-            ->html($confirmationContent);
-            
-        $this->getMailer()->send($managerEmail);
-        
+
+        $this->sendEmail(
+            $mailer,
+            $from,
+            $submission->getEmail() ?? '',
+            'Bestätigung: Die Bestellung wurde erfolgreich übermittelt',
+            $confirmationContent
+        );
+
         return $emailContent;
     }
     
@@ -130,61 +149,62 @@ class EmailService
      */
     public function getDefaultTemplate(): string
     {
-        return '<!DOCTYPE html>
+        return sprintf(<<<'HTML'
+<!DOCTYPE html>
 <html lang="de">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Stückliste {{stückliste}}</title>
     <style>
-        body { 
-            font-family: Arial, sans-serif; 
-            line-height: 1.6; 
-            color: #333; 
-            max-width: 800px; 
-            margin: 0 auto; 
-            padding: 20px; 
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
         }
-        .header { 
-            background-color: #f8f9fa; 
-            padding: 20px; 
-            border-radius: 5px; 
-            margin-bottom: 20px; 
+        .header {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 20px;
         }
-        .content { 
-            background-color: #ffffff; 
-            padding: 20px; 
-            border: 1px solid #dee2e6; 
-            border-radius: 5px; 
+        .content {
+            background-color: #ffffff;
+            padding: 20px;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
         }
-        h1 { 
-            color: #007bff; 
-            margin-top: 0; 
+        h1 {
+            color: #007bff;
+            margin-top: 0;
         }
-        h2 { 
-            color: #6c757d; 
-            border-bottom: 2px solid #007bff; 
-            padding-bottom: 5px; 
+        h2 {
+            color: #6c757d;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 5px;
         }
-        h3 { 
-            color: #495057; 
-            margin-top: 25px; 
-            margin-bottom: 10px; 
+        h3 {
+            color: #495057;
+            margin-top: 25px;
+            margin-bottom: 10px;
         }
-        ul { 
-            background-color: #f8f9fa; 
-            padding: 15px; 
-            border-radius: 5px; 
+        ul {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
         }
-        li { 
-            margin-bottom: 8px; 
+        li {
+            margin-bottom: 8px;
         }
-        .footer { 
-            margin-top: 30px; 
-            padding-top: 20px; 
-            border-top: 1px solid #dee2e6; 
-            color: #6c757d; 
-            font-size: 12px; 
+        .footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #dee2e6;
+            color: #6c757d;
+            font-size: 12px;
         }
     </style>
 </head>
@@ -193,25 +213,27 @@ class EmailService
         <h1>Neue Stückliste eingegangen</h1>
         <p><strong>Stückliste:</strong> {{stückliste}}</p>
     </div>
-    
+
     <div class="content">
         <h2>Mitarbeiterinformationen</h2>
         <ul>
             <li><strong>Name:</strong> {{name}}</li>
             <li><strong>Mitarbeiter-ID:</strong> {{mitarbeiter_id}}</li>
         </ul>
-        
+
         <h2>Ausgewählte Ausstattung</h2>
         {{auswahl}}
         <p>Bei Rückfragen zu dieser Bestellung wende dich an {{rueckfragen_email}}.</p>
     </div>
-    
+
     <div class="footer">
         <p>Diese E-Mail wurde automatisch generiert vom Besteller-System.</p>
-        <p>Eingereicht am: ' . date('d.m.Y H:i') . ' Uhr</p>
+        <p>Eingereicht am: %s Uhr</p>
     </div>
 </body>
-</html>';
+</html>
+HTML
+, date('d.m.Y H:i'));
     }
     
     /**
@@ -219,7 +241,7 @@ class EmailService
      */
     public function getConfirmationTemplate(): string
     {
-        return '
+        return sprintf(<<<'HTML'
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -244,33 +266,35 @@ class EmailService
         <h1>✓ Stückliste erfolgreich übermittelt</h1>
         <p>Vielen Dank für deine Eingabe für Mitarbeiter <strong>{{name}}</strong>!</p>
     </div>
-    
+
     <div class="content">
         <div class="success-message">
             <strong>Die Bestellung wurde erfolgreich übermittelt.</strong><br>
             Die Bearbeitung erfolgt zeitnah durch unser Team.
         </div>
-        
+
         <h2>Deine Angaben im Überblick</h2>
         <ul>
             <li><strong>Stückliste:</strong> {{stückliste}}</li>
             <li><strong>Mitarbeiter-ID:</strong> {{mitarbeiter_id}}</li>
         </ul>
-        
+
         <h2>Deine Auswahl</h2>
         {{auswahl}}
-        
+
         <p><strong>Nächste Schritte:</strong><br>
         Deine Angaben werden nun bearbeitet und die entsprechende Ausstattung wird vorbereitet.
         Bei Rückfragen wende dich an {{rueckfragen_email}}.</p>
     </div>
-    
+
     <div class="footer">
         <p>Diese Bestätigungs-E-Mail wurde automatisch generiert.</p>
-        <p>Übermittelt am: ' . date('d.m.Y H:i') . ' Uhr</p>
+        <p>Übermittelt am: %s Uhr</p>
     </div>
 </body>
-</html>';
+</html>
+HTML
+, date('d.m.Y H:i'));
     }
 
     /**
@@ -307,16 +331,16 @@ class EmailService
 
         $content = str_replace(array_keys($placeholders), array_values($placeholders), $template);
 
-        $settings = $this->entityManager->getRepository(EmailSettings::class)->find(1);
+        $settings = $this->getEmailSettings();
         $from = $settings?->getSenderEmail() ?? 'noreply@besteller.local';
 
-        $email = (new Email())
-            ->from($from)
-            ->to($recipientEmail)
-            ->subject('Link zur Bestelliste ' . $checklist->getTitle())
-            ->html($content);
-
-        $this->getMailer()->send($email);
+        $this->sendEmail(
+            $this->getMailer(),
+            $from,
+            $recipientEmail,
+            'Link zur Bestelliste ' . $checklist->getTitle(),
+            $content
+        );
     }
 
     /**
@@ -324,7 +348,8 @@ class EmailService
      */
     public function getDefaultLinkTemplate(): string
     {
-        return '<!DOCTYPE html>
+        return <<<'HTML'
+<!DOCTYPE html>
 <html lang="de">
 <head>
     <meta charset="UTF-8">
@@ -338,6 +363,7 @@ class EmailService
     <p><a href="{{link}}">{{link}}</a></p>
     <p>Vielen Dank!</p>
 </body>
-</html>';
+</html>
+HTML;
     }
 }
