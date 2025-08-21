@@ -38,7 +38,9 @@ class ChangePasswordCommandTest extends TestCase
         ]);
 
         $this->assertSame(Command::SUCCESS, $status);
-        $this->assertStringContainsString('erfolgreich geändert', $tester->getDisplay());
+    // Ausgabe vereinheitlichen (mehrere Whitespaces/Zeilenumbrüche zu einem Leerzeichen)
+    $displayNormalized = preg_replace('/\s+/', ' ', $tester->getDisplay());
+    $this->assertStringContainsString('erfolgreich geändert', $displayNormalized);
     }
 
     public function testExecuteFailsWhenUserNotFound(): void
