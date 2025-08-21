@@ -49,4 +49,21 @@ class ChecklistRepositoryTest extends TestCase
 
         $this->assertSame($expected, $repo->find(123));
     }
+    
+        /**
+         * Testet den Konstruktor von ChecklistRepository
+         * (Absicherung, dass die Klasse korrekt instanziiert werden kann)
+         */
+        public function testConstructor(): void
+        {
+            // ManagerRegistry Mock erzeugen
+            /** @var \Doctrine\Persistence\ManagerRegistry $registry */
+            $registry = $this->getMockBuilder(\Doctrine\Persistence\ManagerRegistry::class)
+                ->disableOriginalConstructor()
+                ->getMock();
+
+            // Instanziierung testen
+            $repo = new ChecklistRepository($registry);
+            $this->assertInstanceOf(ChecklistRepository::class, $repo);
+        }
 }
