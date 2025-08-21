@@ -4,6 +4,10 @@ namespace App\Controller;
 
 use App\Exception\JsonValidationException;
 use App\Service\EmployeeIdValidatorService;
+use App\Repository\ChecklistRepository;
+use App\Service\EmailService;
+use App\Repository\SubmissionRepository;
+use InvalidArgumentException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -65,9 +69,10 @@ class ApiController extends AbstractController
     /**
      * Hilfsmethode: Validiert die Mitarbeiter-ID
      */
-    private function isValidMitarbeiterId(string $id): bool
+    // Validiert die Mitarbeiter-ID
+    private function isValidMitarbeiterId(string $mitarbeiterId): bool
     {
-        return $this->employeeIdValidator->isValid($id);
+        return $this->employeeIdValidator->isValid($mitarbeiterId);
     }
 
     /**
@@ -79,9 +84,8 @@ class ApiController extends AbstractController
     private function requireString(array $data, string $key, string $errorMessage): string
     {
         if (!isset($data[$key]) || !is_string($data[$key]) || $data[$key] === '') {
-            throw new \InvalidArgumentException($errorMessage);
+            throw new InvalidArgumentException($errorMessage);
         }
-
         return $data[$key];
     }
 
@@ -98,12 +102,11 @@ class ApiController extends AbstractController
         }
         if (is_string($value) || is_float($value)) {
             if ($value === '') {
-                throw new \InvalidArgumentException('Ungültige Stücklisten-ID');
+                throw new InvalidArgumentException('Ungültige Stücklisten-ID');
             }
             return (int) $value;
         }
-
-        throw new \InvalidArgumentException('Ungültige Stücklisten-ID');
+        throw new InvalidArgumentException('Ungültige Stücklisten-ID');
     }
 
     /**
@@ -167,7 +170,7 @@ class ApiController extends AbstractController
 
         try {
             $params = $this->extractGenerateLinkParams($data);
-        } catch (\InvalidArgumentException $e) {
+        } catch (InvalidArgumentException $e) {
             return $this->errorResponse($e->getMessage(), Response::HTTP_BAD_REQUEST);
         }
 
