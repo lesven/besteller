@@ -71,6 +71,42 @@ class ApiController extends AbstractController
     }
 
     /**
+     * Hilfsmethode: Liefert einen string-Parameter oder wirft eine Exception.
+     * Alle Kommentare hier auf Deutsch laut Vorgabe.
+     *
+     * @param array<string,mixed> $data
+     */
+    private function requireString(array $data, string $key, string $errorMessage): string
+    {
+        if (!isset($data[$key]) || !is_string($data[$key]) || $data[$key] === '') {
+            throw new \InvalidArgumentException($errorMessage);
+        }
+
+        return $data[$key];
+    }
+
+    /**
+     * Hilfsmethode: Parst die Stücklisten-ID sicher zu int.
+     * Akzeptiert int, numeric string und float; leere Werte sind ungültig.
+     *
+     * @param mixed $value
+     */
+    private function parseChecklistId(mixed $value): int
+    {
+        if (is_int($value)) {
+            return $value;
+        }
+        if (is_string($value) || is_float($value)) {
+            if ($value === '') {
+                throw new \InvalidArgumentException('Ungültige Stücklisten-ID');
+            }
+            return (int) $value;
+        }
+
+        throw new \InvalidArgumentException('Ungültige Stücklisten-ID');
+    }
+
+    /**
      * Extrahiert und validiert die benötigten Parameter für generateLink.
      *
      * @param array<string,mixed> $data Decodierte JSON-Daten
@@ -79,34 +115,21 @@ class ApiController extends AbstractController
      */
     private function extractGenerateLinkParams(array $data): array
     {
-        if (!isset($data['mitarbeiter_id']) || !is_string($data['mitarbeiter_id'])) {
-            throw new \InvalidArgumentException('Ungültige Personen-ID');
-        }
-        if (!isset($data['mitarbeiter_name']) || !is_string($data['mitarbeiter_name'])) {
-            throw new \InvalidArgumentException('Ungültiger Name');
-        }
-        if (!isset($data['email_empfänger']) || !is_string($data['email_empfänger'])) {
-            throw new \InvalidArgumentException('Ungültige E-Mail');
-        }
-        if (!isset($data['stückliste_id']) || (!is_int($data['stückliste_id']) && !is_string($data['stückliste_id']) && !is_float($data['stückliste_id']))) {
-            throw new \InvalidArgumentException('Ungültige Stücklisten-ID');
-        }
+        // erforderliche string-Parameter holen oder Exception werfen
+        $mitarbeiterId = $this->requireString($data, 'mitarbeiter_id', 'Ungültige Personen-ID');
+        $mitarbeiterName = $this->requireString($data, 'mitarbeiter_name', 'Ungültiger Name');
+        $emailEmpfaenger = $this->requireString($data, 'email_empfänger', 'Ungültige E-Mail');
 
-        $mitarbeiterId = $data['mitarbeiter_id'];
+        // Mitarbeiter-ID zusätzlich validieren
         if (!$this->isValidMitarbeiterId($mitarbeiterId)) {
             throw new \InvalidArgumentException('Ungültige Personen-ID');
         }
 
-        $mitarbeiterName = $data['mitarbeiter_name'];
-        $emailEmpfaenger = $data['email_empfänger'];
-
-        if (is_int($data['stückliste_id'])) {
-            $checklistId = $data['stückliste_id'];
-        } elseif (is_string($data['stückliste_id']) || is_float($data['stückliste_id'])) {
-            $checklistId = (int) $data['stückliste_id'];
-        } else {
-            $checklistId = (int) $data['stückliste_id'];
+        // Stücklisten-ID parsen
+        if (!isset($data['stückliste_id'])) {
+            throw new \InvalidArgumentException('Ungültige Stücklisten-ID');
         }
+        $checklistId = $this->parseChecklistId($data['stückliste_id']);
 
         return [
             'checklistId' => $checklistId,
