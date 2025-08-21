@@ -7,6 +7,7 @@ use App\Entity\ChecklistGroup;
 use App\Entity\GroupItem;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use App\Service\CsrfDeletionHelper;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -14,6 +15,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted('ROLE_ADMIN')]
 class GroupController extends AbstractController
 {
+    use CsrfDeletionHelper;
     /**
      * Konstruktor mit EntityManager für Gruppenoperationen.
      *
@@ -165,12 +167,7 @@ class GroupController extends AbstractController
     {
         $checklistId = $group->getChecklist()?->getId();
 
-        if ($this->isCsrfTokenValid('delete' . $group->getId(), $request->request->getString('_token'))) {
-            $this->entityManager->remove($group);
-            $this->entityManager->flush();
-
-            $this->addFlash('success', 'Gruppe wurde erfolgreich gelöscht.');
-        }
+        $this->handleCsrfDeletion($request, $group, 'Gruppe wurde erfolgreich gelöscht.');
 
         return $this->redirectToRoute('admin_checklist_edit', ['id' => $checklistId]);
     }
@@ -242,12 +239,7 @@ class GroupController extends AbstractController
     {
         $checklistId = $item->getGroup()?->getChecklist()?->getId();
 
-        if ($this->isCsrfTokenValid('delete' . $item->getId(), $request->request->getString('_token'))) {
-            $this->entityManager->remove($item);
-            $this->entityManager->flush();
-
-            $this->addFlash('success', 'Element wurde erfolgreich gelöscht.');
-        }
+        $this->handleCsrfDeletion($request, $item, 'Element wurde erfolgreich gelöscht.');
 
         return $this->redirectToRoute('admin_checklist_edit', ['id' => $checklistId]);
     }

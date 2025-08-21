@@ -161,14 +161,6 @@ admin_email_settings:
     path: /admin/email-settings
     controller: App\Controller\Admin\EmailSettingsController::edit
 
-admin_confirmation_template:
-    path: /admin/confirmation-template
-    controller: App\Controller\Admin\ConfirmationTemplateController::edit
-
-admin_confirmation_template_download:
-    path: /admin/confirmation-template/download
-    controller: App\Controller\Admin\ConfirmationTemplateController::download
-
 # Benutzerverwaltung
 admin_users:
     path: /admin/users
@@ -201,5 +193,24 @@ admin_checklist_send_link:
 admin_checklist_link_template:
     path: /admin/checklists/{id}/link-template
     controller: App\Controller\Admin\ChecklistController::linkEmailTemplate
+    requirements:
+        id: '\d+'
+
+admin_checklist_confirmation_template:
+    path: /admin/checklists/{id}/confirmation-template
+    controller: App\Controller\Admin\ChecklistController::confirmationEmailTemplate
+    requirements:
+        id: '\d+'
+
+admin_checklist_confirmation_template_download:
+    path: /admin/checklists/{id}/confirmation-template/download
+    controller: App\Controller\Admin\ChecklistController::downloadConfirmationTemplate
+    requirements:
+        id: '\d+'
+
+admin_checklist_confirmation_template_reset:
+    path: /admin/checklists/{id}/confirmation-template/reset
+    controller: App\Controller\Admin\ChecklistController::resetConfirmationTemplate
+    methods: [POST]
     requirements:
         id: '\d+'

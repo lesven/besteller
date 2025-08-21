@@ -8,6 +8,7 @@ use App\Repository\SubmissionRepository;
 use App\Repository\ChecklistRepository;
 use App\Service\EmailService;
 use App\Service\ChecklistDuplicationService;
+use App\Service\CsrfDeletionHelper;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -20,6 +21,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted('ROLE_ADMIN')]
 class ChecklistController extends AbstractController
 {
+    use CsrfDeletionHelper;
     /**
      * Konstruktor für benötigte Services im Admin-Bereich.
      *
@@ -160,18 +162,16 @@ class ChecklistController extends AbstractController
      */
     public function delete(Request $request, Checklist $checklist): Response
     {
-        $tokenParam = $request->request->get('_token');
-        $token = is_string($tokenParam) ? $tokenParam : null;
-
-        if ($this->isCsrfTokenValid('delete' . $checklist->getId(), $token)) {
-            foreach ($checklist->getSubmissions() as $submission) {
-                $this->entityManager->remove($submission);
+        $this->handleCsrfDeletion(
+            $request,
+            $checklist,
+            'Checkliste wurde erfolgreich gelöscht.',
+            function (Checklist $checklist): void {
+                foreach ($checklist->getSubmissions() as $submission) {
+                    $this->entityManager->remove($submission);
+                }
             }
-            $this->entityManager->remove($checklist);
-            $this->entityManager->flush();
-
-            $this->addFlash('success', 'Checkliste wurde erfolgreich gelöscht.');
-        }
+        );
 
         return $this->redirectToRoute('admin_checklists');
     }
@@ -260,6 +260,77 @@ class ChecklistController extends AbstractController
         $this->addFlash('success', 'Link-Template wurde erfolgreich aktualisiert.');
 
         return $this->redirectToRoute('admin_checklist_link_template', ['id' => $checklist->getId()]);
+    }
+
+    /**
+     * Bearbeitet das Bestätigungs-E-Mail-Template für eine Checkliste.
+     * Erlaubt das Hochladen einer HTML-Datei oder die direkte Bearbeitung.
+     */
+    public function confirmationEmailTemplate(Request $request, Checklist $checklist): Response
+    {
+        if (!$request->isMethod('POST')) {
+            return $this->render('admin/checklist/confirmation_template.html.twig', [
+                'checklist' => $checklist,
+                'currentTemplate' => $checklist->getConfirmationEmailTemplate() ?? $this->emailService->getConfirmationTemplate(),
+                'placeholders' => [
+                    '{{name}}' => 'Name/Vorname der Person (aus Link)',
+                    '{{mitarbeiter_id}}' => 'Mitarbeitenden-ID (aus Link)',
+                    '{{stückliste}}' => 'Name der Stückliste',
+                    '{{auswahl}}' => 'Strukturierte Ausgabe aller getätigten Auswahlen nach Gruppe',
+                    '{{rueckfragen_email}}' => 'Hinterlegte Rückfragen-Adresse',
+                ],
+            ]);
+        }
+
+        $result = $this->extractTemplateContent($request, $checklist, 'admin_checklist_confirmation_template');
+
+        if ($result instanceof Response) {
+            return $result;
+        }
+
+        $checklist->setConfirmationEmailTemplate($result);
+        $this->entityManager->flush();
+
+        $this->addFlash('success', 'Bestätigungs-Template wurde erfolgreich aktualisiert.');
+
+        return $this->redirectToRoute('admin_checklist_confirmation_template', ['id' => $checklist->getId()]);
+    }
+
+    /**
+     * Download des Bestätigungs-E-Mail-Templates einer Checkliste.
+     */
+    public function downloadConfirmationTemplate(Checklist $checklist): Response
+    {
+        $template = $checklist->getConfirmationEmailTemplate() ?? $this->emailService->getConfirmationTemplate();
+
+        $response = new Response($template);
+        $response->headers->set('Content-Type', 'text/html');
+        $response->headers->set('Content-Disposition',
+            $response->headers->makeDisposition(
+                ResponseHeaderBag::DISPOSITION_ATTACHMENT,
+                'confirmation-template-' . $checklist->getId() . '.html'
+            )
+        );
+
+        return $response;
+    }
+
+    /**
+     * Zurücksetzen des Bestätigungs-E-Mail-Templates auf Standard.
+     */
+    public function resetConfirmationTemplate(Request $request, Checklist $checklist): Response
+    {
+        $tokenParam = $request->request->get('_token');
+        $token = is_string($tokenParam) ? $tokenParam : null;
+
+        if ($this->isCsrfTokenValid('reset_confirmation_template' . $checklist->getId(), $token)) {
+            $checklist->setConfirmationEmailTemplate(null);
+            $this->entityManager->flush();
+
+            $this->addFlash('success', 'Bestätigungs-Template wurde auf Standard zurückgesetzt.');
+        }
+
+        return $this->redirectToRoute('admin_checklist_confirmation_template', ['id' => $checklist->getId()]);
     }
 
     /**

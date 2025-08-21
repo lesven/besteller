@@ -206,15 +206,17 @@ Die folgenden Platzhalter stehen im HTML-Template zur Verfügung:
 - muss bei den einsendungen mit gespeichert werden
 - soll unter admin_submissions_checklist angezeigt werden
 
- #### US-16: Es Soll möglich sein das Email Template für den Vorgesetzten anzupassen
+ #### US-16: Es Soll möglich sein das Email Template für den Vorgesetzten pro Stückliste anzupassen
 **Als** Administrator
-**möchte ich** dass E-Mail Template für die Bestätigungsmail an den Vorgesetzen anpassen können
-**damit ich** da jederzeit passende Informationen reinmachen kann ohne Programmieraufwand zu haben
+**möchte ich** dass E-Mail Template für die Bestätigungsmail an den Vorgesetzen anpassen können und das soll für jede Stücklsite individuell möglich sein
+**damit ich** da jederzeit passende Informationen reinmachen kann ohne Programmieraufwand zu haben und damit das ganze konsistent zu den normalen Bestellmails sind, die ja auch Stücklistenindividuell sind
 
 **akzeptanzkriterien**
  - das Standardtemplate aus getConfirmationTemplate bleibt erhalten
  - wie bei den anderen Mailtemapltes unter admin_checklist_link_template kann ich direkt bearbeiten oder eine Datei hochladen
- - ich kan ndas aktuelle Temaplte runterladen
+ - ich kann das aktuelle Temaplte runterladen
+ - der Link zum besarbeiten befindet sich im admin_checklist_edit controller im  E-Mail Templates Block unterhalb vom BEstellemailtemaplte verwalten button und funktioniert analog zu admin_checklist_email_template
+ - beide funktionalitäten benutzen den gleichen controller um Code duplikation zu vermeiden
 
 #### US-17: Versand von ungültigen und doppelten IDs verhindern
 **Als** Administrator
@@ -231,6 +233,38 @@ Die folgenden Platzhalter stehen im HTML-Template zur Verfügung:
 
 **akzeptanzkriterien**
  - wenn das Feld personenId leer gelassen wird, soll eine UUID genommen werden
+
+#### US-19: Datenbank fixtures für die Listen
+**Als** Entwickler
+**möchte ich** mit einem einzigen Command die Datenbank zurücksetzen und mit IT-Ausstattungs-Fixtures befüllen
+**damit ich** die Anwendung mit realistischen Testdaten für verschiedene Abteilungen schnell prüfen und weiterentwickeln kann.
+
+**Akzeptanzkriterien**
+***✅ Command-Ausführung***
+
+- Command app:database:fixtures löscht nur Geschäftsdaten (Checklisten, Gruppen, Items, Submissions), bestehende User-Accounts bleiben erhalten
+- Command erstellt neue Fixture-Daten in einem Durchgang
+- Command läuft nur in der Entwicklungsumgebung (APP_ENV=dev)
+
+***✅ Datenstruktur***
+
+- 3 Abteilungen: IT/Entwicklung, Marketing, Sonstige
+- Alle 3 Abteilungen haben identische Hardware-Kategorien: Computer/Laptops, Monitore, Peripherie, Software/Lizenzen, Mobilgeräte, Büroausstattung
+- 3-5 Hardware-Items pro Kategorie
+- 2-7 Varianten pro Hardware-Item
+- Jedes Hardware-Item hat genau einen Eingabetyp (entweder Checkboxen ODER Radiobuttons ODER Freitext)
+
+***✅ Eingabetypen***
+
+- Checklisten-Varianten (Mehrfachauswahl)
+- Radio-Button-Varianten (Einfachauswahl)
+- Freitext-Varianten
+
+***✅ Abteilungs-spezifische Inhalte***
+
+- IT/Entwicklung: Hochwertige Hardware, Entwicklungstools
+- Marketing: Design-orientierte Ausstattung
+- Sonstige: Standard-Büroausstattung
 
 
 ## Nicht-funktionale Anforderungen

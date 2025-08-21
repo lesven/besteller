@@ -5,13 +5,16 @@ namespace App\Tests\Controller;
 use App\Controller\ChecklistController;
 use App\Entity\Checklist;
 use App\Entity\Submission;
+use App\Repository\SubmissionRepository;
 use App\Service\EmailService;
 use App\Service\SubmissionService;
 use App\Service\SubmissionFactory;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\Persistence\ObjectRepository;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 class ChecklistControllerTest extends TestCase
 {
@@ -39,7 +42,9 @@ class ChecklistControllerTest extends TestCase
             ->method('error')
             ->with($this->stringContains('E-Mail-Versendung fehlgeschlagen für Submission 123: SMTP connection failed'));
 
-        // Create controller with mocked dependencies
+        // Create controller with mocked dependencies. Only public methods that we need to
+        // override are mocked (render, addFlash). Private methods are exercised via
+        // repository behavior on the EntityManager mock.
         $controller = $this->getMockBuilder(ChecklistController::class)
             ->setConstructorArgs([
                 $entityManager,
@@ -48,20 +53,34 @@ class ChecklistControllerTest extends TestCase
                 $submissionFactory,
                 $logger
             ])
-            ->onlyMethods(['render', 'addFlash', 'getChecklistOr404', 'getRequestValuesFromQuery', 'findExistingSubmission'])
+            ->onlyMethods(['render', 'addFlash'])
             ->getMock();
 
-        // Configure the controller to simulate the flow in the form method
+        // Configure the controller's dependencies so private helper methods work:
+        // - getChecklistOr404 uses EntityManager->getRepository(Checklist::class)->find()
+        // - findExistingSubmission uses SubmissionRepository->findOneByChecklistAndMitarbeiterId()
         $checklist = $this->createMock(Checklist::class);
-        $controller->method('getChecklistOr404')->willReturn($checklist);
-        $controller->method('getRequestValuesFromQuery')->willReturn(['TestUser', '12345', 'test@example.com']);
-        $controller->method('findExistingSubmission')->willReturn(null); // No existing submission
+        $checklistRepo = $this->createMock(ObjectRepository::class);
+        $checklistRepo->method('find')->willReturn($checklist);
+
+        $submissionRepo = $this->createMock(SubmissionRepository::class);
+        $submissionRepo->method('findOneByChecklistAndMitarbeiterId')->willReturn(null); // No existing submission
+
+        $entityManager->method('getRepository')->willReturnCallback(function ($class) use ($checklistRepo, $submissionRepo) {
+            if ($class === Checklist::class) {
+                return $checklistRepo;
+            }
+            if ($class === \App\Entity\Submission::class) {
+                return $submissionRepo;
+            }
+            return null;
+        });
 
         $submissionService->method('collectSubmissionData')->willReturn(['some' => 'data']);
         $submissionFactory->method('createSubmission')->willReturn($submission);
         $entityManager->expects($this->never())->method('flush'); // Should not flush when email fails
 
-        $controller->method('render')->willReturn(new \Symfony\Component\HttpFoundation\Response('success'));
+        $controller->method('render')->willReturn(new Response('success'));
 
         // Act: Create a POST request that will trigger the email sending
         $request = new Request();
@@ -75,6 +94,6 @@ class ChecklistControllerTest extends TestCase
         $response = $controller->form($request);
 
         // The assertions are in the mock expectations above
-        $this->assertInstanceOf(\Symfony\Component\HttpFoundation\Response::class, $response);
+        $this->assertInstanceOf(Response::class, $response);
     }
 }

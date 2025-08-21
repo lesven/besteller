@@ -5,6 +5,7 @@ namespace App\Controller\Admin;
 use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use App\Service\CsrfDeletionHelper;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
@@ -13,6 +14,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted('ROLE_ADMIN')]
 class UserController extends AbstractController
 {
+    use CsrfDeletionHelper;
     /**
      * Konstruktor stellt EntityManager und PasswordHasher bereit.
      *
@@ -133,11 +135,7 @@ class UserController extends AbstractController
      */
     public function delete(Request $request, User $user): Response
     {
-        if ($this->isCsrfTokenValid('delete' . $user->getId(), (string) $request->request->get('_token'))) {
-            $this->entityManager->remove($user);
-            $this->entityManager->flush();
-            $this->addFlash('success', 'Benutzer wurde erfolgreich gelöscht.');
-        }
+        $this->handleCsrfDeletion($request, $user, 'Benutzer wurde erfolgreich gelöscht.');
 
         return $this->redirectToRoute('admin_users');
     }
