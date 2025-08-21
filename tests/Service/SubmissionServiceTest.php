@@ -147,4 +147,59 @@ class SubmissionServiceTest extends TestCase
         $this->assertStringContainsString('<li>X</li>', $html);
         $this->assertStringContainsString('<li>Y</li>', $html);
     }
+
+    public function testCollectIgnoresEmptyCheckboxAndMissing(): void
+    {
+        $service = new SubmissionService();
+
+        $checklist = new Checklist();
+        $group = new ChecklistGroup();
+        $group->setTitle('C');
+        $group->setChecklist($checklist);
+
+        $cbEmpty = $this->createItem(30, 'CBEmpty', GroupItem::TYPE_CHECKBOX);
+        $cbEmpty->setGroup($group);
+        $group->addItem($cbEmpty);
+
+        $cbPresent = $this->createItem(31, 'CBPresent', GroupItem::TYPE_CHECKBOX);
+        $cbPresent->setGroup($group);
+        $group->addItem($cbPresent);
+
+        $missing = $this->createItem(32, 'Missing', GroupItem::TYPE_TEXT);
+        $missing->setGroup($group);
+        $group->addItem($missing);
+
+        $checklist->addGroup($group);
+
+        $request = new Request([], [
+            // item_30 present but empty array -> should be ignored
+            'item_30' => [],
+            // item_31 present with values -> should be collected
+            'item_31' => ['one'],
+            // item_32 missing -> should be ignored
+        ]);
+
+        $result = $service->collectSubmissionData($checklist, $request);
+        $this->assertArrayHasKey('C', $result);
+        $groupData = $result['C'];
+        $this->assertArrayNotHasKey('CBEmpty', $groupData);
+        $this->assertArrayNotHasKey('Missing', $groupData);
+        $this->assertSame(['one'], $groupData['CBPresent']['value']);
+    }
+
+    public function testFormatHandlesDirectScalarItem(): void
+    {
+        $service = new SubmissionService();
+
+        $data = [
+            'G' => [
+                'Note' => 'Just a note',
+            ],
+        ];
+
+        $html = $service->formatSubmissionForEmail($data);
+
+        $this->assertStringContainsString('<h3>G</h3>', $html);
+        $this->assertStringContainsString('<strong>Note:</strong> Just a note', $html);
+    }
 }
