@@ -51,6 +51,9 @@ clear-cache: ## Löscht den Symfony Cache
 test: ## Führt Tests aus
 	docker compose exec php vendor/bin/phpunit
 
+coverage: ## Führt PHPUnit mit Coverage-Ausgabe aus (Text + HTML -> var/coverage)
+	docker compose exec -e APP_ENV=$(ENV) -e APP_DEBUG=$(APP_DEBUG) -e XDEBUG_MODE=coverage php vendor/bin/phpunit --coverage-text --coverage-html=var/coverage
+
 phpstan: ## Führt statische Analyse mit PHPStan aus
 	docker compose exec php vendor/bin/phpstan analyse --memory-limit=512M
 
