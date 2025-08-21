@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Tests\Command;
 
 use App\Command\ChangePasswordCommand;
@@ -13,6 +14,7 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 class ChangePasswordCommandTest extends TestCase
 {
     private const MIN_PASSWORD_LENGTH = 16;
+
     public function testExecuteChangesPassword(): void
     {
         $user = new User();
@@ -85,4 +87,6 @@ class ChangePasswordCommandTest extends TestCase
         $this->assertStringContainsString('mindestens 16 Zeichen', $tester->getDisplay());
     }
 }
+        
+
 
