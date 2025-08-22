@@ -6,6 +6,7 @@ use App\Exception\JsonValidationException;
 use App\Service\EmployeeIdValidatorService;
 use InvalidArgumentException;
 use App\Service\LinkSenderService;
+use App\Service\ApiControllerHelper;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -18,6 +19,7 @@ class ApiController extends AbstractController
 {
     private ApiValidationService $apiValidationService;
     private LinkSenderService $linkSenderService;
+    private ApiControllerHelper $helper;
     /**
      * Hilfsmethode: Gibt eine Fehlerantwort als JsonResponse zurück
      */
@@ -29,101 +31,18 @@ class ApiController extends AbstractController
     /**
      * Hilfsmethode: Validiert das API-Token
      */
-    private function isAuthorized(Request $request): bool
-    {
-        $configuredTokenRaw = $this->parameterBag->get('API_TOKEN') ?? null;
-        $configuredToken = is_string($configuredTokenRaw) ? $configuredTokenRaw : '';
-        if ($configuredToken === '') {
-            return true;
-        }
-        $auth = $request->headers->get('Authorization', '');
-        return $auth === 'Bearer ' . $configuredToken;
-    }
-
-    /**
-     * Hilfsmethode: Validiert die Mitarbeiter-ID
-     */
-    // Validiert die Mitarbeiter-ID
-    private function isValidMitarbeiterId(string $mitarbeiterId): bool
-    {
-        return $this->employeeIdValidator->isValid($mitarbeiterId);
-    }
-
-    /**
-     * Hilfsmethode: Liefert einen string-Parameter oder wirft eine Exception.
-     * Alle Kommentare hier auf Deutsch laut Vorgabe.
-     *
-     * @param array<string,mixed> $data
-     */
-    private function requireString(array $data, string $key, string $errorMessage): string
-    {
-        if (!isset($data[$key]) || !is_string($data[$key]) || $data[$key] === '') {
-            throw new InvalidArgumentException($errorMessage);
-        }
-        return $data[$key];
-    }
-
-    /**
-     * Hilfsmethode: Parst die Stücklisten-ID sicher zu int.
-     * Akzeptiert int, numeric string und float; leere Werte sind ungültig.
-     *
-     * @param mixed $value
-     */
-    private function parseChecklistId(mixed $value): int
-    {
-        if (is_int($value)) {
-            return $value;
-        }
-        if (is_string($value) || is_float($value)) {
-            if ($value === '') {
-                throw new InvalidArgumentException('Ungültige Stücklisten-ID');
-            }
-            return (int) $value;
-        }
-        throw new InvalidArgumentException('Ungültige Stücklisten-ID');
-    }
-
-    /**
-     * Extrahiert und validiert die benötigten Parameter für generateLink.
-     *
-     * @param array<string,mixed> $data Decodierte JSON-Daten
-     * @return array{checklistId:int,mitarbeiterId:string,mitarbeiterName:string,emailEmpfaenger:string}
-     * @throws \InvalidArgumentException Bei fehlenden oder ungültigen Parametern
-     */
-    private function extractGenerateLinkParams(array $data): array
-    {
-        // erforderliche string-Parameter holen oder Exception werfen
-        $mitarbeiterId = $this->requireString($data, 'mitarbeiter_id', 'Ungültige Personen-ID');
-        $mitarbeiterName = $this->requireString($data, 'mitarbeiter_name', 'Ungültiger Name');
-        $emailEmpfaenger = $this->requireString($data, 'email_empfänger', 'Ungültige E-Mail');
-
-        // Mitarbeiter-ID zusätzlich validieren
-        if (!$this->isValidMitarbeiterId($mitarbeiterId)) {
-            throw new InvalidArgumentException('Ungültige Personen-ID');
-        }
-
-        // Stücklisten-ID parsen
-        if (!isset($data['stückliste_id'])) {
-            throw new InvalidArgumentException('Ungültige Stücklisten-ID');
-        }
-        $checklistId = $this->parseChecklistId($data['stückliste_id']);
-
-        return [
-            'checklistId' => $checklistId,
-            'mitarbeiterId' => $mitarbeiterId,
-            'mitarbeiterName' => $mitarbeiterName,
-            'emailEmpfaenger' => $emailEmpfaenger,
-        ];
-    }
+    // helper methods moved to ApiControllerHelper to keep controller slim
     public function __construct(
         private UrlGeneratorInterface $urlGenerator,
         private ParameterBagInterface $parameterBag,
         private EmployeeIdValidatorService $employeeIdValidator,
         LinkSenderService $linkSenderService,
-        ApiValidationService $apiValidationService
+        ApiValidationService $apiValidationService,
+        ?ApiControllerHelper $helper = null
     ) {
         $this->linkSenderService = $linkSenderService;
         $this->apiValidationService = $apiValidationService;
+        $this->helper = $helper ?? new ApiControllerHelper($parameterBag, $employeeIdValidator);
     }
 
     /**
@@ -133,8 +52,8 @@ class ApiController extends AbstractController
      */
     public function generateLink(Request $request): JsonResponse
     {
-        // 1. Authentifizierung prüfen
-        if (!$this->isAuthorized($request)) {
+    // 1. Authentifizierung prüfen
+    if (!$this->helper->isAuthorized($request)) {
             return $this->errorResponse('Unauthorized', Response::HTTP_UNAUTHORIZED);
         }
 
@@ -147,7 +66,7 @@ class ApiController extends AbstractController
         }
 
         try {
-            $params = $this->extractGenerateLinkParams($data);
+            $params = $this->helper->extractGenerateLinkParams($data);
         } catch (InvalidArgumentException $e) {
             return $this->errorResponse($e->getMessage(), Response::HTTP_BAD_REQUEST);
         }
@@ -178,8 +97,8 @@ class ApiController extends AbstractController
         Request $request,
         $checklistRepository
     ): JsonResponse {
-        // 1. Authentifizierung prüfen
-        if (!$this->isAuthorized($request)) {
+    // 1. Authentifizierung prüfen
+    if (!$this->helper->isAuthorized($request)) {
             return $this->errorResponse('Unauthorized', Response::HTTP_UNAUTHORIZED);
         }
 
@@ -199,7 +118,7 @@ class ApiController extends AbstractController
 
         $recipientName = $data['recipient_name'];
         $recipientEmail = $data['recipient_email'];
-    [$mitarbeiterId, $personName, $intro] = $this->extractSendLinkParams($data);
+    [$mitarbeiterId, $personName, $intro] = $this->helper->extractSendLinkParams($data);
 
         try {
             $this->linkSenderService->sendChecklistLink(
@@ -227,27 +146,5 @@ class ApiController extends AbstractController
         return new JsonResponse(['status' => 'sent', 'link' => $link]);
     }
 
-    /**
-     * Extrahiert Parameter für sendLink (kleiner Helfer zur Reduzierung der Komplexität)
-     *
-     * @param array<string,mixed> $data
-     * @return array{string,?string,string}
-     */
-    private function extractSendLinkParams(array $data): array
-    {
-        $mitarbeiterId = isset($data['mitarbeiter_id']) ? $data['mitarbeiter_id'] : '';
-        $mitarbeiterId = is_string($mitarbeiterId) || is_int($mitarbeiterId) ? (string) $mitarbeiterId : '';
-
-        $personName = null;
-        if (isset($data['person_name']) && is_string($data['person_name'])) {
-            $personName = $data['person_name'];
-        }
-
-        $intro = '';
-        if (isset($data['intro']) && is_string($data['intro'])) {
-            $intro = $data['intro'];
-        }
-
-        return [$mitarbeiterId, $personName, $intro];
-    }
+    // parameter-extraction moved to ApiControllerHelper
 }
