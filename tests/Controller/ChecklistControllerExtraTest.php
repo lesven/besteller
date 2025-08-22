@@ -163,4 +163,121 @@ class ChecklistControllerExtraTest extends TestCase
         $response = $controller->form($request);
         $this->assertInstanceOf(Response::class, $response);
     }
+
+    public function testSubmitRedirectsWhenExistingSubmission(): void
+    {
+        [$entityManager, $submissionService, $emailService, $submissionFactory, $logger] = $this->createBaseMocks();
+
+        $checklist = $this->createMock(Checklist::class);
+        $existingSubmission = $this->createMock(Submission::class);
+
+        $checklistRepo = $this->createMock(ObjectRepository::class);
+        $checklistRepo->method('find')->willReturn($checklist);
+
+        $submissionRepo = $this->createMock(SubmissionRepository::class);
+        $submissionRepo->method('findOneByChecklistAndMitarbeiterId')->willReturn($existingSubmission);
+
+        $entityManager->method('getRepository')->willReturnCallback(function ($class) use ($checklistRepo, $submissionRepo) {
+            if ($class === Checklist::class) {
+                return $checklistRepo;
+            }
+            if ($class === Submission::class) {
+                return $submissionRepo;
+            }
+            return null;
+        });
+
+    $controller = $this->getMockBuilder(ChecklistController::class)
+            ->setConstructorArgs([$entityManager, $submissionService, $emailService, $submissionFactory, $logger])
+            ->onlyMethods(['redirectToRoute'])
+            ->getMock();
+
+    /** @var ChecklistController|\PHPUnit\Framework\MockObject\MockObject $controller */
+
+        $controller->expects($this->once())->method('redirectToRoute')->with(
+            'checklist_show',
+            $this->arrayHasKey('mitarbeiter_id')
+        )->willReturn(new \Symfony\Component\HttpFoundation\RedirectResponse('/checklist/1'));
+
+        $request = new Request();
+        $request->request->set('name', 'Bob');
+        $request->request->set('mitarbeiter_id', 'm123');
+        $request->request->set('email', 'b@example.com');
+        $request->setMethod('POST');
+
+        $response = $controller->submit(1, $request);
+        $this->assertInstanceOf(Response::class, $response);
+    }
+
+    public function testSubmitSavesAndSendsEmail(): void
+    {
+        [$entityManager, $submissionService, $emailService, $submissionFactory, $logger] = $this->createBaseMocks();
+
+        $checklist = $this->createMock(Checklist::class);
+        $submission = $this->createMock(Submission::class);
+
+        $checklistRepo = $this->createMock(ObjectRepository::class);
+        $checklistRepo->method('find')->willReturn($checklist);
+
+        $submissionRepo = $this->createMock(SubmissionRepository::class);
+        $submissionRepo->method('findOneByChecklistAndMitarbeiterId')->willReturn(null);
+
+        $entityManager->method('getRepository')->willReturnCallback(function ($class) use ($checklistRepo, $submissionRepo) {
+            if ($class === Checklist::class) {
+                return $checklistRepo;
+            }
+            if ($class === Submission::class) {
+                return $submissionRepo;
+            }
+            return null;
+        });
+
+        $submissionService->method('collectSubmissionData')->willReturn(['k' => 'v']);
+        $submissionFactory->method('createSubmission')->willReturn($submission);
+
+        $emailService->expects($this->once())
+            ->method('generateAndSendEmail')
+            ->with($submission)
+            ->willReturn('generated');
+
+        $entityManager->expects($this->once())->method('persist')->with($submission);
+        $entityManager->expects($this->once())->method('flush');
+
+    $controller = $this->getMockBuilder(ChecklistController::class)
+            ->setConstructorArgs([$entityManager, $submissionService, $emailService, $submissionFactory, $logger])
+            ->onlyMethods(['render'])
+            ->getMock();
+
+    /** @var ChecklistController|\PHPUnit\Framework\MockObject\MockObject $controller */
+
+        $controller->method('render')->willReturn(new Response('success'));
+
+        $request = new Request();
+        $request->request->set('name', 'Bob');
+        $request->request->set('mitarbeiter_id', 'm123');
+        $request->request->set('email', 'b@example.com');
+        $request->setMethod('POST');
+
+        $response = $controller->submit(1, $request);
+        $this->assertInstanceOf(Response::class, $response);
+    }
+
+    public function testFormThrowsWhenNoChecklistId(): void
+    {
+        [$entityManager, $submissionService, $emailService, $submissionFactory, $logger] = $this->createBaseMocks();
+
+    $controller = $this->getMockBuilder(ChecklistController::class)
+            ->setConstructorArgs([$entityManager, $submissionService, $emailService, $submissionFactory, $logger])
+            ->onlyMethods(['render'])
+            ->getMock();
+
+    /** @var ChecklistController|\PHPUnit\Framework\MockObject\MockObject $controller */
+
+        $this->expectException(\Symfony\Component\HttpKernel\Exception\NotFoundHttpException::class);
+
+        $request = new Request();
+        // no checklist_id in query
+
+        $controller->form($request);
+    }
 }
