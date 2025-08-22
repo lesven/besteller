@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Tests\Command;
 
 use App\Command\CreateUserCommand;
@@ -13,6 +14,7 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 class CreateUserCommandTest extends TestCase
 {
     private const MIN_PASSWORD_LENGTH = 16;
+
     public function testExecuteCreatesUser(): void
     {
         $repository = $this->createMock(ObjectRepository::class);
@@ -84,4 +86,3 @@ class CreateUserCommandTest extends TestCase
         $this->assertStringContainsString('mindestens 16 Zeichen', $tester->getDisplay());
     }
 }
-
