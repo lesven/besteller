@@ -280,4 +280,96 @@ class ChecklistControllerExtraTest extends TestCase
 
         $controller->form($request);
     }
+
+    public function testShowThrowsWhenChecklistNotFound(): void
+    {
+        [$entityManager, $submissionService, $emailService, $submissionFactory, $logger] = $this->createBaseMocks();
+
+        $checklistRepo = $this->createMock(ObjectRepository::class);
+        $checklistRepo->method('find')->willReturn(null);
+
+        $entityManager->method('getRepository')->willReturnCallback(function ($class) use ($checklistRepo) {
+            if ($class === Checklist::class) {
+                return $checklistRepo;
+            }
+            return null;
+        });
+
+        $controller = $this->getMockBuilder(ChecklistController::class)
+            ->setConstructorArgs([$entityManager, $submissionService, $emailService, $submissionFactory, $logger])
+            ->onlyMethods(['render'])
+            ->getMock();
+
+        $this->expectException(\Symfony\Component\HttpKernel\Exception\NotFoundHttpException::class);
+
+        $request = new Request();
+        $request->query->set('name', 'Bob');
+        $request->query->set('mitarbeiter_id', 'm123');
+        $request->query->set('email', 'b@example.com');
+
+        $controller->show(999, $request);
+    }
+
+    public function testShowThrowsWhenMissingQueryParams(): void
+    {
+        [$entityManager, $submissionService, $emailService, $submissionFactory, $logger] = $this->createBaseMocks();
+
+        $checklist = $this->createMock(Checklist::class);
+        $checklistRepo = $this->createMock(ObjectRepository::class);
+        $checklistRepo->method('find')->willReturn($checklist);
+
+        $entityManager->method('getRepository')->willReturnCallback(function ($class) use ($checklistRepo) {
+            if ($class === Checklist::class) {
+                return $checklistRepo;
+            }
+            return null;
+        });
+
+        $controller = $this->getMockBuilder(ChecklistController::class)
+            ->setConstructorArgs([$entityManager, $submissionService, $emailService, $submissionFactory, $logger])
+            ->onlyMethods(['render'])
+            ->getMock();
+
+        $this->expectException(\Symfony\Component\HttpKernel\Exception\NotFoundHttpException::class);
+
+        $request = new Request();
+        // missing name/mitarbeiter_id/email
+
+        $controller->show(1, $request);
+    }
+
+    public function testSubmitThrowsWhenMissingRequestParams(): void
+    {
+        [$entityManager, $submissionService, $emailService, $submissionFactory, $logger] = $this->createBaseMocks();
+
+        $checklist = $this->createMock(Checklist::class);
+        $checklistRepo = $this->createMock(ObjectRepository::class);
+        $checklistRepo->method('find')->willReturn($checklist);
+
+        $submissionRepo = $this->createMock(SubmissionRepository::class);
+        $submissionRepo->method('findOneByChecklistAndMitarbeiterId')->willReturn(null);
+
+        $entityManager->method('getRepository')->willReturnCallback(function ($class) use ($checklistRepo, $submissionRepo) {
+            if ($class === Checklist::class) {
+                return $checklistRepo;
+            }
+            if ($class === Submission::class) {
+                return $submissionRepo;
+            }
+            return null;
+        });
+
+        $controller = $this->getMockBuilder(ChecklistController::class)
+            ->setConstructorArgs([$entityManager, $submissionService, $emailService, $submissionFactory, $logger])
+            ->onlyMethods(['render'])
+            ->getMock();
+
+        $this->expectException(\Symfony\Component\HttpKernel\Exception\NotFoundHttpException::class);
+
+        $request = new Request();
+        $request->setMethod('POST');
+        // no name/mitarbeiter_id/email in request->request
+
+        $controller->submit(1, $request);
+    }
 }
