@@ -59,44 +59,51 @@ class SubmissionService
         $output = '';
         
         foreach ($data as $groupTitle => $groupData) {
-            $output .= "<h3>{$groupTitle}</h3>\n<ul>\n";
+            $escapedGroupTitle = htmlspecialchars($groupTitle, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+            $output .= "<h3>{$escapedGroupTitle}</h3>\n<ul>\n";
             
             foreach ($groupData as $itemLabel => $itemData) {
+                $escapedItemLabel = htmlspecialchars($itemLabel, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+                
                 // Neue Datenstruktur verwenden
                 if (is_array($itemData) && isset($itemData['type'], $itemData['value'])) {
                     $value = $itemData['value'];
 
                     if (is_array($value)) {
                         // Checkbox-Arrays als Unterliste ausgeben
-                        $output .= "<li><strong>{$itemLabel}:</strong><ul>\n";
+                        $output .= "<li><strong>{$escapedItemLabel}:</strong><ul>\n";
                         foreach ($value as $val) {
-                            $val = is_scalar($val) ? nl2br((string) $val) : nl2br('');
-                            $output .= "<li>{$val}</li>\n";
+                            $escapedVal = is_scalar($val) ? htmlspecialchars((string) $val, ENT_QUOTES | ENT_HTML5, 'UTF-8') : '';
+                            $escapedVal = nl2br($escapedVal);
+                            $output .= "<li>{$escapedVal}</li>\n";
                         }
                         $output .= "</ul></li>\n";
                         continue;
                     }
 
                     // Text und Radio
-                    $value = is_scalar($value) ? nl2br((string) $value) : nl2br('');
-                    $output .= "<li><strong>{$itemLabel}:</strong> {$value}</li>\n";
+                    $escapedValue = is_scalar($value) ? htmlspecialchars((string) $value, ENT_QUOTES | ENT_HTML5, 'UTF-8') : '';
+                    $escapedValue = nl2br($escapedValue);
+                    $output .= "<li><strong>{$escapedItemLabel}:</strong> {$escapedValue}</li>\n";
                     continue;
                 }
 
                 // Fallback für alte Datenstruktur
                 if (is_array($itemData)) {
-                    $output .= "<li><strong>{$itemLabel}:</strong><ul>\n";
+                    $output .= "<li><strong>{$escapedItemLabel}:</strong><ul>\n";
                     foreach ($itemData as $val) {
-                        $val = is_scalar($val) ? nl2br((string) $val) : nl2br('');
-                        $output .= "<li>{$val}</li>\n";
+                        $escapedVal = is_scalar($val) ? htmlspecialchars((string) $val, ENT_QUOTES | ENT_HTML5, 'UTF-8') : '';
+                        $escapedVal = nl2br($escapedVal);
+                        $output .= "<li>{$escapedVal}</li>\n";
                     }
                     $output .= "</ul></li>\n";
                     continue;
                 }
 
-                $itemData = is_scalar($itemData) ? nl2br((string) $itemData) : nl2br('');
+                $escapedItemData = is_scalar($itemData) ? htmlspecialchars((string) $itemData, ENT_QUOTES | ENT_HTML5, 'UTF-8') : '';
+                $escapedItemData = nl2br($escapedItemData);
 
-                $output .= "<li><strong>{$itemLabel}:</strong> {$itemData}</li>\n";
+                $output .= "<li><strong>{$escapedItemLabel}:</strong> {$escapedItemData}</li>\n";
             }
             
             $output .= "</ul>\n";
