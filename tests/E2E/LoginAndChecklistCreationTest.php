@@ -17,11 +17,76 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 /**
- * End-to-End tests for login and checklist creation workflows
- * Simplified to work without database dependencies
+ * End-to-End Tests für Login- und Checklisten-Erstellungs-Workflows
+ * 
+ * Diese Testsuite simuliert den kompletten Admin-Workflow von der Anmeldung 
+ * bis zur Verwaltung von Checklisten. Alle Tests arbeiten mit Mocks ohne 
+ * echte Datenbankverbindung für schnelle und zuverlässige Ausführung.
+ * 
+ * WAS DIESER TEST KOMPLETT ABDECKT:
+ * 
+ * 1. ADMIN-AUTHENTIFIZIERUNG:
+ *    - Passwort-Validierung (testPasswordValidationInAuthentication)
+ *    - Rollen-basierte Zugriffskontrolle (testSecurityRoleValidationForAdminAccess)
+ *    - ROLE_ADMIN vs ROLE_USER Unterscheidung
+ * 
+ * 2. CHECKLISTEN-ERSTELLUNG:
+ *    - GET: Formular anzeigen (testSuccessfulChecklistCreationWorkflow)
+ *    - POST: Neue Checkliste erstellen mit persist/flush
+ *    - Erfolgreiche Weiterleitung und Flash-Message
+ * 
+ * 3. EINGABE-VALIDIERUNG:
+ *    - E-Mail-Format-Validierung (testChecklistCreationWithValidationErrors)
+ *    - Fehlerbehandlung bei ungültigen Daten
+ *    - Verhindert persist() bei Validierungsfehlern
+ * 
+ * 4. CHECKLISTEN-BEARBEITUNG:
+ *    - GET: Edit-Formular mit UUID-Beispiel (testChecklistEditWorkflow)
+ *    - POST: Aktualisierung bestehender Checklisten
+ *    - Setter-Methoden werden korrekt aufgerufen
+ * 
+ * 5. CHECKLISTEN-ÜBERSICHT:
+ *    - Index-Seite mit allen Checklisten (testChecklistIndexDisplaysAllChecklists)
+ *    - Repository findAll() Integration
+ * 
+ * 6. SICHERHEITS-VALIDIERUNG:
+ *    - Template-Upload-Sicherheit (testEmailTemplateSecurityValidation)
+ *    - XSS-Schutz bei HTML-Templates
+ *    - Ablehnung von <script>-Tags
+ * 
+ * 7. KOMPLETTER LEBENSZYKLUS:
+ *    - Erstellen → Bearbeiten → Löschen (testCompleteChecklistLifecycle)
+ *    - CSRF-Token-Validierung bei Löschung
+ *    - Korrekte Reihenfolge der DB-Operationen
+ * 
+ * MOCK-STRATEGIE:
+ * - EntityManager mit Repository-Callback-Mapping
+ * - User-Mocks mit verschiedenen Rollen
+ * - Checklist-Mocks mit Standard-Eigenschaften
+ * - HTTP-Request-Simulation (GET/POST)
+ * - File-Upload-Mocks für Sicherheitstests
+ * 
+ * SICHERHEITS-FOKUS:
+ * - Rollenbasierte Zugriffskontrolle wird explizit getestet
+ * - Template-Uploads werden auf schädliche Inhalte geprüft
+ * - CSRF-Tokens werden bei kritischen Aktionen validiert
+ * - E-Mail-Validierung verhindert ungültige Eingaben
  */
 class LoginAndChecklistCreationTest extends TestCase
 {
+    /**
+     * Erstellt einen Mock EntityManager für alle Tests
+     * 
+     * Der EntityManager ist zentral für alle Datenbankoperationen.
+     * Diese Mock-Version simuliert Repository-Zugriffe ohne echte DB.
+     * 
+     * REPOSITORY-MAPPING:
+     * - Checklist::class → ChecklistRepository Mock
+     * - User::class → ObjectRepository Mock (für User-Verwaltung)
+     * - Alle anderen → Standard ObjectRepository Mock
+     * 
+     * @return EntityManagerInterface Gemockter EntityManager
+     */
     private function createMockEntityManager(): EntityManagerInterface
     {
         $entityManager = $this->createMock(EntityManagerInterface::class);
@@ -42,6 +107,19 @@ class LoginAndChecklistCreationTest extends TestCase
         return $entityManager;
     }
 
+    /**
+     * Erstellt einen Mock Admin-User für Authentifizierungs-Tests
+     * 
+     * Simuliert einen angemeldeten Administrator mit allen nötigen
+     * Eigenschaften für rollenbasierte Zugriffskontrolle.
+     * 
+     * EIGENSCHAFTEN:
+     * - ID: 1 (Standard-Test-User)
+     * - E-Mail: admin@test.com
+     * - Rolle: ROLE_ADMIN (für Admin-Bereich-Zugriff)
+     * 
+     * @return User Gemockter Admin-User
+     */
     private function createMockUser(): User
     {
         $user = $this->createMock(User::class);
@@ -51,6 +129,20 @@ class LoginAndChecklistCreationTest extends TestCase
         return $user;
     }
 
+    /**
+     * Erstellt eine Mock-Checkliste für alle Checklisten-Tests
+     * 
+     * Simuliert eine typische Checkliste mit Standard-Eigenschaften
+     * für Tests der CRUD-Operationen.
+     * 
+     * EIGENSCHAFTEN:
+     * - ID: 1 (Standard-Test-Checkliste)
+     * - Titel: "Test Checklist"
+     * - Ziel-E-Mail: target@test.com (wohin Submissions gehen)
+     * - Reply-E-Mail: reply@test.com (für Rückfragen)
+     * 
+     * @return Checklist Gemockte Checkliste
+     */
     private function createMockChecklist(): Checklist
     {
         $checklist = $this->createMock(Checklist::class);
@@ -61,13 +153,40 @@ class LoginAndChecklistCreationTest extends TestCase
         return $checklist;
     }
 
+    /**
+     * TEST 1: Erfolgreicher Checklisten-Erstellungs-Workflow (GET + POST)
+     * 
+     * Dieser Test simuliert den kompletten Prozess der Checklisten-Erstellung
+     * durch einen Administrator über das Web-Interface.
+     * 
+     * TEIL A - GET-Request (Formular anzeigen):
+     * 1. Admin ruft /admin/checklist/new auf
+     * 2. Controller rendert das Erstellungsformular
+     * 3. Template admin/checklist/new.html.twig wird zurückgegeben
+     * 
+     * TEIL B - POST-Request (Formular absenden):
+     * 1. Admin füllt Formular aus (Titel, Ziel-E-Mail, Reply-E-Mail)
+     * 2. Controller validiert Eingaben
+     * 3. Neue Checkliste wird über EntityManager.persist() gespeichert
+     * 4. EntityManager.flush() schreibt Änderungen in die Datenbank
+     * 5. Success-Flash-Message wird gesetzt
+     * 6. Weiterleitung zur Checklisten-Übersicht
+     * 
+     * VALIDIERT:
+     * - Korrekte Template-Verwendung
+     * - Datenbankoperationen (persist + flush)
+     * - User-Feedback (Flash-Messages)
+     * - Navigation (Redirect nach Erfolg)
+     */
     public function testSuccessfulChecklistCreationWorkflow(): void
     {
+        // SETUP: Alle nötigen Dependencies für den Controller mocken
         $entityManager = $this->createMockEntityManager();
         $checklistRepo = $this->createMock(ChecklistRepository::class);
         $emailService = $this->createMock(EmailService::class);
         $duplicationService = $this->createMock(ChecklistDuplicationService::class);
 
+        // Controller mit gemockten Dependencies erstellen
         $controller = $this->getMockBuilder(ChecklistController::class)
             ->setConstructorArgs([
                 $entityManager,
@@ -78,37 +197,43 @@ class LoginAndChecklistCreationTest extends TestCase
             ->onlyMethods(['render', 'addFlash', 'redirectToRoute'])
             ->getMock();
 
-        // Test GET request (form display)
+        // TEIL A: GET-Request - Formular anzeigen
         $getRequest = new Request();
         $getRequest->setMethod('GET');
 
+        // ERWARTUNG: Korrektes Template wird gerendert
         $controller->expects($this->once())
             ->method('render')
             ->with('admin/checklist/new.html.twig')
             ->willReturn(new Response('form html'));
 
+        // AUSFÜHRUNG: GET-Request ausführen
         $getResponse = $controller->new($getRequest);
         $this->assertInstanceOf(Response::class, $getResponse);
 
-        // Test POST request (form submission)
+        // TEIL B: POST-Request - Formular absenden
         $postRequest = new Request();
         $postRequest->setMethod('POST');
         $postRequest->request->set('title', 'Integration Test Checklist');
         $postRequest->request->set('target_email', 'integration@test.com');
         $postRequest->request->set('reply_email', 'reply@test.com');
 
+        // ERWARTUNGEN: Datenbankoperationen werden korrekt ausgeführt
         $entityManager->expects($this->once())->method('persist');
         $entityManager->expects($this->once())->method('flush');
 
+        // ERWARTUNG: Success-Message wird gesetzt
         $controller->expects($this->once())
             ->method('addFlash')
             ->with('success', 'Checkliste wurde erfolgreich erstellt.');
 
+        // ERWARTUNG: Weiterleitung zur Übersicht
         $controller->expects($this->once())
             ->method('redirectToRoute')
             ->with('admin_checklists')
             ->willReturn(new RedirectResponse('/admin/checklists'));
 
+        // AUSFÜHRUNG: POST-Request ausführen
         $postResponse = $controller->new($postRequest);
         $this->assertInstanceOf(Response::class, $postResponse);
     }
@@ -282,8 +407,37 @@ class LoginAndChecklistCreationTest extends TestCase
         $this->assertContains('ROLE_USER', $regularRoles);
     }
 
+    /**
+     * TEST 6: E-Mail-Template-Sicherheits-Validierung (XSS-Schutz)
+     * 
+     * Dieser kritische Sicherheitstest stellt sicher, dass böswillige 
+     * HTML-Templates mit JavaScript-Code abgelehnt werden.
+     * 
+     * SZENARIO:
+     * 1. Angreifer versucht, HTML-Template mit <script>-Tags hochzuladen
+     * 2. System erkennt gefährlichen Inhalt (XSS-Potential)
+     * 3. Upload wird abgelehnt und Fehlermeldung angezeigt
+     * 4. Keine Persistierung in der Datenbank
+     * 
+     * SICHERHEITS-VALIDIERUNG:
+     * - MIME-Type wird geprüft (text/html)
+     * - Dateiinhalt wird gescannt nach <script>-Tags
+     * - Potentielle XSS-Angriffe werden verhindert
+     * - User wird über Sicherheitsproblem informiert
+     * 
+     * ERWARTETES VERHALTEN:
+     * - Fehlermeldung: "nicht erlaubte Inhalte"
+     * - Redirect zurück zum Upload-Formular
+     * - Keine Datenbankoperationen
+     * 
+     * WARUM WICHTIG:
+     * - Verhindert Code-Injection über Template-Uploads
+     * - Schützt andere Admin-User vor gespeicherten XSS-Attacken
+     * - Kritisch für Produktionsumgebungen
+     */
     public function testEmailTemplateSecurityValidation(): void
     {
+        // SETUP: Controller mit Sicherheitsfokus
         $entityManager = $this->createMockEntityManager();
         $checklistRepo = $this->createMock(ChecklistRepository::class);
         $emailService = $this->createMock(EmailService::class);
@@ -301,10 +455,11 @@ class LoginAndChecklistCreationTest extends TestCase
 
         $checklist = $this->createMockChecklist();
 
-        // Test template with script tags gets rejected
+        // ANGRIFFS-SZENARIO: Böswilliges HTML-Template hochladen
         $request = new Request();
         $request->setMethod('POST');
         
+        // Mock für gefährliche Datei mit Script-Tags
         $maliciousFile = $this->getMockBuilder(\Symfony\Component\HttpFoundation\File\UploadedFile::class)
             ->setConstructorArgs(['', '', 'text/html', 1000])
             ->getMock();
@@ -312,6 +467,7 @@ class LoginAndChecklistCreationTest extends TestCase
         $maliciousFile->method('getClientOriginalExtension')->willReturn('html');
         $maliciousFile->method('getSize')->willReturn(1000);
         
+        // Dateiinhalt mit gefährlichem JavaScript
         $fileObject = $this->getMockBuilder(\SplFileObject::class)
             ->setConstructorArgs(['php://memory'])
             ->getMock();
@@ -320,14 +476,17 @@ class LoginAndChecklistCreationTest extends TestCase
         
         $request->files->set('template_file', $maliciousFile);
 
+        // ERWARTUNG: Sicherheitsfehler wird erkannt und gemeldet
         $controller->expects($this->once())
             ->method('addFlash')
             ->with('error', 'Die hochgeladene Datei enthält nicht erlaubte Inhalte.');
 
+        // ERWARTUNG: Redirect zurück zum Upload-Formular
         $controller->expects($this->once())
             ->method('redirectToRoute')
             ->willReturn(new RedirectResponse('/admin/checklist/email-template'));
 
+        // AUSFÜHRUNG: Upload-Versuch ausführen
         $response = $controller->emailTemplate($request, $checklist);
         $this->assertInstanceOf(Response::class, $response);
     }

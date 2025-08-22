@@ -23,19 +23,76 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 use Psr\Log\LoggerInterface;
 
 /**
- * End-to-End tests for complete checklist workflows
- * Simplified to work without database dependencies
+ * End-to-End Tests für komplette Checklist-Workflows
+ * 
+ * Diese Testsuite simuliert den kompletten Workflow einer Checkliste von der 
+ * Erstellung durch einen Admin bis zur Einreichung durch einen Mitarbeiter.
+ * 
+ * WICHTIG: Diese Tests arbeiten OHNE echte Datenbankverbindung - alle 
+ * Datenbankoperationen werden über Mocks simuliert, um die Tests schnell 
+ * und unabhängig von der Infrastruktur zu halten.
+ * 
+ * WAS DIESER TEST KOMPLETT ABDECKT:
+ * 
+ * 1. ADMIN-WORKFLOW:
+ *    - Erstellung neuer Checklisten (testCompleteChecklistWorkflowFromCreationToSubmission)
+ *    - Link-Generierung für Mitarbeiter (testChecklistLinkGeneration)
+ *    - Duplizierung von Checklisten (testAdminControllerDuplication)
+ * 
+ * 2. MITARBEITER-WORKFLOW:
+ *    - Zugriff auf Checkliste über Link (testChecklistAccessWithInvalidParameters)
+ *    - Validierung der Eingaben (testChecklistValidatesRequiredFields)
+ *    - Submission-Erstellung (testSubmissionFactoryCreatesSubmission)
+ * 
+ * 3. SERVICE-LAYER-INTEGRATION:
+ *    - Controller-Service-Integration (testChecklistControllerServiceIntegration)
+ *    - Datensammlung durch SubmissionService (testSubmissionServiceCollectsDataCorrectly)
+ *    - E-Mail-Versendung durch EmailService (testEmailServiceSendsEmails)
+ *    - Fehlerbehandlung bei E-Mail-Problemen (testEmailServiceHandlesFailures)
+ * 
+ * 4. DATENBANK-OPERATIONEN:
+ *    - Repository-Zugriffe (testRepositoryFindMethods)
+ *    - Persistierung und Löschung (testEntityManagerPersistenceOperations)
+ *    - Logging bei Fehlern (testLoggerErrorHandling)
+ * 
+ * 5. FEHLERBEHANDLUNG:
+ *    - Ungültige Parameter abfangen
+ *    - Nicht gefundene Checklisten behandeln
+ *    - E-Mail-Versendungsfehler loggen
+ * 
+ * MOCK-STRATEGIE:
+ * - EntityManager, Repositories und Services werden gemockt
+ * - Echte Entity-Instanzen werden durch Mocks ersetzt
+ * - HTTP-Requests werden simuliert (GET/POST)
+ * - Alle Erwartungen werden explizit definiert und validiert
+ * 
+ * NUTZEN:
+ * - Stellt sicher, dass der komplette Workflow funktioniert
+ * - Testet die Integration zwischen allen Komponenten
+ * - Läuft schnell ohne DB-Abhängigkeiten
+ * - Deckt Happy Path und Error Cases ab
  */
 class ChecklistWorkflowTest extends TestCase
 {
+    /**
+     * Erstellt einen Mock EntityManager für Tests
+     * 
+     * Der EntityManager ist das zentrale Interface für alle Datenbankoperationen.
+     * Dieser Mock simuliert die wichtigsten Repository-Zugriffe ohne echte DB.
+     * 
+     * @return EntityManagerInterface Gemockter EntityManager
+     */
     private function createMockEntityManager(): EntityManagerInterface
     {
+        // Hauptmock für den EntityManager
         $entityManager = $this->createMock(EntityManagerInterface::class);
         
+        // Mocks für die verschiedenen Repositories
         $checklistRepo = $this->createMock(ChecklistRepository::class);
         $submissionRepo = $this->createMock(SubmissionRepository::class);
         $userRepo = $this->createMock(ObjectRepository::class);
         
+        // EntityManager gibt je nach Entity-Klasse das passende Repository zurück
         $entityManager->method('getRepository')->willReturnCallback(function ($class) use ($checklistRepo, $submissionRepo, $userRepo) {
             if ($class === Checklist::class) {
                 return $checklistRepo;
@@ -52,6 +109,14 @@ class ChecklistWorkflowTest extends TestCase
         return $entityManager;
     }
 
+    /**
+     * Erstellt eine Mock-Checkliste für Tests
+     * 
+     * Simuliert eine typische Checkliste mit allen wichtigen Eigenschaften
+     * wie ID, Titel, E-Mail-Adressen und leerer Gruppen-Collection.
+     * 
+     * @return Checklist Gemockte Checkliste
+     */
     private function createMockChecklist(): Checklist
     {
         $checklist = $this->createMock(Checklist::class);
@@ -64,6 +129,14 @@ class ChecklistWorkflowTest extends TestCase
         return $checklist;
     }
 
+    /**
+     * Erstellt eine Mock-Submission für Tests
+     * 
+     * Simuliert eine Mitarbeiter-Einreichung mit typischen Testdaten
+     * wie Name, Mitarbeiter-ID und E-Mail-Adresse.
+     * 
+     * @return Submission Gemockte Submission
+     */
     private function createMockSubmission(): Submission
     {
         $submission = $this->createMock(Submission::class);
@@ -74,14 +147,34 @@ class ChecklistWorkflowTest extends TestCase
         return $submission;
     }
 
+    /**
+     * TEST 1: Kompletter Workflow - Admin erstellt eine neue Checkliste
+     * 
+     * Dieser Test simuliert den ersten Schritt im Workflow: Ein Administrator
+     * erstellt über das Admin-Interface eine neue Checkliste.
+     * 
+     * ABLAUF:
+     * 1. POST-Request mit Checklisten-Daten wird erstellt
+     * 2. AdminChecklistController verarbeitet die Anfrage
+     * 3. EntityManager.persist() wird aufgerufen (neue Checkliste speichern)
+     * 4. EntityManager.flush() wird aufgerufen (Änderungen in DB schreiben)
+     * 5. Success-Flash-Message wird gesetzt
+     * 6. Redirect zur Checklisten-Übersicht erfolgt
+     * 
+     * VALIDIERT:
+     * - Dass persist() und flush() genau einmal aufgerufen werden
+     * - Dass eine Erfolgsmeldung gesetzt wird
+     * - Dass zur richtigen Route weitergeleitet wird
+     */
     public function testCompleteChecklistWorkflowFromCreationToSubmission(): void
     {
-        // Test admin checklist creation
+        // Mock-Dependencies für den Admin-Controller erstellen
         $entityManager = $this->createMockEntityManager();
         $checklistRepo = $this->createMock(ChecklistRepository::class);
         $emailService = $this->createMock(EmailService::class);
         $duplicationService = $this->createMock(ChecklistDuplicationService::class);
 
+        // Admin-Controller mit gemockten Dependencies
         $adminController = $this->getMockBuilder(AdminChecklistController::class)
             ->setConstructorArgs([
                 $entityManager,
@@ -92,23 +185,28 @@ class ChecklistWorkflowTest extends TestCase
             ->onlyMethods(['render', 'addFlash', 'redirectToRoute'])
             ->getMock();
 
+        // POST-Request simulieren mit Checklisten-Daten
         $createRequest = new Request();
         $createRequest->setMethod('POST');
         $createRequest->request->set('title', 'Workflow Test Checklist');
         $createRequest->request->set('target_email', 'workflow@test.com');
 
+        // ERWARTUNGEN: EntityManager soll persist() und flush() aufrufen
         $entityManager->expects($this->once())->method('persist');
         $entityManager->expects($this->once())->method('flush');
 
+        // ERWARTUNGEN: Success-Flash soll gesetzt werden
         $adminController->expects($this->once())
             ->method('addFlash')
             ->with('success', 'Checkliste wurde erfolgreich erstellt.');
 
+        // ERWARTUNGEN: Redirect zur Admin-Übersicht
         $adminController->expects($this->once())
             ->method('redirectToRoute')
             ->with('admin_checklists')
             ->willReturn(new RedirectResponse('/admin/checklists'));
 
+        // AUSFÜHRUNG: Controller-Methode aufrufen
         $response = $adminController->new($createRequest);
         $this->assertInstanceOf(Response::class, $response);
     }
