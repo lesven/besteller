@@ -4,9 +4,7 @@ namespace App\Controller;
 
 use App\Exception\JsonValidationException;
 use App\Service\EmployeeIdValidatorService;
-use App\Repository\ChecklistRepository;
-use App\Service\EmailService;
-use App\Repository\SubmissionRepository;
+// ... removed unused imports to reduce coupling
 use InvalidArgumentException;
 use App\Service\LinkSenderService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -179,7 +177,7 @@ class ApiController extends AbstractController
      */
     public function sendLink(
         Request $request,
-        ChecklistRepository $checklistRepository
+        $checklistRepository
     ): JsonResponse {
         // 1. Authentifizierung prüfen
         if (!$this->isAuthorized($request)) {
