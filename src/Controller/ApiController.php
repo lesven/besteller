@@ -4,7 +4,6 @@ namespace App\Controller;
 
 use App\Exception\JsonValidationException;
 use App\Service\EmployeeIdValidatorService;
-// ... removed unused imports to reduce coupling
 use InvalidArgumentException;
 use App\Service\LinkSenderService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -200,9 +199,7 @@ class ApiController extends AbstractController
 
         $recipientName = $data['recipient_name'];
         $recipientEmail = $data['recipient_email'];
-        $mitarbeiterId = $data['mitarbeiter_id'];
-        $personName = isset($data['person_name']) && is_string($data['person_name']) ? $data['person_name'] : null;
-        $intro = isset($data['intro']) && is_string($data['intro']) ? $data['intro'] : '';
+    [$mitarbeiterId, $personName, $intro] = $this->extractSendLinkParams($data);
 
         try {
             $this->linkSenderService->sendChecklistLink(
@@ -228,5 +225,29 @@ class ApiController extends AbstractController
         ], UrlGeneratorInterface::ABSOLUTE_URL);
 
         return new JsonResponse(['status' => 'sent', 'link' => $link]);
+    }
+
+    /**
+     * Extrahiert Parameter für sendLink (kleiner Helfer zur Reduzierung der Komplexität)
+     *
+     * @param array<string,mixed> $data
+     * @return array{string,?string,string}
+     */
+    private function extractSendLinkParams(array $data): array
+    {
+        $mitarbeiterId = isset($data['mitarbeiter_id']) ? $data['mitarbeiter_id'] : '';
+        $mitarbeiterId = is_string($mitarbeiterId) || is_int($mitarbeiterId) ? (string) $mitarbeiterId : '';
+
+        $personName = null;
+        if (isset($data['person_name']) && is_string($data['person_name'])) {
+            $personName = $data['person_name'];
+        }
+
+        $intro = '';
+        if (isset($data['intro']) && is_string($data['intro'])) {
+            $intro = $data['intro'];
+        }
+
+        return [$mitarbeiterId, $personName, $intro];
     }
 }
