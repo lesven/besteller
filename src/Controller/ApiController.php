@@ -102,12 +102,12 @@ class ApiController extends AbstractController
 
         // Mitarbeiter-ID zusätzlich validieren
         if (!$this->isValidMitarbeiterId($mitarbeiterId)) {
-            throw new \InvalidArgumentException('Ungültige Personen-ID');
+            throw new InvalidArgumentException('Ungültige Personen-ID');
         }
 
         // Stücklisten-ID parsen
         if (!isset($data['stückliste_id'])) {
-            throw new \InvalidArgumentException('Ungültige Stücklisten-ID');
+            throw new InvalidArgumentException('Ungültige Stücklisten-ID');
         }
         $checklistId = $this->parseChecklistId($data['stückliste_id']);
 
