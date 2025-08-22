@@ -1,6 +1,6 @@
 services:
   web:
-  restart: unless-stopped
+    restart: unless-stopped
     build:
       context: .
       dockerfile: docker/nginx/Dockerfile
@@ -16,7 +16,7 @@ services:
       - besteller
 
   php:
-  restart: unless-stopped
+    restart: unless-stopped
     build:
       context: .
       dockerfile: docker/php/Dockerfile
@@ -34,7 +34,7 @@ services:
       - besteller
 
   db:
-  restart: unless-stopped
+    restart: unless-stopped
     image: mariadb:10.11
     environment:
       MYSQL_ROOT_PASSWORD: root
@@ -47,7 +47,7 @@ services:
       - besteller
 
   mailhog:
-  restart: unless-stopped
+    restart: unless-stopped
     image: mailhog/mailhog:latest
     ports:
       - "8026:8025"  # Web UI
