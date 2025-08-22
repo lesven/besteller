@@ -25,7 +25,7 @@ class EmailServiceSystemErrorTest extends TestCase
         $mailer = $this->createMock(MailerInterface::class);
         $mailer->expects($this->once())
                ->method('send')
-               ->willThrowException(new TransportException('Connection to SMTP server failed'));
+               ->willThrowException(new TransportException('SMTP connection failed'));
 
         $submissionService = $this->createMock(SubmissionService::class);
         $submissionService->method('formatSubmissionForEmail')->willReturn('<ul><li>Test Item</li></ul>');
@@ -52,7 +52,7 @@ class EmailServiceSystemErrorTest extends TestCase
 
         // Erwartet: TransportException wird weitergegeben, da System-Fehler nicht gefangen werden können
         $this->expectException(TransportException::class);
-        $this->expectExceptionMessage('Connection to SMTP server failed');
+        $this->expectExceptionMessage('SMTP connection failed');
 
         $service->generateAndSendEmail($submission);
     }
@@ -63,7 +63,7 @@ class EmailServiceSystemErrorTest extends TestCase
         $mailer = $this->createMock(MailerInterface::class);
         $mailer->expects($this->once())
                ->method('send')
-               ->willThrowException(new TransportException('Network timeout occurred'));
+               ->willThrowException(new TransportException('Network timeout'));
 
         $submissionService = $this->createMock(SubmissionService::class);
         $submissionService->method('formatSubmissionForEmail')->willReturn('<ul><li>Test Item</li></ul>');
@@ -88,7 +88,7 @@ class EmailServiceSystemErrorTest extends TestCase
             ->setData([]);
 
         $this->expectException(TransportException::class);
-        $this->expectExceptionMessage('Network timeout occurred');
+        $this->expectExceptionMessage('Network timeout');
 
         $service->generateAndSendEmail($submission);
     }
@@ -146,14 +146,21 @@ class EmailServiceSystemErrorTest extends TestCase
 
         $service = new EmailService($mailer, $submissionService, $em);
 
+        $checklist = (new Checklist())
+            ->setTitle('Test Link Checklist')
+            ->setTargetEmail('target@test.com');
+
         $this->expectException(TransportException::class);
         $this->expectExceptionMessage('Mail server temporarily unavailable');
 
         $service->sendLinkEmail(
-            'test@example.com',
+            $checklist,
             'Test User',
-            'https://example.com/link',
-            'Test-Einladung zur Bestellung'
+            'test@example.com',
+            'EMP123',
+            'Max Mustermann',
+            'Test-Einladung zur Bestellung',
+            'https://example.com/link'
         );
     }
 
@@ -205,7 +212,7 @@ class EmailServiceSystemErrorTest extends TestCase
 
         $repo = $this->createMock(ObjectRepository::class);
         $repo->method('find')
-             ->willThrowException(new \Doctrine\DBAL\Exception\ConnectionException('Database connection lost'));
+             ->willThrowException(new \RuntimeException('Database connection lost'));
 
         $em = $this->createMock(EntityManagerInterface::class);
         $em->method('getRepository')->willReturn($repo);
@@ -223,7 +230,7 @@ class EmailServiceSystemErrorTest extends TestCase
             ->setEmail('dbtest@test.com')
             ->setData([]);
 
-        $this->expectException(\Doctrine\DBAL\Exception\ConnectionException::class);
+        $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('Database connection lost');
 
         $service->generateAndSendEmail($submission);
