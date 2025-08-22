@@ -150,6 +150,10 @@ test: ## Führt PHPUnit-Tests im PHP-Container aus
 	@echo "==> Running PHPUnit tests inside $(PHP_SERVICE) (APP_ENV=test)"
 	@$(DC_BASE) $(DC_ARGS) exec -e APP_ENV=test -T $(PHP_SERVICE) bash -lc "if [ -f vendor/bin/phpunit ]; then vendor/bin/phpunit --colors=always; else echo 'phpunit not found, run composer install first'; exit 1; fi"
 
+test-testdox: ## Führt PHPUnit-Tests mit TestDox-Format aus (lesbare Übersicht)
+	@echo "==> Running PHPUnit tests with TestDox format inside $(PHP_SERVICE) (APP_ENV=test)"
+	@$(DC_BASE) $(DC_ARGS) exec -e APP_ENV=test -T $(PHP_SERVICE) bash -lc "if [ -f vendor/bin/phpunit ]; then vendor/bin/phpunit --colors=always --testdox; else echo 'phpunit not found, run composer install first'; exit 1; fi"
+
 coverage: ## Erzeugt Coverage (HTML + text)
 	@echo "==> Running PHPUnit coverage inside $(PHP_SERVICE) (APP_ENV=test)"
 	@$(DC_BASE) $(DC_ARGS) exec -e APP_ENV=test -T $(PHP_SERVICE) /bin/sh -lc "echo '=== php -v ===' && php -v && echo '=== php -m (xdebug?) ===' && php -m | grep -i xdebug || true && if [ -f vendor/bin/phpunit ]; then mkdir -p var/coverage && XDEBUG_MODE=coverage XDEBUG_CONFIG='start_with_request=1' vendor/bin/phpunit --colors=always --coverage-html var/coverage --coverage-text; else echo 'phpunit not found, run composer install first'; exit 1; fi"
