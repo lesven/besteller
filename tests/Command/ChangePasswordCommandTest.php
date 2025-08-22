@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Tests\Command;
 
 use App\Command\ChangePasswordCommand;
@@ -13,6 +14,7 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 class ChangePasswordCommandTest extends TestCase
 {
     private const MIN_PASSWORD_LENGTH = 16;
+
     public function testExecuteChangesPassword(): void
     {
         $user = new User();
@@ -36,7 +38,9 @@ class ChangePasswordCommandTest extends TestCase
         ]);
 
         $this->assertSame(Command::SUCCESS, $status);
-        $this->assertStringContainsString('erfolgreich geändert', $tester->getDisplay());
+    // Ausgabe vereinheitlichen (mehrere Whitespaces/Zeilenumbrüche zu einem Leerzeichen)
+    $displayNormalized = preg_replace('/\s+/', ' ', $tester->getDisplay());
+    $this->assertStringContainsString('erfolgreich geändert', $displayNormalized);
     }
 
     public function testExecuteFailsWhenUserNotFound(): void
@@ -85,4 +89,6 @@ class ChangePasswordCommandTest extends TestCase
         $this->assertStringContainsString('mindestens 16 Zeichen', $tester->getDisplay());
     }
 }
+        
+
 

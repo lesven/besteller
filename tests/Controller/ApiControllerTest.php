@@ -47,8 +47,16 @@ class ApiControllerTest extends TestCase
             'mitarbeiter_id' => 'abc-123',
             'email_empfänger' => 'chef@example.com',
         ]));
+        $linkSenderService = $this->createMock(\App\Service\LinkSenderService::class);
+        $apiValidationService = $this->createMock(\App\Service\ApiValidationService::class);
+        $apiValidationService->method('validateJson')->willReturn([
+            'stückliste_id' => 123,
+            'mitarbeiter_name' => 'Max Muster',
+            'mitarbeiter_id' => 'abc-123',
+            'email_empfänger' => 'chef@example.com',
+        ]);
 
-        $controller = new ApiController($urlGenerator, $parameterBag, $employeeIdValidator);
+        $controller = new ApiController($urlGenerator, $parameterBag, $employeeIdValidator, $linkSenderService, $apiValidationService);
         $response = $controller->generateLink($request);
 
         $this->assertInstanceOf(JsonResponse::class, $response);
@@ -68,8 +76,10 @@ class ApiControllerTest extends TestCase
             });
 
         $employeeIdValidator = $this->createMock(EmployeeIdValidatorService::class);
-            
-        $controller = new ApiController($urlGenerator, $parameterBag, $employeeIdValidator);
+        $linkSenderService = $this->createMock(\App\Service\LinkSenderService::class);
+        $apiValidationService = $this->createMock(\App\Service\ApiValidationService::class);
+
+        $controller = new ApiController($urlGenerator, $parameterBag, $employeeIdValidator, $linkSenderService, $apiValidationService);
         $request = new Request([], [], [], [], [], [], json_encode(['foo' => 'bar']));
 
         $response = $controller->generateLink($request);
@@ -87,8 +97,10 @@ class ApiControllerTest extends TestCase
             });
 
         $employeeIdValidator = $this->createMock(EmployeeIdValidatorService::class);
+        $linkSenderService = $this->createMock(\App\Service\LinkSenderService::class);
+        $apiValidationService = $this->createMock(\App\Service\ApiValidationService::class);
             
-        $controller = new ApiController($urlGenerator, $parameterBag, $employeeIdValidator);
+        $controller = new ApiController($urlGenerator, $parameterBag, $employeeIdValidator,$linkSenderService,$apiValidationService);
         $request = new Request([], [], [], [], [], [], json_encode([
             'stückliste_id' => 1,
             'mitarbeiter_name' => 'A',
@@ -134,10 +146,10 @@ class ApiControllerTest extends TestCase
             ->with(1)
             ->willReturn($checklist);
 
-        $emailService = $this->createMock(\App\Service\EmailService::class);
-        $emailService->expects($this->once())
-            ->method('sendLinkEmail')
-            ->with($checklist, 'Bob', 'b@example.com', '123', 'Alice', 'Intro', $url);
+        $linkSenderService = $this->createMock(\App\Service\LinkSenderService::class);
+        $linkSenderService->expects($this->once())
+            ->method('sendChecklistLink')
+            ->with($checklist, 'Bob', 'b@example.com', '123', 'Alice', 'Intro');
 
         $request = new Request([], [], [], [], [], [], json_encode([
             'checklist_id' => 1,
@@ -148,14 +160,18 @@ class ApiControllerTest extends TestCase
             'intro' => 'Intro',
         ]));
 
-        $submissionRepo = $this->createMock(\App\Repository\SubmissionRepository::class);
-        $submissionRepo->expects($this->once())
-            ->method('findOneByChecklistAndMitarbeiterId')
-            ->with($checklist, '123')
-            ->willReturn(null);
+    $apiValidationService = $this->createMock(\App\Service\ApiValidationService::class);
+        $apiValidationService->method('validateJson')->willReturn([
+            'checklist_id' => 1,
+            'recipient_name' => 'Bob',
+            'recipient_email' => 'b@example.com',
+            'mitarbeiter_id' => '123',
+            'person_name' => 'Alice',
+            'intro' => 'Intro',
+        ]);
 
-        $controller = new ApiController($urlGenerator, $parameterBag, $employeeIdValidator);
-        $response = $controller->sendLink($request, $repo, $emailService, $submissionRepo);
+        $controller = new ApiController($urlGenerator, $parameterBag, $employeeIdValidator, $linkSenderService, $apiValidationService);
+    $response = $controller->sendLink($request, $repo);
 
         $this->assertInstanceOf(JsonResponse::class, $response);
         $this->assertSame(Response::HTTP_OK, $response->getStatusCode());
@@ -181,15 +197,10 @@ class ApiControllerTest extends TestCase
             ->with(1)
             ->willReturn($checklist);
 
-        $emailService = $this->createMock(\App\Service\EmailService::class);
-        $emailService->expects($this->never())
-            ->method('sendLinkEmail');
-
-        $submissionRepo = $this->createMock(\App\Repository\SubmissionRepository::class);
-        $submissionRepo->expects($this->once())
-            ->method('findOneByChecklistAndMitarbeiterId')
-            ->with($checklist, '123')
-            ->willReturn(new \App\Entity\Submission());
+            $linkSenderService = $this->createMock(\App\Service\LinkSenderService::class);
+            $linkSenderService->expects($this->once())
+                ->method('sendChecklistLink')
+                ->willThrowException(new \RuntimeException('Für diese Personen-ID/Listen Kombination wurde bereits eine Bestellung übermittelt.'));
 
         $request = new Request([], [], [], [], [], [], json_encode([
             'checklist_id' => 1,
@@ -197,9 +208,16 @@ class ApiControllerTest extends TestCase
             'recipient_email' => 'b@example.com',
             'mitarbeiter_id' => '123',
         ]));
+    $apiValidationService = $this->createMock(\App\Service\ApiValidationService::class);
+        $apiValidationService->method('validateJson')->willReturn([
+            'checklist_id' => 1,
+            'recipient_name' => 'Bob',
+            'recipient_email' => 'b@example.com',
+            'mitarbeiter_id' => '123',
+        ]);
 
-        $controller = new ApiController($urlGenerator, $parameterBag, $employeeIdValidator);
-        $response = $controller->sendLink($request, $repo, $emailService, $submissionRepo);
+        $controller = new ApiController($urlGenerator, $parameterBag, $employeeIdValidator, $linkSenderService, $apiValidationService);
+    $response = $controller->sendLink($request, $repo);
 
         $this->assertSame(Response::HTTP_CONFLICT, $response->getStatusCode());
     }
@@ -217,10 +235,15 @@ class ApiControllerTest extends TestCase
         $repo = $this->createMock(\App\Repository\ChecklistRepository::class);
         $emailService = $this->createMock(\App\Service\EmailService::class);
         $submissionRepo = $this->createMock(\App\Repository\SubmissionRepository::class);
+        $linkSenderService = $this->createMock(\App\Service\LinkSenderService::class);
+        $apiValidationService = $this->createMock(\App\Service\ApiValidationService::class);
+        $apiValidationService->method('validateJson')->willThrowException(
+            new \App\Exception\JsonValidationException('Fehlende Parameter')
+        );
 
-        $controller = new ApiController($urlGenerator, $parameterBag, $employeeIdValidator);
+        $controller = new ApiController($urlGenerator, $parameterBag, $employeeIdValidator, $linkSenderService, $apiValidationService);
         $request = new Request([], [], [], [], [], [], json_encode(['foo' => 'bar']));
-        $response = $controller->sendLink($request, $repo, $emailService, $submissionRepo);
+    $response = $controller->sendLink($request, $repo);
 
         $this->assertSame(Response::HTTP_BAD_REQUEST, $response->getStatusCode());
     }
@@ -231,8 +254,18 @@ class ApiControllerTest extends TestCase
         $parameterBag = $this->createMock(ParameterBagInterface::class);
         $parameterBag->method('get')->willReturnCallback(fn($k) => $k === 'API_TOKEN' ? '' : null);
         $employeeIdValidator = $this->createMock(EmployeeIdValidatorService::class);
+        $linkSenderService = $this->createMock(\App\Service\LinkSenderService::class);
+        $apiValidationService = $this->createMock(\App\Service\ApiValidationService::class);
+        $apiValidationService->method('validateJson')
+            ->will($this->returnCallback(function($request, $required) {
+                $json = $request->getContent();
+                if ($json === '{invalid json') {
+                    throw new \App\Exception\JsonValidationException('Ungültiges JSON');
+                }
+                throw new \App\Exception\JsonValidationException('Fehlende Parameter');
+            }));
 
-        $controller = new ApiController($urlGenerator, $parameterBag, $employeeIdValidator);
+        $controller = new ApiController($urlGenerator, $parameterBag, $employeeIdValidator, $linkSenderService, $apiValidationService);
 
         // Test 1: Invalid JSON syntax should return BAD_REQUEST
         $invalidJsonRequest = new Request([], [], [], [], [], [], '{invalid json');
