@@ -147,12 +147,12 @@ migrate: ## doctrine:migrations:migrate (no interaction)
 ## Tests (PHPUnit)
 
 test: ## Führt PHPUnit-Tests im PHP-Container aus
-	@echo "==> Running PHPUnit tests inside $(PHP_SERVICE)"
-	@$(DC_BASE) $(DC_ARGS) exec -T $(PHP_SERVICE) bash -lc "if [ -f vendor/bin/phpunit ]; then vendor/bin/phpunit --colors=always; else echo 'phpunit not found, run composer install first'; exit 1; fi"
+	@echo "==> Running PHPUnit tests inside $(PHP_SERVICE) (APP_ENV=test)"
+	@$(DC_BASE) $(DC_ARGS) exec -e APP_ENV=test -T $(PHP_SERVICE) bash -lc "if [ -f vendor/bin/phpunit ]; then vendor/bin/phpunit --colors=always; else echo 'phpunit not found, run composer install first'; exit 1; fi"
 
 coverage: ## Erzeugt Coverage (HTML + text)
-	@echo "==> Running PHPUnit coverage inside $(PHP_SERVICE)"
-	@$(DC_BASE) $(DC_ARGS) exec -T $(PHP_SERVICE) /bin/sh -lc "echo '=== php -v ===' && php -v && echo '=== php -m (xdebug?) ===' && php -m | grep -i xdebug || true && if [ -f vendor/bin/phpunit ]; then mkdir -p var/coverage && XDEBUG_MODE=coverage XDEBUG_CONFIG='start_with_request=1' vendor/bin/phpunit --colors=always --coverage-html var/coverage --coverage-text; else echo 'phpunit not found, run composer install first'; exit 1; fi"
+	@echo "==> Running PHPUnit coverage inside $(PHP_SERVICE) (APP_ENV=test)"
+	@$(DC_BASE) $(DC_ARGS) exec -e APP_ENV=test -T $(PHP_SERVICE) /bin/sh -lc "echo '=== php -v ===' && php -v && echo '=== php -m (xdebug?) ===' && php -m | grep -i xdebug || true && if [ -f vendor/bin/phpunit ]; then mkdir -p var/coverage && XDEBUG_MODE=coverage XDEBUG_CONFIG='start_with_request=1' vendor/bin/phpunit --colors=always --coverage-html var/coverage --coverage-text; else echo 'phpunit not found, run composer install first'; exit 1; fi"
 
 ## Recreate DB: stop, remove volumes and bring up database only
 
@@ -213,8 +213,6 @@ install: composer-install ## alias: install -> composer-install
 
 clear-cache: cache-clear ## alias
 
-coverage: ## Führt PHPUnit mit Coverage-Ausgabe aus (Text + HTML -> var/coverage)
-	docker compose exec -e APP_ENV=$(ENV) -e APP_DEBUG=$(APP_DEBUG) -e XDEBUG_MODE=coverage php vendor/bin/phpunit --coverage-text --coverage-html=var/coverage
 
 phpstan: ## Führt statische Analyse mit PHPStan aus
 	@$(DC_BASE) $(DC_ARGS) exec -T $(PHP_SERVICE) vendor/bin/phpstan analyse --memory-limit=512M || true
