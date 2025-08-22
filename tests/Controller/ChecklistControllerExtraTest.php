@@ -30,6 +30,8 @@ class ChecklistControllerExtraTest extends TestCase
         return [$entityManager, $submissionService, $emailService, $submissionFactory, $logger];
     }
 
+    private const TEST_EMAIL = 'b@example.com';
+
     public function testShowRendersAlreadySubmittedWhenSubmissionExists(): void
     {
         [$entityManager, $submissionService, $emailService, $submissionFactory, $logger] = $this->createBaseMocks();
@@ -66,7 +68,9 @@ class ChecklistControllerExtraTest extends TestCase
         $request = new Request();
         $request->query->set('name', 'Bob');
         $request->query->set('mitarbeiter_id', 'm123');
-        $request->query->set('email', 'b@example.com');
+    $request->query->set('email', self::TEST_EMAIL);
+        
+    // Additional context for the next change
 
         $response = $controller->show(1, $request);
         $this->assertInstanceOf(Response::class, $response);
@@ -107,7 +111,9 @@ class ChecklistControllerExtraTest extends TestCase
         $request = new Request();
         $request->query->set('name', 'Bob');
         $request->query->set('mitarbeiter_id', 'm123');
-        $request->query->set('email', 'b@example.com');
+    $request->query->set('email', self::TEST_EMAIL);
+        
+    // Additional context for the next change
 
         $response = $controller->show(1, $request);
         $this->assertInstanceOf(Response::class, $response);
@@ -157,7 +163,9 @@ class ChecklistControllerExtraTest extends TestCase
         $request->query->set('checklist_id', '1');
         $request->query->set('name', 'Bob');
         $request->query->set('mitarbeiter_id', 'm123');
-        $request->query->set('email', 'b@example.com');
+    $request->query->set('email', self::TEST_EMAIL);
+        
+    // Additional context for the next change
         $request->setMethod('POST');
 
         $response = $controller->form($request);
@@ -202,7 +210,9 @@ class ChecklistControllerExtraTest extends TestCase
         $request = new Request();
         $request->request->set('name', 'Bob');
         $request->request->set('mitarbeiter_id', 'm123');
-        $request->request->set('email', 'b@example.com');
+    $request->request->set('email', self::TEST_EMAIL);
+        
+    // Additional context for the next change
         $request->setMethod('POST');
 
         $response = $controller->submit(1, $request);
@@ -255,7 +265,9 @@ class ChecklistControllerExtraTest extends TestCase
         $request = new Request();
         $request->request->set('name', 'Bob');
         $request->request->set('mitarbeiter_id', 'm123');
-        $request->request->set('email', 'b@example.com');
+    $request->request->set('email', self::TEST_EMAIL);
+        
+    // Additional context for the next change
         $request->setMethod('POST');
 
         $response = $controller->submit(1, $request);
@@ -305,7 +317,7 @@ class ChecklistControllerExtraTest extends TestCase
         $request = new Request();
         $request->query->set('name', 'Bob');
         $request->query->set('mitarbeiter_id', 'm123');
-        $request->query->set('email', 'b@example.com');
+    $request->query->set('email', self::TEST_EMAIL);
 
         $controller->show(999, $request);
     }
