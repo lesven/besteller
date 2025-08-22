@@ -15,10 +15,14 @@ class ChecklistControllerFunctionalTest extends KernelTestCase
         $show = $collection->get('checklist_show');
         $this->assertNotNull($show, 'Route "checklist_show" should exist');
         $this->assertSame('/checklist/{id}', $show->getPath());
+    // ID soll numerisch sein (requirements aus routes.yaml)
+    $this->assertSame('\d+', $show->getRequirement('id'));
 
         $submit = $collection->get('checklist_submit');
         $this->assertNotNull($submit, 'Route "checklist_submit" should exist');
         $this->assertSame('/checklist/{id}/submit', $submit->getPath());
+    // Submit-Route darf nur per POST angesprochen werden
+    $this->assertSame(['POST'], $submit->getMethods());
 
         $form = $collection->get('checklist_form');
         $this->assertNotNull($form, 'Route "checklist_form" should exist');
