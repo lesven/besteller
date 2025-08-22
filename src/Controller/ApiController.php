@@ -8,15 +8,19 @@ use App\Repository\ChecklistRepository;
 use App\Service\EmailService;
 use App\Repository\SubmissionRepository;
 use InvalidArgumentException;
+use App\Service\LinkSenderService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
+use App\Service\ApiValidationService;
 
 class ApiController extends AbstractController
 {
+    private ApiValidationService $apiValidationService;
+    private LinkSenderService $linkSenderService;
     /**
      * Hilfsmethode: Gibt eine Fehlerantwort als JsonResponse zurück
      */
@@ -37,33 +41,6 @@ class ApiController extends AbstractController
         }
         $auth = $request->headers->get('Authorization', '');
         return $auth === 'Bearer ' . $configuredToken;
-    }
-
-    /**
-     * Hilfsmethode: Validiert die JSON-Daten und Pflichtfelder
-     *
-     * @param string[] $requiredFields Liste der Pflichtfelder
-     * @return array<string,mixed> Decodierte JSON-Daten
-     * @throws JsonValidationException Bei ungültigen JSON-Daten oder fehlenden Pflichtfeldern
-     */
-    private function validateJson(Request $request, array $requiredFields): array
-    {
-        $data = json_decode($request->getContent(), true);
-        if (!is_array($data)) {
-            throw new JsonValidationException('Ungültiges JSON');
-        }
-
-        // präzise Typinformation für PHPStan
-        /** @var array<string,mixed> $typedData */
-        $typedData = $data;
-
-        foreach ($requiredFields as $field) {
-            if (empty($typedData[$field])) {
-                throw new JsonValidationException('Fehlende Parameter');
-            }
-        }
-
-        return $typedData;
     }
 
     /**
@@ -144,8 +121,12 @@ class ApiController extends AbstractController
     public function __construct(
         private UrlGeneratorInterface $urlGenerator,
         private ParameterBagInterface $parameterBag,
-        private EmployeeIdValidatorService $employeeIdValidator
+        private EmployeeIdValidatorService $employeeIdValidator,
+        LinkSenderService $linkSenderService,
+        ApiValidationService $apiValidationService
     ) {
+        $this->linkSenderService = $linkSenderService;
+        $this->apiValidationService = $apiValidationService;
     }
 
     /**
@@ -163,7 +144,7 @@ class ApiController extends AbstractController
         // 2. JSON und Pflichtfelder validieren
         $required = ['stückliste_id', 'mitarbeiter_name', 'mitarbeiter_id', 'email_empfänger'];
         try {
-            $data = $this->validateJson($request, $required);
+            $data = $this->apiValidationService->validateJson($request, $required);
         } catch (JsonValidationException $e) {
             return $this->errorResponse($e->getMessage(), Response::HTTP_BAD_REQUEST);
         }
@@ -198,9 +179,7 @@ class ApiController extends AbstractController
      */
     public function sendLink(
         Request $request,
-        \App\Repository\ChecklistRepository $checklistRepository,
-        \App\Service\EmailService $emailService,
-        \App\Repository\SubmissionRepository $submissionRepository
+        ChecklistRepository $checklistRepository
     ): JsonResponse {
         // 1. Authentifizierung prüfen
         if (!$this->isAuthorized($request)) {
@@ -210,28 +189,9 @@ class ApiController extends AbstractController
         // 2. JSON und Pflichtfelder validieren
         $required = ['checklist_id', 'recipient_name', 'recipient_email', 'mitarbeiter_id'];
         try {
-            $data = $this->validateJson($request, $required);
+            $data = $this->apiValidationService->validateJson($request, $required);
         } catch (JsonValidationException $e) {
             return $this->errorResponse($e->getMessage(), Response::HTTP_BAD_REQUEST);
-        }
-
-        // Type-safety for expected fields
-        if (!isset($data['mitarbeiter_id']) || !is_string($data['mitarbeiter_id'])) {
-            return $this->errorResponse('Ungültige Personen-ID', Response::HTTP_BAD_REQUEST);
-        }
-        if (!isset($data['recipient_name']) || !is_string($data['recipient_name'])) {
-            return $this->errorResponse('Ungültiger Empfängername', Response::HTTP_BAD_REQUEST);
-        }
-        if (!isset($data['recipient_email']) || !is_string($data['recipient_email'])) {
-            return $this->errorResponse('Ungültige Empfänger-E-Mail', Response::HTTP_BAD_REQUEST);
-        }
-        if (!isset($data['checklist_id']) || (!is_int($data['checklist_id']) && !is_string($data['checklist_id']) && !is_float($data['checklist_id']))) {
-            return $this->errorResponse('Ungültige Checklist-ID', Response::HTTP_BAD_REQUEST);
-        }
-
-        $mitarbeiterId = $data['mitarbeiter_id'];
-        if (!$this->isValidMitarbeiterId($mitarbeiterId)) {
-            return $this->errorResponse('Ungültige Personen-ID', Response::HTTP_BAD_REQUEST);
         }
 
         $checklistId = is_int($data['checklist_id']) ? $data['checklist_id'] : (int) $data['checklist_id'];
@@ -240,26 +200,28 @@ class ApiController extends AbstractController
             return $this->errorResponse('Checklist not found', Response::HTTP_NOT_FOUND);
         }
 
-        // 5. Prüfen, ob Bestellung existiert
-        $existingSubmission = $submissionRepository->findOneByChecklistAndMitarbeiterId(
-            $checklist,
-            $mitarbeiterId
-        );
-        if ($existingSubmission) {
-            return $this->errorResponse('Für diese Personen-ID wurde bereits eine Bestellung übermittelt.', Response::HTTP_CONFLICT);
-        }
-
-        // 6. Optionale Felder
-        $personName = isset($data['person_name']) && is_string($data['person_name'])
-            ? $data['person_name']
-            : null;
-        $intro = isset($data['intro']) && is_string($data['intro']) ? $data['intro'] : '';
-
-        // assign validated recipient vars
         $recipientName = $data['recipient_name'];
         $recipientEmail = $data['recipient_email'];
+        $mitarbeiterId = $data['mitarbeiter_id'];
+        $personName = isset($data['person_name']) && is_string($data['person_name']) ? $data['person_name'] : null;
+        $intro = isset($data['intro']) && is_string($data['intro']) ? $data['intro'] : '';
 
-        // 7. Link generieren
+        try {
+            $this->linkSenderService->sendChecklistLink(
+                $checklist,
+                $recipientName,
+                $recipientEmail,
+                $mitarbeiterId,
+                $personName,
+                $intro
+            );
+        } catch (InvalidArgumentException $e) {
+            return $this->errorResponse($e->getMessage(), Response::HTTP_BAD_REQUEST);
+        } catch (\RuntimeException $e) {
+            return $this->errorResponse($e->getMessage(), Response::HTTP_CONFLICT);
+        }
+
+        // Link generieren (wie im Service)
         $link = $this->urlGenerator->generate('checklist_form', [
             'checklist_id' => $checklist->getId(),
             'name' => $personName ?? $recipientName,
@@ -267,18 +229,6 @@ class ApiController extends AbstractController
             'email' => $recipientEmail,
         ], UrlGeneratorInterface::ABSOLUTE_URL);
 
-        // 8. E-Mail versenden
-        $emailService->sendLinkEmail(
-            $checklist,
-            urldecode($recipientName),
-            $recipientEmail,
-            $mitarbeiterId,
-            $personName ? urldecode($personName) : null,
-            $intro,
-            $link
-        );
-
-        // 9. Erfolg zurückgeben
         return new JsonResponse(['status' => 'sent', 'link' => $link]);
     }
 }
