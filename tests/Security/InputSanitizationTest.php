@@ -12,6 +12,7 @@ use App\Service\SubmissionService;
 use App\Service\SubmissionFactory;
 use App\Service\EmployeeIdValidatorService;
 use App\Service\ValidationService;
+use App\Service\TemplateResolverService;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ObjectRepository;
 use PHPUnit\Framework\TestCase;
@@ -31,13 +32,14 @@ class InputSanitizationTest extends TestCase
         $submissionFactory = $this->createMock(SubmissionFactory::class);
         $logger = $this->createMock(LoggerInterface::class);
         $validationService = $this->createMock(ValidationService::class);
+        $templateResolver = $this->createMock(TemplateResolverService::class);
 
-        return [$entityManager, $submissionService, $emailService, $submissionFactory, $logger, $validationService];
+        return [$entityManager, $submissionService, $emailService, $submissionFactory, $logger, $validationService, $templateResolver];
     }
 
     private function setupControllerMocks(array $mocks): ChecklistController
     {
-        [$entityManager, $submissionService, $emailService, $submissionFactory, $logger, $validationService] = $mocks;
+        [$entityManager, $submissionService, $emailService, $submissionFactory, $logger, $validationService, $templateResolver] = $mocks;
 
         $checklist = $this->createMock(Checklist::class);
         $checklistRepo = $this->createMock(ChecklistRepository::class);
@@ -57,7 +59,7 @@ class InputSanitizationTest extends TestCase
         });
 
         return $this->getMockBuilder(ChecklistController::class)
-            ->setConstructorArgs([$entityManager, $submissionService, $emailService, $submissionFactory, $logger, $validationService])
+            ->setConstructorArgs([$entityManager, $submissionService, $emailService, $submissionFactory, $logger, $validationService, $templateResolver])
             ->onlyMethods(['render'])
             ->getMock();
     }

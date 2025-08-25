@@ -14,6 +14,7 @@ use App\Service\SubmissionService;
 use App\Service\SubmissionFactory;
 use App\Service\ChecklistDuplicationService;
 use App\Service\ValidationService;
+use App\Service\TemplateResolverService;
 use App\Exception\InvalidParametersException;
 use App\Exception\ChecklistNotFoundException;
 use Doctrine\ORM\EntityManagerInterface;
@@ -223,6 +224,7 @@ class ChecklistWorkflowTest extends TestCase
         $submissionFactory = $this->createMock(SubmissionFactory::class);
         $logger = $this->createMock(LoggerInterface::class);
         $validationService = $this->createMock(ValidationService::class);
+        $templateResolver = $this->createMock(TemplateResolverService::class);
 
         $controller = new ChecklistController(
             $entityManager,
@@ -230,7 +232,8 @@ class ChecklistWorkflowTest extends TestCase
             $emailService,
             $submissionFactory,
             $logger,
-            $validationService
+            $validationService,
+            $templateResolver
         );
 
         $this->assertInstanceOf(ChecklistController::class, $controller);
@@ -310,6 +313,7 @@ class ChecklistWorkflowTest extends TestCase
         $submissionFactory = $this->createMock(SubmissionFactory::class);
         $logger = $this->createMock(LoggerInterface::class);
         $validationService = $this->createMock(ValidationService::class);
+        $templateResolver = $this->createMock(TemplateResolverService::class);
 
         $controller = new ChecklistController(
             $entityManager,
@@ -317,7 +321,8 @@ class ChecklistWorkflowTest extends TestCase
             $emailService,
             $submissionFactory,
             $logger,
-            $validationService
+            $validationService,
+            $templateResolver
         );
 
         // Test with missing checklist_id parameter
@@ -396,6 +401,8 @@ class ChecklistWorkflowTest extends TestCase
             return null;
         });
 
+        $templateResolver = $this->createMock(TemplateResolverService::class);
+        
         $controller = $this->getMockBuilder(ChecklistController::class)
             ->setConstructorArgs([
                 $entityManager,
@@ -403,7 +410,8 @@ class ChecklistWorkflowTest extends TestCase
                 $emailService,
                 $submissionFactory,
                 $logger,
-                $validationService
+                $validationService,
+                $templateResolver
             ])
             ->onlyMethods(['render', 'addFlash'])
             ->getMock();

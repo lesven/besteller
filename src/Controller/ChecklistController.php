@@ -14,6 +14,7 @@ use App\Service\EmailService;
 use App\Service\SubmissionService;
 use App\Service\SubmissionFactory;
 use App\Service\ValidationService;
+use App\Service\TemplateResolverService;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -39,7 +40,8 @@ class ChecklistController extends AbstractController
         private EmailService $emailService,
         private SubmissionFactory $submissionFactory,
         private LoggerInterface $logger,
-        private ValidationService $validationService
+        private ValidationService $validationService,
+        private TemplateResolverService $templateResolver
     ) {}
 
     /**
@@ -138,19 +140,19 @@ class ChecklistController extends AbstractController
         $existingSubmission = $this->findExistingSubmission($checklist, $mitarbeiterId);
 
         if ($existingSubmission) {
-            return $this->render('checklist/already_submitted.html.twig', [
-                'checklist' => $checklist,
-                'name' => $name,
-                'submission' => $existingSubmission
-            ]);
+            return $this->templateResolver->renderAlreadySubmitted(
+                $checklist,
+                $existingSubmission,
+                $name
+            );
         }
 
-        return $this->render('checklist/show.html.twig', [
-            'checklist' => $checklist,
-            'name' => $name,
-            'mitarbeiterId' => $mitarbeiterId,
-            'email' => $email
-        ]);
+        return $this->templateResolver->renderChecklistShow(
+            $checklist,
+            $name,
+            $mitarbeiterId,
+            $email
+        );
     }
 
 
@@ -196,10 +198,7 @@ class ChecklistController extends AbstractController
         $this->entityManager->persist($submission);
         $this->entityManager->flush();
 
-        return $this->render('checklist/success.html.twig', [
-            'checklist' => $checklist,
-            'name' => $name
-        ]);
+        return $this->templateResolver->renderSuccess($checklist, $name);
     }
 
   
@@ -221,18 +220,12 @@ class ChecklistController extends AbstractController
         $checklist = $this->getChecklistOr404((int) $checklistIdParam);
         $existingSubmission = $this->findExistingSubmission($checklist, $mitarbeiterId);
 
-        $template = 'checklist/form.html.twig';
-        $templateVars = [
-            'checklist' => $checklist,
-            'name' => $name,
-            'mitarbeiterId' => $mitarbeiterId,
-            'email' => $email
-        ];
-
         // Wenn bereits eine Submission existiert, zeige die entsprechende Seite
         if ($existingSubmission) {
-            $template = 'checklist/already_submitted.html.twig';
-        } elseif ($request->isMethod('POST')) {
+            return $this->templateResolver->renderAlreadySubmitted($checklist, $existingSubmission, $name);
+        } 
+        
+        if ($request->isMethod('POST')) {
             try {
                 $submissionData = $this->submissionService->collectSubmissionData($checklist, $request);
                 $submission = $this->submissionFactory->createSubmission(
@@ -250,17 +243,18 @@ class ChecklistController extends AbstractController
                 } catch (\Exception $e) {
                     $this->logger->error('E-Mail-Versendung fehlgeschlagen für Submission ' . $submission->getId() . ': ' . $e->getMessage());
                 }
-                $template = 'checklist/success.html.twig';
-                $templateVars = [
-                    'checklist' => $checklist,
-                    'name' => $name
-                ];
+                
+                return $this->templateResolver->renderSuccess($checklist, $name);
             } catch (\Exception $e) {
                 $this->addFlash('error', 'Es ist ein Fehler beim Übermitteln der Stückliste aufgetreten. Bitte versuchen Sie es erneut.');
             }
         }
 
-        return $this->render($template, $templateVars);
+        return $this->templateResolver->renderForm($checklist, [
+            'name' => $name,
+            'mitarbeiterId' => $mitarbeiterId,
+            'email' => $email
+        ]);
     }
 
 }
