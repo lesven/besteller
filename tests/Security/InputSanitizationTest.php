@@ -7,6 +7,7 @@ use App\Entity\Checklist;
 use App\Entity\Submission;
 use App\Repository\SubmissionRepository;
 use App\Service\EmailService;
+use App\Repository\ChecklistRepository;
 use App\Service\SubmissionService;
 use App\Service\SubmissionFactory;
 use App\Service\EmployeeIdValidatorService;
@@ -39,8 +40,8 @@ class InputSanitizationTest extends TestCase
         [$entityManager, $submissionService, $emailService, $submissionFactory, $logger, $validationService] = $mocks;
 
         $checklist = $this->createMock(Checklist::class);
-        $checklistRepo = $this->createMock(ObjectRepository::class);
-        $checklistRepo->method('find')->willReturn($checklist);
+        $checklistRepo = $this->createMock(ChecklistRepository::class);
+        $checklistRepo->method('findOrFail')->willReturn($checklist);
 
         $submissionRepo = $this->createMock(SubmissionRepository::class);
         $submissionRepo->method('findOneByChecklistAndMitarbeiterId')->willReturn(null);

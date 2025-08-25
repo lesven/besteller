@@ -8,6 +8,7 @@ use App\Exception\ChecklistNotFoundException;
 use App\Exception\EmailDeliveryException;
 use App\Exception\InvalidParametersException;
 use App\Exception\SubmissionAlreadyExistsException;
+use App\Repository\ChecklistRepository;
 use App\Repository\SubmissionRepository;
 use App\Service\EmailService;
 use App\Service\SubmissionService;
@@ -49,12 +50,10 @@ class ChecklistController extends AbstractController
      */
     private function getChecklistOr404(int $checklistId): Checklist
     {
-        $checklist = $this->entityManager->getRepository(Checklist::class)->find($checklistId);
-        if (!$checklist) {
-            throw new ChecklistNotFoundException($checklistId);
-        }
-
-        return $checklist;
+        /** @var ChecklistRepository $repo */
+        $repo = $this->entityManager->getRepository(Checklist::class);
+        
+        return $repo->findOrFail($checklistId);
     }
 
     /**
@@ -167,9 +166,11 @@ class ChecklistController extends AbstractController
         $checklist = $this->getChecklistOr404($checklistId);
         [$name, $mitarbeiterId, $email] = $this->getRequestValuesFromRequest($request);
 
-        $existingSubmission = $this->findExistingSubmission($checklist, $mitarbeiterId);
-
-        if ($existingSubmission) {
+        // Prüfe auf existierende Submission mit Repository-Methode
+        /** @var SubmissionRepository $submissionRepo */
+        $submissionRepo = $this->entityManager->getRepository(Submission::class);
+        
+        if ($submissionRepo->existsForChecklistAndEmployee($checklist, $mitarbeiterId)) {
             throw new SubmissionAlreadyExistsException($mitarbeiterId, $checklistId);
         }
 

@@ -369,26 +369,47 @@ class ChecklistWorkflowTest extends TestCase
 
     public function testChecklistAccessWithInvalidParameters(): void
     {
-        $entityManager = $this->createMockEntityManager();
+        // Create entity manager mock directly instead of using createMockEntityManager()
+        $entityManager = $this->createMock(EntityManagerInterface::class);
         $submissionService = $this->createMock(SubmissionService::class);
         $emailService = $this->createMock(EmailService::class);
         $submissionFactory = $this->createMock(SubmissionFactory::class);
         $logger = $this->createMock(LoggerInterface::class);
         $validationService = $this->createMock(ValidationService::class);
 
-        $controller = new ChecklistController(
-            $entityManager,
-            $submissionService,
-            $emailService,
-            $submissionFactory,
-            $logger,
-            $validationService
-        );
-
         $checklistRepo = $this->createMock(ChecklistRepository::class);
-        $checklistRepo->method('find')->willReturn(null); // Checklist not found
+        $checklistRepo->expects($this->once())
+            ->method('findOrFail')
+            ->with(999)
+            ->willThrowException(new ChecklistNotFoundException(999)); // Checklist not found
 
-        $entityManager->method('getRepository')->willReturn($checklistRepo);
+        $submissionRepo = $this->createMock(SubmissionRepository::class);
+        $submissionRepo->method('findOneByChecklistAndMitarbeiterId')->willReturn(null);
+
+        $entityManager->method('getRepository')->willReturnCallback(function ($class) use ($checklistRepo, $submissionRepo) {
+            if ($class === Checklist::class) {
+                return $checklistRepo;
+            }
+            if ($class === Submission::class) {
+                return $submissionRepo;
+            }
+            return null;
+        });
+
+        $controller = $this->getMockBuilder(ChecklistController::class)
+            ->setConstructorArgs([
+                $entityManager,
+                $submissionService,
+                $emailService,
+                $submissionFactory,
+                $logger,
+                $validationService
+            ])
+            ->onlyMethods(['render', 'addFlash'])
+            ->getMock();
+
+        $controller->method('render')->willReturn(new Response('test'));
+        $controller->method('addFlash');
 
         $request = new Request();
         $request->query->set('checklist_id', '999');
@@ -398,7 +419,7 @@ class ChecklistWorkflowTest extends TestCase
 
         // Expect ChecklistNotFoundException to be thrown
         $this->expectException(ChecklistNotFoundException::class);
-
+        
         $controller->form($request);
     }
 

@@ -8,6 +8,7 @@ use App\Entity\Submission;
 use App\Exception\ChecklistNotFoundException;
 use App\Exception\InvalidParametersException;
 use App\Exception\SubmissionAlreadyExistsException;
+use App\Repository\ChecklistRepository;
 use App\Repository\SubmissionRepository;
 use App\Service\EmailService;
 use App\Service\SubmissionService;
@@ -44,11 +45,12 @@ class ChecklistControllerExtraTest extends TestCase
         $checklist = $this->createMock(Checklist::class);
         $existingSubmission = $this->createMock(Submission::class);
 
-        $checklistRepo = $this->createMock(ObjectRepository::class);
-        $checklistRepo->method('find')->willReturn($checklist);
+        $checklistRepo = $this->createMock(ChecklistRepository::class);
+        $checklistRepo->method('findOrFail')->willReturn($checklist);
 
         $submissionRepo = $this->createMock(SubmissionRepository::class);
         $submissionRepo->method('findOneByChecklistAndMitarbeiterId')->willReturn($existingSubmission);
+        $submissionRepo->method('existsForChecklistAndEmployee')->willReturn(true);
 
         $entityManager->method('getRepository')->willReturnCallback(function ($class) use ($checklistRepo, $submissionRepo) {
             if ($class === Checklist::class) {
@@ -87,11 +89,12 @@ class ChecklistControllerExtraTest extends TestCase
 
         $checklist = $this->createMock(Checklist::class);
 
-        $checklistRepo = $this->createMock(ObjectRepository::class);
-        $checklistRepo->method('find')->willReturn($checklist);
+        $checklistRepo = $this->createMock(ChecklistRepository::class);
+        $checklistRepo->method('findOrFail')->willReturn($checklist);
 
         $submissionRepo = $this->createMock(SubmissionRepository::class);
         $submissionRepo->method('findOneByChecklistAndMitarbeiterId')->willReturn(null);
+        $submissionRepo->method('existsForChecklistAndEmployee')->willReturn(false);
 
         $entityManager->method('getRepository')->willReturnCallback(function ($class) use ($checklistRepo, $submissionRepo) {
             if ($class === Checklist::class) {
@@ -131,11 +134,12 @@ class ChecklistControllerExtraTest extends TestCase
         $checklist = $this->createMock(Checklist::class);
         $submission = $this->createMock(Submission::class);
 
-        $checklistRepo = $this->createMock(ObjectRepository::class);
-        $checklistRepo->method('find')->willReturn($checklist);
+        $checklistRepo = $this->createMock(ChecklistRepository::class);
+        $checklistRepo->method('findOrFail')->willReturn($checklist);
 
         $submissionRepo = $this->createMock(SubmissionRepository::class);
         $submissionRepo->method('findOneByChecklistAndMitarbeiterId')->willReturn(null);
+        $submissionRepo->method('existsForChecklistAndEmployee')->willReturn(false);
 
         $entityManager->method('getRepository')->willReturnCallback(function ($class) use ($checklistRepo, $submissionRepo) {
             if ($class === Checklist::class) {
@@ -184,11 +188,12 @@ class ChecklistControllerExtraTest extends TestCase
         $checklist = $this->createMock(Checklist::class);
         $existingSubmission = $this->createMock(Submission::class);
 
-        $checklistRepo = $this->createMock(ObjectRepository::class);
-        $checklistRepo->method('find')->willReturn($checklist);
+        $checklistRepo = $this->createMock(ChecklistRepository::class);
+        $checklistRepo->method('findOrFail')->willReturn($checklist);
 
         $submissionRepo = $this->createMock(SubmissionRepository::class);
         $submissionRepo->method('findOneByChecklistAndMitarbeiterId')->willReturn($existingSubmission);
+        $submissionRepo->method('existsForChecklistAndEmployee')->willReturn(true);
 
         $entityManager->method('getRepository')->willReturnCallback(function ($class) use ($checklistRepo, $submissionRepo) {
             if ($class === Checklist::class) {
@@ -228,11 +233,12 @@ class ChecklistControllerExtraTest extends TestCase
         $checklist = $this->createMock(Checklist::class);
         $submission = $this->createMock(Submission::class);
 
-        $checklistRepo = $this->createMock(ObjectRepository::class);
-        $checklistRepo->method('find')->willReturn($checklist);
+        $checklistRepo = $this->createMock(ChecklistRepository::class);
+        $checklistRepo->method('findOrFail')->willReturn($checklist);
 
         $submissionRepo = $this->createMock(SubmissionRepository::class);
         $submissionRepo->method('findOneByChecklistAndMitarbeiterId')->willReturn(null);
+        $submissionRepo->method('existsForChecklistAndEmployee')->willReturn(false);
 
         $entityManager->method('getRepository')->willReturnCallback(function ($class) use ($checklistRepo, $submissionRepo) {
             if ($class === Checklist::class) {
@@ -299,8 +305,8 @@ class ChecklistControllerExtraTest extends TestCase
     {
         [$entityManager, $submissionService, $emailService, $submissionFactory, $logger, $validationService] = $this->createBaseMocks();
 
-        $checklistRepo = $this->createMock(ObjectRepository::class);
-        $checklistRepo->method('find')->willReturn(null);
+        $checklistRepo = $this->createMock(ChecklistRepository::class);
+        $checklistRepo->method('findOrFail')->willThrowException(new ChecklistNotFoundException(999));
 
         $entityManager->method('getRepository')->willReturnCallback(function ($class) use ($checklistRepo) {
             if ($class === Checklist::class) {
@@ -329,8 +335,8 @@ class ChecklistControllerExtraTest extends TestCase
         [$entityManager, $submissionService, $emailService, $submissionFactory, $logger, $validationService] = $this->createBaseMocks();
 
         $checklist = $this->createMock(Checklist::class);
-        $checklistRepo = $this->createMock(ObjectRepository::class);
-        $checklistRepo->method('find')->willReturn($checklist);
+        $checklistRepo = $this->createMock(ChecklistRepository::class);
+        $checklistRepo->method('findOrFail')->willReturn($checklist);
 
         $entityManager->method('getRepository')->willReturnCallback(function ($class) use ($checklistRepo) {
             if ($class === Checklist::class) {
@@ -357,11 +363,12 @@ class ChecklistControllerExtraTest extends TestCase
         [$entityManager, $submissionService, $emailService, $submissionFactory, $logger, $validationService] = $this->createBaseMocks();
 
         $checklist = $this->createMock(Checklist::class);
-        $checklistRepo = $this->createMock(ObjectRepository::class);
-        $checklistRepo->method('find')->willReturn($checklist);
+        $checklistRepo = $this->createMock(ChecklistRepository::class);
+        $checklistRepo->method('findOrFail')->willReturn($checklist);
 
         $submissionRepo = $this->createMock(SubmissionRepository::class);
         $submissionRepo->method('findOneByChecklistAndMitarbeiterId')->willReturn(null);
+        $submissionRepo->method('existsForChecklistAndEmployee')->willReturn(false);
 
         $entityManager->method('getRepository')->willReturnCallback(function ($class) use ($checklistRepo, $submissionRepo) {
             if ($class === Checklist::class) {

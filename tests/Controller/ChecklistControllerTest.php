@@ -5,6 +5,7 @@ namespace App\Tests\Controller;
 use App\Controller\ChecklistController;
 use App\Entity\Checklist;
 use App\Entity\Submission;
+use App\Repository\ChecklistRepository;
 use App\Repository\SubmissionRepository;
 use App\Service\EmailService;
 use App\Service\SubmissionService;
@@ -63,11 +64,12 @@ class ChecklistControllerTest extends TestCase
         // - getChecklistOr404 uses EntityManager->getRepository(Checklist::class)->find()
         // - findExistingSubmission uses SubmissionRepository->findOneByChecklistAndMitarbeiterId()
         $checklist = $this->createMock(Checklist::class);
-        $checklistRepo = $this->createMock(ObjectRepository::class);
-        $checklistRepo->method('find')->willReturn($checklist);
+        $checklistRepo = $this->createMock(ChecklistRepository::class);
+        $checklistRepo->method('findOrFail')->willReturn($checklist);
 
         $submissionRepo = $this->createMock(SubmissionRepository::class);
         $submissionRepo->method('findOneByChecklistAndMitarbeiterId')->willReturn(null); // No existing submission
+        $submissionRepo->method('existsForChecklistAndEmployee')->willReturn(false);
 
         $entityManager->method('getRepository')->willReturnCallback(function ($class) use ($checklistRepo, $submissionRepo) {
             if ($class === Checklist::class) {
