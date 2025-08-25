@@ -9,6 +9,7 @@ use App\Repository\SubmissionRepository;
 use App\Service\EmailService;
 use App\Service\SubmissionService;
 use App\Service\SubmissionFactory;
+use App\Service\ValidationService;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ObjectRepository;
 use PHPUnit\Framework\TestCase;
@@ -26,6 +27,7 @@ class ChecklistControllerTest extends TestCase
         $emailService = $this->createMock(EmailService::class);
         $submissionFactory = $this->createMock(SubmissionFactory::class);
         $logger = $this->createMock(LoggerInterface::class);
+        $validationService = $this->createMock(ValidationService::class);
 
         // Mock submission
         $submission = $this->createMock(Submission::class);
@@ -51,7 +53,8 @@ class ChecklistControllerTest extends TestCase
                 $submissionService,
                 $emailService,
                 $submissionFactory,
-                $logger
+                $logger,
+                $validationService
             ])
             ->onlyMethods(['render', 'addFlash'])
             ->getMock();

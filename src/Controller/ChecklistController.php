@@ -4,17 +4,22 @@ namespace App\Controller;
 
 use App\Entity\Checklist;
 use App\Entity\Submission;
+use App\Exception\ChecklistNotFoundException;
+use App\Exception\EmailDeliveryException;
+use App\Exception\InvalidParametersException;
+use App\Exception\SubmissionAlreadyExistsException;
 use App\Repository\SubmissionRepository;
 use App\Service\EmailService;
 use App\Service\SubmissionService;
 use App\Service\SubmissionFactory;
+use App\Service\ValidationService;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\ParameterBag;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class ChecklistController extends AbstractController
 {
@@ -32,7 +37,8 @@ class ChecklistController extends AbstractController
         private SubmissionService $submissionService,
         private EmailService $emailService,
         private SubmissionFactory $submissionFactory,
-        private LoggerInterface $logger
+        private LoggerInterface $logger,
+        private ValidationService $validationService
     ) {}
 
     /**
@@ -45,7 +51,7 @@ class ChecklistController extends AbstractController
     {
         $checklist = $this->entityManager->getRepository(Checklist::class)->find($checklistId);
         if (!$checklist) {
-            throw new NotFoundHttpException('Stückliste nicht gefunden');
+            throw new ChecklistNotFoundException($checklistId);
         }
 
         return $checklist;
@@ -63,9 +69,19 @@ class ChecklistController extends AbstractController
         $mitarbeiterId = urldecode($source->getString('mitarbeiter_id', $source->getString('id', '')));
         $email = urldecode($source->getString('email', ''));
 
-        if ($name === '' || $mitarbeiterId === '' || $email === '') {
-            throw new NotFoundHttpException('Ungültige Parameter');
+        $missingParams = [];
+        if ($name === '') $missingParams[] = 'name';
+        if ($mitarbeiterId === '') $missingParams[] = 'mitarbeiter_id';
+        if ($email === '') $missingParams[] = 'email';
+        
+        if (!empty($missingParams)) {
+            throw new InvalidParametersException($missingParams);
         }
+
+        // Validate input formats
+        $this->validationService->validateName($name);
+        $this->validationService->validateEmployeeId($mitarbeiterId);
+        $this->validationService->validateEmail($email);
 
         return [$name, $mitarbeiterId, $email];
     }
@@ -154,16 +170,12 @@ class ChecklistController extends AbstractController
         $existingSubmission = $this->findExistingSubmission($checklist, $mitarbeiterId);
 
         if ($existingSubmission) {
-            return $this->redirectToRoute('checklist_show', [
-                'id' => $checklistId,
-                'name' => $name,
-                'mitarbeiter_id' => $mitarbeiterId,
-                'email' => $email
-            ]);
+            throw new SubmissionAlreadyExistsException($mitarbeiterId, $checklistId);
         }
 
-        // Formulardaten sammeln
+        // Formulardaten sammeln und validieren
         $submissionData = $this->submissionService->collectSubmissionData($checklist, $request);
+        $this->validationService->validateSubmissionData($submissionData);
 
         // Submission erstellen
         $submission = $this->submissionFactory->createSubmission(
@@ -201,7 +213,7 @@ class ChecklistController extends AbstractController
         // Parameter extrahieren und validieren
         $checklistIdParam = $request->query->get('checklist_id') ?? $request->query->get('list');
         if (!$checklistIdParam) {
-            throw new NotFoundHttpException('Ungültige Parameter');
+            throw new InvalidParametersException(['checklist_id']);
         }
 
         [$name, $mitarbeiterId, $email] = $this->getRequestValuesFromQuery($request);

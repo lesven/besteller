@@ -5,6 +5,7 @@ namespace App\Entity;
 use App\Repository\SubmissionRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: SubmissionRepository::class)]
 #[ORM\Table(name: 'submissions')]
@@ -22,12 +23,20 @@ class Submission
     private ?Checklist $checklist = null;
 
     #[ORM\Column(type: 'string', length: 255)]
+    #[Assert\NotBlank(message: 'Name cannot be empty')]
+    #[Assert\Length(max: 255, maxMessage: 'Name cannot exceed {{ limit }} characters')]
     private ?string $name = null;
 
     #[ORM\Column(type: 'string', length: 255)]
+    #[Assert\NotBlank(message: 'Employee ID cannot be empty')]
+    #[Assert\Length(max: 255, maxMessage: 'Employee ID cannot exceed {{ limit }} characters')]
+    #[Assert\Regex(pattern: '/^[A-Za-z0-9_-]+$/', message: 'Employee ID can only contain letters, numbers, underscores and dashes')]
     private ?string $mitarbeiterId = null;
 
     #[ORM\Column(type: 'string', length: 255)]
+    #[Assert\NotBlank(message: 'Email cannot be empty')]
+    #[Assert\Email(message: 'Invalid email format')]
+    #[Assert\Length(max: 255, maxMessage: 'Email cannot exceed {{ limit }} characters')]
     private ?string $email = null;
 
     /**

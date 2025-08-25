@@ -4,52 +4,64 @@ namespace App\Tests\Service;
 use App\Entity\Checklist;
 use App\Entity\Submission;
 use App\Service\EmailService;
-use App\Service\SubmissionService;
-use Doctrine\ORM\EntityManagerInterface;
-use Doctrine\Persistence\ObjectRepository;
+use App\Service\NotificationService;
+use App\Service\EmailTemplateService;
 use PHPUnit\Framework\TestCase;
-use Symfony\Component\Mailer\MailerInterface;
 
 class EmailServiceTest extends TestCase
 {
     public function testGenerateAndSendEmail(): void
     {
-        $mailer = $this->createMock(MailerInterface::class);
-        $mailer->expects($this->exactly(2))->method("send");
-        $submissionService = $this->createMock(SubmissionService::class);
-        $submissionService->method("formatSubmissionForEmail")->willReturn("<ul></ul>");
-        $repo = $this->createMock(ObjectRepository::class);
-        $repo->method("find")->willReturn(null);
-        $em = $this->createMock(EntityManagerInterface::class);
-        $em->method("getRepository")->willReturn($repo);
-        $service = new EmailService($mailer, $submissionService, $em);
+        $notificationService = $this->createMock(NotificationService::class);
+        $templateService = $this->createMock(EmailTemplateService::class);
+        
+        $expectedHtml = '<p>Test content for Alice with reply@test</p>';
+        $notificationService->expects($this->once())
+            ->method('sendSubmissionNotifications')
+            ->willReturn($expectedHtml);
+            
+        $service = new EmailService($notificationService, $templateService);
         $checklist = (new Checklist())->setTitle("List")->setTargetEmail("target@test")->setReplyEmail("reply@test");
         $submission = (new Submission())->setChecklist($checklist)->setName("Alice")->setMitarbeiterId("123")->setEmail("alice@test")->setData([]);
+        
         $html = $service->generateAndSendEmail($submission);
-        $this->assertStringContainsString("Alice", $html);
-        $this->assertStringContainsString("reply@test", $html);
+        $this->assertEquals($expectedHtml, $html);
     }
 
     public function testGetDefaultTemplateForAdmin(): void
     {
-        $mailer = $this->createMock(MailerInterface::class);
-        $submissionService = $this->createMock(SubmissionService::class);
-        $em = $this->createMock(EntityManagerInterface::class);
-        $service = new EmailService($mailer, $submissionService, $em);
+        $notificationService = $this->createMock(NotificationService::class);
+        $templateService = $this->createMock(EmailTemplateService::class);
+        
+        $expectedTemplate = '<html>Default template</html>';
+        $templateService->expects($this->exactly(2))
+            ->method('getDefaultSubmissionTemplate')
+            ->willReturn($expectedTemplate);
+            
+        $service = new EmailService($notificationService, $templateService);
         $this->assertSame($service->getDefaultTemplate(), $service->getDefaultTemplateForAdmin());
     }
 
-    public function testSendLinkEmailUsesMailer(): void
+    public function testSendLinkEmailUsesNotificationService(): void
     {
-        $mailer = $this->createMock(MailerInterface::class);
-        $mailer->expects($this->once())->method("send");
-        $submissionService = $this->createMock(SubmissionService::class);
-        $repo = $this->createMock(ObjectRepository::class);
-        $repo->method("find")->willReturn(null);
-        $em = $this->createMock(EntityManagerInterface::class);
-        $em->method("getRepository")->willReturn($repo);
-        $service = new EmailService($mailer, $submissionService, $em);
+        $notificationService = $this->createMock(NotificationService::class);
+        $templateService = $this->createMock(EmailTemplateService::class);
+        
         $checklist = (new Checklist())->setTitle("List");
+        
+        $notificationService->expects($this->once())
+            ->method('sendLinkEmail')
+            ->with(
+                $checklist,
+                "Manager",
+                "m@example.com",
+                "123",
+                "Alice",
+                "Intro",
+                "http://example.com"
+            );
+            
+        $service = new EmailService($notificationService, $templateService);
         $service->sendLinkEmail($checklist, "Manager", "m@example.com", "123", "Alice", "Intro", "http://example.com");
     }
 }

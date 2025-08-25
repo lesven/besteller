@@ -153,8 +153,8 @@ class ErrorBoundaryIntegrationTest extends TestCase
             
             // Prüfe, dass korrekte Exception-Typen verwendet werden
             if (strpos($filename, 'Email') !== false) {
-                $this->assertStringContainsString('TransportException', $content,
-                    "E-Mail-Tests sollten TransportException verwenden");
+                $this->assertStringContainsString('EmailDeliveryException', $content,
+                    "E-Mail-Tests sollten EmailDeliveryException verwenden");
             }
             
             if (strpos($filename, 'Database') !== false) {

@@ -10,12 +10,14 @@ use App\Service\EmailService;
 use App\Service\SubmissionService;
 use App\Service\SubmissionFactory;
 use App\Service\EmployeeIdValidatorService;
+use App\Service\ValidationService;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ObjectRepository;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use App\Exception\InvalidParametersException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class InputSanitizationTest extends TestCase
@@ -27,13 +29,14 @@ class InputSanitizationTest extends TestCase
         $emailService = $this->createMock(EmailService::class);
         $submissionFactory = $this->createMock(SubmissionFactory::class);
         $logger = $this->createMock(LoggerInterface::class);
+        $validationService = $this->createMock(ValidationService::class);
 
-        return [$entityManager, $submissionService, $emailService, $submissionFactory, $logger];
+        return [$entityManager, $submissionService, $emailService, $submissionFactory, $logger, $validationService];
     }
 
     private function setupControllerMocks(array $mocks): ChecklistController
     {
-        [$entityManager, $submissionService, $emailService, $submissionFactory, $logger] = $mocks;
+        [$entityManager, $submissionService, $emailService, $submissionFactory, $logger, $validationService] = $mocks;
 
         $checklist = $this->createMock(Checklist::class);
         $checklistRepo = $this->createMock(ObjectRepository::class);
@@ -53,7 +56,7 @@ class InputSanitizationTest extends TestCase
         });
 
         return $this->getMockBuilder(ChecklistController::class)
-            ->setConstructorArgs([$entityManager, $submissionService, $emailService, $submissionFactory, $logger])
+            ->setConstructorArgs([$entityManager, $submissionService, $emailService, $submissionFactory, $logger, $validationService])
             ->onlyMethods(['render'])
             ->getMock();
     }
@@ -131,7 +134,7 @@ class InputSanitizationTest extends TestCase
         $mocks = $this->createBaseMocks();
         $controller = $this->setupControllerMocks($mocks);
 
-        $this->expectException(NotFoundHttpException::class);
+        $this->expectException(InvalidParametersException::class);
 
         $request = new Request();
         $request->query->set('name', '');

@@ -5,6 +5,7 @@ namespace App\Entity;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity]
 #[ORM\Table(name: 'checklists')]
@@ -17,12 +18,19 @@ class Checklist
     private ?int $id = null;
 
     #[ORM\Column(type: 'string', length: 255)]
+    #[Assert\NotBlank(message: 'Title cannot be empty')]
+    #[Assert\Length(max: 255, maxMessage: 'Title cannot exceed {{ limit }} characters')]
     private ?string $title = null;
 
     #[ORM\Column(type: 'string', length: 255)]
+    #[Assert\NotBlank(message: 'Target email cannot be empty')]
+    #[Assert\Email(message: 'Invalid email format')]
+    #[Assert\Length(max: 255, maxMessage: 'Email cannot exceed {{ limit }} characters')]
     private ?string $targetEmail = null;
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    #[Assert\Email(message: 'Invalid email format')]
+    #[Assert\Length(max: 255, maxMessage: 'Email cannot exceed {{ limit }} characters')]
     private ?string $replyEmail = null;
 
     #[ORM\Column(type: 'text', nullable: true)]

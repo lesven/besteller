@@ -13,6 +13,9 @@ use App\Service\EmailService;
 use App\Service\SubmissionService;
 use App\Service\SubmissionFactory;
 use App\Service\ChecklistDuplicationService;
+use App\Service\ValidationService;
+use App\Exception\InvalidParametersException;
+use App\Exception\ChecklistNotFoundException;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ObjectRepository;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -219,13 +222,15 @@ class ChecklistWorkflowTest extends TestCase
         $emailService = $this->createMock(EmailService::class);
         $submissionFactory = $this->createMock(SubmissionFactory::class);
         $logger = $this->createMock(LoggerInterface::class);
+        $validationService = $this->createMock(ValidationService::class);
 
         $controller = new ChecklistController(
             $entityManager,
             $submissionService,
             $emailService,
             $submissionFactory,
-            $logger
+            $logger,
+            $validationService
         );
 
         $this->assertInstanceOf(ChecklistController::class, $controller);
@@ -304,22 +309,23 @@ class ChecklistWorkflowTest extends TestCase
         $emailService = $this->createMock(EmailService::class);
         $submissionFactory = $this->createMock(SubmissionFactory::class);
         $logger = $this->createMock(LoggerInterface::class);
+        $validationService = $this->createMock(ValidationService::class);
 
         $controller = new ChecklistController(
             $entityManager,
             $submissionService,
             $emailService,
             $submissionFactory,
-            $logger
+            $logger,
+            $validationService
         );
 
         // Test with missing checklist_id parameter
         $request = new Request();
         // Missing checklist_id completely
 
-        // Expect NotFoundHttpException for missing checklist_id
-        $this->expectException(\Symfony\Component\HttpKernel\Exception\NotFoundHttpException::class);
-        $this->expectExceptionMessage('Ungültige Parameter');
+        // Expect InvalidParametersException for missing checklist_id
+        $this->expectException(InvalidParametersException::class);
 
         $controller->form($request);
     }
@@ -368,13 +374,15 @@ class ChecklistWorkflowTest extends TestCase
         $emailService = $this->createMock(EmailService::class);
         $submissionFactory = $this->createMock(SubmissionFactory::class);
         $logger = $this->createMock(LoggerInterface::class);
+        $validationService = $this->createMock(ValidationService::class);
 
         $controller = new ChecklistController(
             $entityManager,
             $submissionService,
             $emailService,
             $submissionFactory,
-            $logger
+            $logger,
+            $validationService
         );
 
         $checklistRepo = $this->createMock(ChecklistRepository::class);
@@ -388,9 +396,8 @@ class ChecklistWorkflowTest extends TestCase
         $request->query->set('mitarbeiter_id', 'TEST123');
         $request->query->set('email', 'test@example.com');
 
-        // Expect NotFoundHttpException to be thrown
-        $this->expectException(\Symfony\Component\HttpKernel\Exception\NotFoundHttpException::class);
-        $this->expectExceptionMessage('Stückliste nicht gefunden');
+        // Expect ChecklistNotFoundException to be thrown
+        $this->expectException(ChecklistNotFoundException::class);
 
         $controller->form($request);
     }

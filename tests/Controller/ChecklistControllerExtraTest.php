@@ -5,10 +5,14 @@ namespace App\Tests\Controller;
 use App\Controller\ChecklistController;
 use App\Entity\Checklist;
 use App\Entity\Submission;
+use App\Exception\ChecklistNotFoundException;
+use App\Exception\InvalidParametersException;
+use App\Exception\SubmissionAlreadyExistsException;
 use App\Repository\SubmissionRepository;
 use App\Service\EmailService;
 use App\Service\SubmissionService;
 use App\Service\SubmissionFactory;
+use App\Service\ValidationService;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ObjectRepository;
 use PHPUnit\Framework\TestCase;
@@ -26,15 +30,16 @@ class ChecklistControllerExtraTest extends TestCase
         $emailService = $this->createMock(EmailService::class);
         $submissionFactory = $this->createMock(SubmissionFactory::class);
         $logger = $this->createMock(LoggerInterface::class);
+        $validationService = $this->createMock(ValidationService::class);
 
-        return [$entityManager, $submissionService, $emailService, $submissionFactory, $logger];
+        return [$entityManager, $submissionService, $emailService, $submissionFactory, $logger, $validationService];
     }
 
     private const TEST_EMAIL = 'b@example.com';
 
     public function testShowRendersAlreadySubmittedWhenSubmissionExists(): void
     {
-        [$entityManager, $submissionService, $emailService, $submissionFactory, $logger] = $this->createBaseMocks();
+        [$entityManager, $submissionService, $emailService, $submissionFactory, $logger, $validationService] = $this->createBaseMocks();
 
         $checklist = $this->createMock(Checklist::class);
         $existingSubmission = $this->createMock(Submission::class);
@@ -56,7 +61,7 @@ class ChecklistControllerExtraTest extends TestCase
         });
 
         $controller = $this->getMockBuilder(ChecklistController::class)
-            ->setConstructorArgs([$entityManager, $submissionService, $emailService, $submissionFactory, $logger])
+            ->setConstructorArgs([$entityManager, $submissionService, $emailService, $submissionFactory, $logger, $validationService])
             ->onlyMethods(['render'])
             ->getMock();
 
@@ -78,7 +83,7 @@ class ChecklistControllerExtraTest extends TestCase
 
     public function testShowRendersShowWhenNoSubmission(): void
     {
-        [$entityManager, $submissionService, $emailService, $submissionFactory, $logger] = $this->createBaseMocks();
+        [$entityManager, $submissionService, $emailService, $submissionFactory, $logger, $validationService] = $this->createBaseMocks();
 
         $checklist = $this->createMock(Checklist::class);
 
@@ -99,7 +104,7 @@ class ChecklistControllerExtraTest extends TestCase
         });
 
         $controller = $this->getMockBuilder(ChecklistController::class)
-            ->setConstructorArgs([$entityManager, $submissionService, $emailService, $submissionFactory, $logger])
+            ->setConstructorArgs([$entityManager, $submissionService, $emailService, $submissionFactory, $logger, $validationService])
             ->onlyMethods(['render'])
             ->getMock();
 
@@ -121,7 +126,7 @@ class ChecklistControllerExtraTest extends TestCase
 
     public function testFormPostSuccessSendsEmailAndFlushes(): void
     {
-        [$entityManager, $submissionService, $emailService, $submissionFactory, $logger] = $this->createBaseMocks();
+        [$entityManager, $submissionService, $emailService, $submissionFactory, $logger, $validationService] = $this->createBaseMocks();
 
         $checklist = $this->createMock(Checklist::class);
         $submission = $this->createMock(Submission::class);
@@ -153,7 +158,7 @@ class ChecklistControllerExtraTest extends TestCase
         $entityManager->expects($this->once())->method('flush');
 
         $controller = $this->getMockBuilder(ChecklistController::class)
-            ->setConstructorArgs([$entityManager, $submissionService, $emailService, $submissionFactory, $logger])
+            ->setConstructorArgs([$entityManager, $submissionService, $emailService, $submissionFactory, $logger, $validationService])
             ->onlyMethods(['render'])
             ->getMock();
 
@@ -172,9 +177,9 @@ class ChecklistControllerExtraTest extends TestCase
         $this->assertInstanceOf(Response::class, $response);
     }
 
-    public function testSubmitRedirectsWhenExistingSubmission(): void
+    public function testSubmitThrowsWhenExistingSubmission(): void
     {
-        [$entityManager, $submissionService, $emailService, $submissionFactory, $logger] = $this->createBaseMocks();
+        [$entityManager, $submissionService, $emailService, $submissionFactory, $logger, $validationService] = $this->createBaseMocks();
 
         $checklist = $this->createMock(Checklist::class);
         $existingSubmission = $this->createMock(Submission::class);
@@ -196,16 +201,13 @@ class ChecklistControllerExtraTest extends TestCase
         });
 
     $controller = $this->getMockBuilder(ChecklistController::class)
-            ->setConstructorArgs([$entityManager, $submissionService, $emailService, $submissionFactory, $logger])
-            ->onlyMethods(['redirectToRoute'])
+            ->setConstructorArgs([$entityManager, $submissionService, $emailService, $submissionFactory, $logger, $validationService])
+            ->onlyMethods(['render'])
             ->getMock();
 
     /** @var ChecklistController|\PHPUnit\Framework\MockObject\MockObject $controller */
 
-        $controller->expects($this->once())->method('redirectToRoute')->with(
-            'checklist_show',
-            $this->arrayHasKey('mitarbeiter_id')
-        )->willReturn(new \Symfony\Component\HttpFoundation\RedirectResponse('/checklist/1'));
+        $this->expectException(SubmissionAlreadyExistsException::class);
 
         $request = new Request();
         $request->request->set('name', 'Bob');
@@ -221,7 +223,7 @@ class ChecklistControllerExtraTest extends TestCase
 
     public function testSubmitSavesAndSendsEmail(): void
     {
-        [$entityManager, $submissionService, $emailService, $submissionFactory, $logger] = $this->createBaseMocks();
+        [$entityManager, $submissionService, $emailService, $submissionFactory, $logger, $validationService] = $this->createBaseMocks();
 
         $checklist = $this->createMock(Checklist::class);
         $submission = $this->createMock(Submission::class);
@@ -254,7 +256,7 @@ class ChecklistControllerExtraTest extends TestCase
         $entityManager->expects($this->once())->method('flush');
 
     $controller = $this->getMockBuilder(ChecklistController::class)
-            ->setConstructorArgs([$entityManager, $submissionService, $emailService, $submissionFactory, $logger])
+            ->setConstructorArgs([$entityManager, $submissionService, $emailService, $submissionFactory, $logger, $validationService])
             ->onlyMethods(['render'])
             ->getMock();
 
@@ -276,16 +278,16 @@ class ChecklistControllerExtraTest extends TestCase
 
     public function testFormThrowsWhenNoChecklistId(): void
     {
-        [$entityManager, $submissionService, $emailService, $submissionFactory, $logger] = $this->createBaseMocks();
+        [$entityManager, $submissionService, $emailService, $submissionFactory, $logger, $validationService] = $this->createBaseMocks();
 
     $controller = $this->getMockBuilder(ChecklistController::class)
-            ->setConstructorArgs([$entityManager, $submissionService, $emailService, $submissionFactory, $logger])
+            ->setConstructorArgs([$entityManager, $submissionService, $emailService, $submissionFactory, $logger, $validationService])
             ->onlyMethods(['render'])
             ->getMock();
 
     /** @var ChecklistController|\PHPUnit\Framework\MockObject\MockObject $controller */
 
-        $this->expectException(\Symfony\Component\HttpKernel\Exception\NotFoundHttpException::class);
+        $this->expectException(InvalidParametersException::class);
 
         $request = new Request();
         // no checklist_id in query
@@ -295,7 +297,7 @@ class ChecklistControllerExtraTest extends TestCase
 
     public function testShowThrowsWhenChecklistNotFound(): void
     {
-        [$entityManager, $submissionService, $emailService, $submissionFactory, $logger] = $this->createBaseMocks();
+        [$entityManager, $submissionService, $emailService, $submissionFactory, $logger, $validationService] = $this->createBaseMocks();
 
         $checklistRepo = $this->createMock(ObjectRepository::class);
         $checklistRepo->method('find')->willReturn(null);
@@ -308,11 +310,11 @@ class ChecklistControllerExtraTest extends TestCase
         });
 
         $controller = $this->getMockBuilder(ChecklistController::class)
-            ->setConstructorArgs([$entityManager, $submissionService, $emailService, $submissionFactory, $logger])
+            ->setConstructorArgs([$entityManager, $submissionService, $emailService, $submissionFactory, $logger, $validationService])
             ->onlyMethods(['render'])
             ->getMock();
 
-        $this->expectException(\Symfony\Component\HttpKernel\Exception\NotFoundHttpException::class);
+        $this->expectException(ChecklistNotFoundException::class);
 
         $request = new Request();
         $request->query->set('name', 'Bob');
@@ -324,7 +326,7 @@ class ChecklistControllerExtraTest extends TestCase
 
     public function testShowThrowsWhenMissingQueryParams(): void
     {
-        [$entityManager, $submissionService, $emailService, $submissionFactory, $logger] = $this->createBaseMocks();
+        [$entityManager, $submissionService, $emailService, $submissionFactory, $logger, $validationService] = $this->createBaseMocks();
 
         $checklist = $this->createMock(Checklist::class);
         $checklistRepo = $this->createMock(ObjectRepository::class);
@@ -338,11 +340,11 @@ class ChecklistControllerExtraTest extends TestCase
         });
 
         $controller = $this->getMockBuilder(ChecklistController::class)
-            ->setConstructorArgs([$entityManager, $submissionService, $emailService, $submissionFactory, $logger])
+            ->setConstructorArgs([$entityManager, $submissionService, $emailService, $submissionFactory, $logger, $validationService])
             ->onlyMethods(['render'])
             ->getMock();
 
-        $this->expectException(\Symfony\Component\HttpKernel\Exception\NotFoundHttpException::class);
+        $this->expectException(InvalidParametersException::class);
 
         $request = new Request();
         // missing name/mitarbeiter_id/email
@@ -352,7 +354,7 @@ class ChecklistControllerExtraTest extends TestCase
 
     public function testSubmitThrowsWhenMissingRequestParams(): void
     {
-        [$entityManager, $submissionService, $emailService, $submissionFactory, $logger] = $this->createBaseMocks();
+        [$entityManager, $submissionService, $emailService, $submissionFactory, $logger, $validationService] = $this->createBaseMocks();
 
         $checklist = $this->createMock(Checklist::class);
         $checklistRepo = $this->createMock(ObjectRepository::class);
@@ -372,11 +374,11 @@ class ChecklistControllerExtraTest extends TestCase
         });
 
         $controller = $this->getMockBuilder(ChecklistController::class)
-            ->setConstructorArgs([$entityManager, $submissionService, $emailService, $submissionFactory, $logger])
+            ->setConstructorArgs([$entityManager, $submissionService, $emailService, $submissionFactory, $logger, $validationService])
             ->onlyMethods(['render'])
             ->getMock();
 
-        $this->expectException(\Symfony\Component\HttpKernel\Exception\NotFoundHttpException::class);
+        $this->expectException(InvalidParametersException::class);
 
         $request = new Request();
         $request->setMethod('POST');

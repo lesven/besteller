@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./vendor/bin/phpunit:*)",
+      "Bash(composer show:*)",
+      "Bash(make test:*)",
+      "Bash(find:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
