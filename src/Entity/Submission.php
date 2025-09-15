@@ -3,6 +3,7 @@
 namespace App\Entity;
 
 use App\Repository\SubmissionRepository;
+use App\ValueObject\EmailAddress;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 
@@ -29,6 +30,8 @@ class Submission
 
     #[ORM\Column(type: 'string', length: 255)]
     private ?string $email = null;
+
+    private ?EmailAddress $emailAddress = null;
 
     /**
      * @var array<string, array<string, mixed>>
@@ -93,6 +96,22 @@ class Submission
     public function setEmail(string $email): static
     {
         $this->email = $email;
+        $this->emailAddress = new EmailAddress($email);
+        return $this;
+    }
+
+    public function getEmailAddress(): ?EmailAddress
+    {
+        if ($this->emailAddress === null && $this->email !== null) {
+            $this->emailAddress = new EmailAddress($this->email);
+        }
+        return $this->emailAddress;
+    }
+
+    public function setEmailAddress(EmailAddress $emailAddress): static
+    {
+        $this->emailAddress = $emailAddress;
+        $this->email = $emailAddress->getValue();
         return $this;
     }
 

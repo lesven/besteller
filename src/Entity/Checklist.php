@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\ValueObject\EmailAddress;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
@@ -24,6 +25,9 @@ class Checklist
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
     private ?string $replyEmail = null;
+
+    private ?EmailAddress $targetEmailAddress = null;
+    private ?EmailAddress $replyEmailAddress = null;
 
     #[ORM\Column(type: 'text', nullable: true)]
     private ?string $emailTemplate = null;
@@ -73,6 +77,22 @@ class Checklist
     public function setTargetEmail(string $targetEmail): static
     {
         $this->targetEmail = $targetEmail;
+        $this->targetEmailAddress = new EmailAddress($targetEmail);
+        return $this;
+    }
+
+    public function getTargetEmailAddress(): ?EmailAddress
+    {
+        if ($this->targetEmailAddress === null && $this->targetEmail !== null) {
+            $this->targetEmailAddress = new EmailAddress($this->targetEmail);
+        }
+        return $this->targetEmailAddress;
+    }
+
+    public function setTargetEmailAddress(EmailAddress $targetEmailAddress): static
+    {
+        $this->targetEmailAddress = $targetEmailAddress;
+        $this->targetEmail = $targetEmailAddress->getValue();
         return $this;
     }
 
@@ -84,6 +104,22 @@ class Checklist
     public function setReplyEmail(?string $replyEmail): static
     {
         $this->replyEmail = $replyEmail;
+        $this->replyEmailAddress = $replyEmail ? new EmailAddress($replyEmail) : null;
+        return $this;
+    }
+
+    public function getReplyEmailAddress(): ?EmailAddress
+    {
+        if ($this->replyEmailAddress === null && $this->replyEmail !== null) {
+            $this->replyEmailAddress = new EmailAddress($this->replyEmail);
+        }
+        return $this->replyEmailAddress;
+    }
+
+    public function setReplyEmailAddress(?EmailAddress $replyEmailAddress): static
+    {
+        $this->replyEmailAddress = $replyEmailAddress;
+        $this->replyEmail = $replyEmailAddress?->getValue();
         return $this;
     }
 

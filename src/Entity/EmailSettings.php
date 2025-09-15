@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\ValueObject\EmailAddress;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity]
@@ -31,6 +32,8 @@ class EmailSettings
 
     #[ORM\Column(type: 'string', length: 255)]
     private string $senderEmail = 'noreply@besteller.local';
+
+    private ?EmailAddress $senderEmailAddress = null;
 
     public function getId(): ?int
     {
@@ -100,6 +103,22 @@ class EmailSettings
     public function setSenderEmail(string $senderEmail): static
     {
         $this->senderEmail = $senderEmail;
+        $this->senderEmailAddress = new EmailAddress($senderEmail);
+        return $this;
+    }
+
+    public function getSenderEmailAddress(): EmailAddress
+    {
+        if ($this->senderEmailAddress === null) {
+            $this->senderEmailAddress = new EmailAddress($this->senderEmail);
+        }
+        return $this->senderEmailAddress;
+    }
+
+    public function setSenderEmailAddress(EmailAddress $senderEmailAddress): static
+    {
+        $this->senderEmailAddress = $senderEmailAddress;
+        $this->senderEmail = $senderEmailAddress->getValue();
         return $this;
     }
 }

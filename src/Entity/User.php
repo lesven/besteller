@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\ValueObject\EmailAddress;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -18,6 +19,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[ORM\Column(type: 'string', length: 180, unique: true)]
     private string $email = '';
+
+    private ?EmailAddress $emailAddress = null;
 
     /**
      * @var list<string>
@@ -41,6 +44,22 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setEmail(string $email): static
     {
         $this->email = $email;
+        $this->emailAddress = new EmailAddress($email);
+        return $this;
+    }
+
+    public function getEmailAddress(): ?EmailAddress
+    {
+        if ($this->emailAddress === null && $this->email !== '') {
+            $this->emailAddress = new EmailAddress($this->email);
+        }
+        return $this->emailAddress;
+    }
+
+    public function setEmailAddress(EmailAddress $emailAddress): static
+    {
+        $this->emailAddress = $emailAddress;
+        $this->email = $emailAddress->getValue();
         return $this;
     }
 

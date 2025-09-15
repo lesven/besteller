@@ -6,6 +6,7 @@ use App\Entity\Checklist;
 use App\Entity\Submission;
 use App\Service\EmailService;
 use App\Service\EmployeeIdValidatorService;
+use App\ValueObject\EmailAddress;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
@@ -34,9 +35,16 @@ class LinkSenderService
      */
     public function sendChecklistLink(Checklist $checklist, string $recipientName, string $recipientEmail, string $mitarbeiterId, ?string $personName, string $intro): void
     {
-        // --- Validierung der Eingaben (wie zuvor im Controller) ---
-        if (!$recipientName || !filter_var($recipientEmail, FILTER_VALIDATE_EMAIL) || !$mitarbeiterId || !$this->employeeIdValidator->isValid($mitarbeiterId)) {
+        // --- Validierung der Eingaben (mit EmailAddress Value Object) ---
+        if (!$recipientName || !$mitarbeiterId || !$this->employeeIdValidator->isValid($mitarbeiterId)) {
             throw new \InvalidArgumentException('Bitte Empfängerdaten und gültige Personen-ID vollständig angeben.');
+        }
+
+        // Validierung der E-Mail-Adresse über Value Object
+        try {
+            $emailAddress = new EmailAddress($recipientEmail);
+        } catch (\InvalidArgumentException $e) {
+            throw new \InvalidArgumentException('Bitte geben Sie eine gültige E-Mail-Adresse ein.');
         }
 
         // --- Duplicate-Check ---

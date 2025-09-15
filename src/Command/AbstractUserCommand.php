@@ -2,6 +2,7 @@
 
 namespace App\Command;
 
+use App\ValueObject\EmailAddress;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -39,7 +40,11 @@ abstract class AbstractUserCommand extends Command
     {
         $io = new SymfonyStyle($input, $output);
         $email = $input->getArgument('email');
-        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        
+        // Validierung über EmailAddress Value Object
+        try {
+            new EmailAddress($email);
+        } catch (\InvalidArgumentException $e) {
             $io->error('Ungültige E-Mail-Adresse.');
             return Command::FAILURE;
         }

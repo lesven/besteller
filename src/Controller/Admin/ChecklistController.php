@@ -9,6 +9,7 @@ use App\Repository\ChecklistRepository;
 use App\Service\EmailService;
 use App\Service\ChecklistDuplicationService;
 use App\Service\CsrfDeletionHelper;
+use App\ValueObject\EmailAddress;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -70,9 +71,13 @@ class ChecklistController extends AbstractController
             $checklist->setTitle($title);
             $checklist->setTargetEmail($targetEmail);
             $reply = trim((string) $request->request->get('reply_email'));
-            if ($reply !== '' && !filter_var($reply, FILTER_VALIDATE_EMAIL)) {
-                $this->addFlash('error', 'Bitte eine gültige Rückfragen-E-Mail eingeben.');
-                return $this->redirectToRoute('admin_checklist_new');
+            if ($reply !== '') {
+                try {
+                    new EmailAddress($reply);
+                } catch (\InvalidArgumentException $e) {
+                    $this->addFlash('error', 'Bitte eine gültige Rückfragen-E-Mail eingeben.');
+                    return $this->redirectToRoute('admin_checklist_new');
+                }
             }
             $checklist->setReplyEmail($reply !== '' ? $reply : null);
 
@@ -110,9 +115,13 @@ class ChecklistController extends AbstractController
             $checklist->setTitle($title);
             $checklist->setTargetEmail($targetEmail);
             $reply = trim((string) $request->request->get('reply_email'));
-            if ($reply !== '' && !filter_var($reply, FILTER_VALIDATE_EMAIL)) {
-                $this->addFlash('error', 'Bitte eine gültige Rückfragen-E-Mail eingeben.');
-                return $this->redirectToRoute('admin_checklist_edit', ['id' => $checklist->getId()]);
+            if ($reply !== '') {
+                try {
+                    new EmailAddress($reply);
+                } catch (\InvalidArgumentException $e) {
+                    $this->addFlash('error', 'Bitte eine gültige Rückfragen-E-Mail eingeben.');
+                    return $this->redirectToRoute('admin_checklist_edit', ['id' => $checklist->getId()]);
+                }
             }
             $checklist->setReplyEmail($reply !== '' ? $reply : null);
 
