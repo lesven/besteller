@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\ValueObject\SortOrder;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity]
@@ -29,6 +30,8 @@ class GroupItem
 
     #[ORM\Column(type: 'integer')]
     private int $sortOrder = 0;
+
+    private ?SortOrder $sortOrderObject = null;
 
     #[ORM\ManyToOne(targetEntity: ChecklistGroup::class, inversedBy: 'items')]
     #[ORM\JoinColumn(nullable: false)]
@@ -202,6 +205,22 @@ class GroupItem
     public function setSortOrder(int $sortOrder): static
     {
         $this->sortOrder = $sortOrder;
+        $this->sortOrderObject = new SortOrder($sortOrder);
+        return $this;
+    }
+
+    public function getSortOrderObject(): SortOrder
+    {
+        if ($this->sortOrderObject === null) {
+            $this->sortOrderObject = new SortOrder($this->sortOrder);
+        }
+        return $this->sortOrderObject;
+    }
+
+    public function setSortOrderObject(SortOrder $sortOrder): static
+    {
+        $this->sortOrderObject = $sortOrder;
+        $this->sortOrder = $sortOrder->getValue();
         return $this;
     }
 

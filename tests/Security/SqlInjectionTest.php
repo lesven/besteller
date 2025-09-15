@@ -5,7 +5,7 @@ namespace App\Tests\Security;
 use App\Entity\Checklist;
 use App\Entity\Submission;
 use App\Repository\SubmissionRepository;
-use App\Service\EmployeeIdValidatorService;
+use App\ValueObject\MitarbeiterId;
 use App\Service\ApiValidationService;
 use App\Exception\JsonValidationException;
 use Doctrine\DBAL\Connection;
@@ -94,7 +94,7 @@ class SqlInjectionTest extends TestCase
 
     public function testEmployeeIdValidatorRejectsSqlInjection(): void
     {
-        $validator = new EmployeeIdValidatorService();
+        // Test MitarbeiterId Value Object validation instead
 
         $sqlInjectionPayloads = [
             "'; DROP TABLE users; --",
@@ -108,14 +108,14 @@ class SqlInjectionTest extends TestCase
         ];
 
         foreach ($sqlInjectionPayloads as $payload) {
-            $isValid = $validator->isValid($payload);
-            $this->assertFalse($isValid, "Validator should reject SQL injection payload: $payload");
+            $this->expectException(\InvalidArgumentException::class);
+            new MitarbeiterId($payload);
         }
     }
 
     public function testEmployeeIdValidatorAcceptsValidIds(): void
     {
-        $validator = new EmployeeIdValidatorService();
+        // Test MitarbeiterId Value Object validation instead
 
         $validIds = [
             'EMP-123',
@@ -127,8 +127,8 @@ class SqlInjectionTest extends TestCase
         ];
 
         foreach ($validIds as $id) {
-            $isValid = $validator->isValid($id);
-            $this->assertTrue($isValid, "Validator should accept valid ID: $id");
+            $mitarbeiterId = new MitarbeiterId($id);
+            $this->assertSame($id, $mitarbeiterId->getValue());
         }
     }
 
@@ -213,10 +213,9 @@ class SqlInjectionTest extends TestCase
      */
     public function testAdvancedSqlInjectionPrevention(string $payload, string $description): void
     {
-        $validator = new EmployeeIdValidatorService();
-        
-        $isValid = $validator->isValid($payload);
-        $this->assertFalse($isValid, "Should reject advanced SQL injection: $description");
+        // Test MitarbeiterId Value Object validation instead
+        $this->expectException(\InvalidArgumentException::class);
+        new MitarbeiterId($payload);
     }
 
     public function testSubmissionRepositoryHandlesSpecialCharacters(): void

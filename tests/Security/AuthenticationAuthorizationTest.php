@@ -13,7 +13,6 @@ use App\Service\LinkSenderService;
 use App\Service\ChecklistDuplicationService;
 use App\Service\EmailService;
 use App\Service\ApiValidationService;
-use App\Service\EmployeeIdValidatorService;
 use App\Service\ApiControllerHelper;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ObjectRepository;
@@ -73,10 +72,8 @@ class AuthenticationAuthorizationTest extends TestCase
         $controller = new ApiController(
             $this->createMock(UrlGeneratorInterface::class),
             $parameterBag,
-            $this->createMock(EmployeeIdValidatorService::class),
             $this->createMock(LinkSenderService::class),
-            $this->createMock(ApiValidationService::class),
-            $helper
+            $this->createMock(ApiValidationService::class)
         );
 
         // This test verifies that ApiController uses the helper for token validation
@@ -88,9 +85,8 @@ class AuthenticationAuthorizationTest extends TestCase
         $parameterBag = $this->createMock(ParameterBagInterface::class);
         $parameterBag->method('get')->with('API_TOKEN')->willReturn('valid_secret_token');
 
-        $employeeIdValidator = $this->createMock(EmployeeIdValidatorService::class);
         
-        $helper = new ApiControllerHelper($parameterBag, $employeeIdValidator);
+        $helper = new ApiControllerHelper($parameterBag);
 
         // Test with invalid token
         $request = Request::create('/api/test', 'POST', [], [], [], ['HTTP_AUTHORIZATION' => 'Bearer invalid_token']);
@@ -111,9 +107,8 @@ class AuthenticationAuthorizationTest extends TestCase
         $parameterBag = $this->createMock(ParameterBagInterface::class);
         $parameterBag->method('get')->with('API_TOKEN')->willReturn('valid_secret_token');
 
-        $employeeIdValidator = $this->createMock(EmployeeIdValidatorService::class);
         
-        $helper = new ApiControllerHelper($parameterBag, $employeeIdValidator);
+        $helper = new ApiControllerHelper($parameterBag);
 
         $authHeader = is_string($maliciousToken) ? 'Bearer ' . $maliciousToken : 'Bearer invalid';
         $request = Request::create('/api/test', 'POST', [], [], [], ['HTTP_AUTHORIZATION' => $authHeader]);
@@ -127,9 +122,8 @@ class AuthenticationAuthorizationTest extends TestCase
         $parameterBag = $this->createMock(ParameterBagInterface::class);
         $parameterBag->method('get')->with('API_TOKEN')->willReturn('valid_secret_token_12345');
 
-        $employeeIdValidator = $this->createMock(EmployeeIdValidatorService::class);
         
-        $helper = new ApiControllerHelper($parameterBag, $employeeIdValidator);
+        $helper = new ApiControllerHelper($parameterBag);
 
         // Test timing consistency for different length invalid tokens
         $shortToken = 'short';
@@ -181,10 +175,8 @@ class AuthenticationAuthorizationTest extends TestCase
         $parameterBag = $this->createMock(ParameterBagInterface::class);
         $parameterBag->method('get')->with('API_TOKEN')->willReturn('api_secret');
 
-        $employeeIdValidator = $this->createMock(EmployeeIdValidatorService::class);
-        $employeeIdValidator->method('isValid')->willReturn(true);
         
-        $helper = new ApiControllerHelper($parameterBag, $employeeIdValidator);
+        $helper = new ApiControllerHelper($parameterBag);
 
         // Test various privilege escalation attempts through API token manipulation
         $escalationAttempts = [
@@ -221,9 +213,8 @@ class AuthenticationAuthorizationTest extends TestCase
         $parameterBag = $this->createMock(ParameterBagInterface::class);
         $parameterBag->method('get')->with('API_TOKEN')->willReturn('correct_token');
 
-        $employeeIdValidator = $this->createMock(EmployeeIdValidatorService::class);
         
-        $helper = new ApiControllerHelper($parameterBag, $employeeIdValidator);
+        $helper = new ApiControllerHelper($parameterBag);
 
         // Simulate multiple failed attempts
         for ($i = 0; $i < 10; $i++) {
@@ -262,9 +253,8 @@ class AuthenticationAuthorizationTest extends TestCase
         $parameterBag = $this->createMock(ParameterBagInterface::class);
         $parameterBag->method('get')->with('API_TOKEN')->willReturn('valid_token');
 
-        $employeeIdValidator = $this->createMock(EmployeeIdValidatorService::class);
         
-        $helper = new ApiControllerHelper($parameterBag, $employeeIdValidator);
+        $helper = new ApiControllerHelper($parameterBag);
 
         // Test various authentication bypass attempts
         foreach ($requestData as $key => $value) {

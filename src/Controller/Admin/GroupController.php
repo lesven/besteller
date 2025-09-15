@@ -54,8 +54,9 @@ class GroupController extends AbstractController
         // Beschreibung säubern (leer -> null)
         $group->setDescription($this->sanitizeValue($request->request->getString('description', '')));
 
-        // Sortierung als Integer
-        $group->setSortOrder($request->request->getInt('sort_order', 0));
+        // Sortierung als Integer (durch Value Object validiert)
+        $sortOrderValue = max(0, $request->request->getInt('sort_order', 0));
+        $group->setSortOrder($sortOrderValue);
     }
 
     /**
@@ -68,7 +69,8 @@ class GroupController extends AbstractController
     {
         $item->setLabel($request->request->getString('label'));
         $item->setType($request->request->getString('type'));
-        $item->setSortOrder($request->request->getInt('sort_order', 0));
+        $sortOrderValue = max(0, $request->request->getInt('sort_order', 0));
+        $item->setSortOrder($sortOrderValue);
 
         // Für Checkbox/Radio: Optionen parsen
         if (in_array($item->getType(), [GroupItem::TYPE_CHECKBOX, GroupItem::TYPE_RADIO])) {

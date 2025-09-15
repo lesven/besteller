@@ -14,7 +14,6 @@ class ApiControllerHelperTest extends TestCase
         $parameterBag = $this->createMock(ParameterBagInterface::class);
         $parameterBag->method('get')->willReturnCallback(fn($k) => $k === 'API_TOKEN' ? '' : null);
 
-        $validator = $this->createMock(EmployeeIdValidatorService::class);
         $helper = new ApiControllerHelper($parameterBag);
 
         $request = new Request();
@@ -26,7 +25,6 @@ class ApiControllerHelperTest extends TestCase
         $parameterBag = $this->createMock(ParameterBagInterface::class);
         $parameterBag->method('get')->willReturnCallback(fn($k) => $k === 'API_TOKEN' ? 'secret' : null);
 
-        $validator = $this->createMock(EmployeeIdValidatorService::class);
         $helper = new ApiControllerHelper($parameterBag);
 
         $request = new Request();
@@ -61,7 +59,6 @@ class ApiControllerHelperTest extends TestCase
     public function testExtractGenerateLinkParamsMissingFieldsThrows(): void
     {
         $parameterBag = $this->createMock(ParameterBagInterface::class);
-        $validator = $this->createMock(EmployeeIdValidatorService::class);
         $helper = new ApiControllerHelper($parameterBag);
 
         $this->expectException(InvalidArgumentException::class);
@@ -71,16 +68,13 @@ class ApiControllerHelperTest extends TestCase
     public function testExtractGenerateLinkParamsInvalidEmployeeIdThrows(): void
     {
         $parameterBag = $this->createMock(ParameterBagInterface::class);
-        $validator = $this->createMock(EmployeeIdValidatorService::class);
-        $validator->method('isValid')->with('bad')->willReturn(false);
-
-        $helper = new ApiControllerHelper($parameterBag, $validator);
+        $helper = new ApiControllerHelper($parameterBag);
 
         $this->expectException(InvalidArgumentException::class);
         $helper->extractGenerateLinkParams([
             'stückliste_id' => 1,
             'mitarbeiter_name' => 'A',
-            'mitarbeiter_id' => 'bad',
+            'mitarbeiter_id' => 'bad@id', // Use invalid characters for MitarbeiterId
             'email_empfänger' => 'a@example.com',
         ]);
     }
@@ -88,7 +82,6 @@ class ApiControllerHelperTest extends TestCase
     public function testExtractSendLinkParamsConvertsValues(): void
     {
         $parameterBag = $this->createMock(ParameterBagInterface::class);
-        $validator = $this->createMock(EmployeeIdValidatorService::class);
         $helper = new ApiControllerHelper($parameterBag);
 
         $data = [

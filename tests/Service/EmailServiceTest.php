@@ -23,11 +23,11 @@ class EmailServiceTest extends TestCase
         $em = $this->createMock(EntityManagerInterface::class);
         $em->method("getRepository")->willReturn($repo);
         $service = new EmailService($mailer, $submissionService, $em);
-        $checklist = (new Checklist())->setTitle("List")->setTargetEmail("target@test")->setReplyEmail("reply@test");
-        $submission = (new Submission())->setChecklist($checklist)->setName("Alice")->setMitarbeiterId("123")->setEmail("alice@test")->setData([]);
+        $checklist = (new Checklist())->setTitle("List")->setTargetEmail("target@test.com")->setReplyEmail("reply@test.com");
+        $submission = (new Submission())->setChecklist($checklist)->setName("Alice")->setMitarbeiterId("123")->setEmail("alice@test.com")->setData([]);
         $html = $service->generateAndSendEmail($submission);
         $this->assertStringContainsString("Alice", $html);
-        $this->assertStringContainsString("reply@test", $html);
+        $this->assertStringContainsString("reply@test.com", $html);
     }
 
     public function testGetDefaultTemplateForAdmin(): void

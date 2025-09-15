@@ -9,7 +9,7 @@ use App\Repository\SubmissionRepository;
 use App\Service\EmailService;
 use App\Service\SubmissionService;
 use App\Service\SubmissionFactory;
-use App\Service\EmployeeIdValidatorService;
+use App\ValueObject\MitarbeiterId;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ObjectRepository;
 use PHPUnit\Framework\TestCase;

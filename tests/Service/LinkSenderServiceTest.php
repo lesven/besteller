@@ -82,10 +82,7 @@ class LinkSenderServiceTest extends TestCase
 
         $urlGenerator = $this->createMock(UrlGeneratorInterface::class);
 
-        $employeeIdValidator = $this->createMock(EmployeeIdValidatorService::class);
-        // isValid should not be called because email validation fails first
-
-        $service = new LinkSenderService($em, $emailService, $urlGenerator, $employeeIdValidator);
+        $service = new LinkSenderService($em, $emailService, $urlGenerator);
 
         $this->expectException(\InvalidArgumentException::class);
 

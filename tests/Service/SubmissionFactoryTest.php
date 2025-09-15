@@ -18,13 +18,13 @@ class SubmissionFactoryTest extends TestCase
         $factory = new SubmissionFactory($em);
         $checklist = new Checklist();
 
-        $submission = $factory->createSubmission($checklist, 'Alice', '1', 'a@test', ['foo' => []]);
+        $submission = $factory->createSubmission($checklist, 'Alice', '1', 'a@test.com', ['foo' => []]);
 
         $this->assertInstanceOf(Submission::class, $submission);
         $this->assertSame($checklist, $submission->getChecklist());
         $this->assertSame('Alice', $submission->getName());
         $this->assertSame('1', $submission->getMitarbeiterId());
-        $this->assertSame('a@test', $submission->getEmail());
+        $this->assertSame('a@test.com', $submission->getEmail());
         $this->assertSame(['foo' => []], $submission->getData());
     }
 
@@ -37,6 +37,6 @@ class SubmissionFactoryTest extends TestCase
         $factory = new SubmissionFactory($em);
         $checklist = new Checklist();
 
-        $factory->createSubmission($checklist, 'Bob', '2', 'b@test', [], true);
+        $factory->createSubmission($checklist, 'Bob', '2', 'b@test.com', [], true);
     }
 }

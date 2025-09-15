@@ -11,7 +11,7 @@ class SubmissionTest extends TestCase
     public function testDataAndChecklistLink(): void
     {
         $sub = new Submission();
-        $sub->setName('Anna')->setMitarbeiterId('ID11')->setEmail('a@e');
+        $sub->setName('Anna')->setMitarbeiterId('ID11')->setEmail('a@example.com');
         $this->assertNotNull($sub->getSubmittedAt());
 
         $data = ['foo' => ['bar' => 1]];

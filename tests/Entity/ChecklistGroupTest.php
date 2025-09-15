@@ -5,6 +5,7 @@ namespace App\Tests\Entity;
 use App\Entity\ChecklistGroup;
 use App\Entity\Checklist;
 use App\Entity\GroupItem;
+use App\ValueObject\SortOrder;
 use PHPUnit\Framework\TestCase;
 use Doctrine\Common\Collections\ArrayCollection;
 
@@ -52,6 +53,30 @@ class ChecklistGroupTest extends TestCase
         
         $this->assertSame($group, $result, 'setSortOrder sollte das Objekt zurückgeben');
         $this->assertSame(42, $group->getSortOrder(), 'SortOrder sollte gesetzt werden');
+    }
+
+    public function testSortOrderValueObject(): void
+    {
+        $group = new ChecklistGroup();
+        
+        // Test mit positivem Wert
+        $sortOrder = new SortOrder(10);
+        $result = $group->setSortOrderObject($sortOrder);
+        
+        $this->assertSame($group, $result, 'setSortOrderObject sollte das Objekt zurückgeben');
+        $this->assertSame(10, $group->getSortOrder(), 'SortOrder int sollte gesetzt werden');
+        $this->assertTrue($group->getSortOrderObject()->equals($sortOrder), 'SortOrder Object sollte gleich sein');
+    }
+
+    public function testGetSortOrderObjectLazyInitialization(): void
+    {
+        $group = new ChecklistGroup();
+        $group->setSortOrder(5);
+        
+        $sortOrderObject = $group->getSortOrderObject();
+        
+        $this->assertInstanceOf(SortOrder::class, $sortOrderObject);
+        $this->assertSame(5, $sortOrderObject->getValue());
     }
 
     public function testSetChecklist(): void
