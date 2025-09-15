@@ -5,7 +5,6 @@ namespace App\Tests\Service;
 use App\Entity\Checklist;
 use App\Entity\Submission;
 use App\Service\LinkSenderService;
-use App\Service\EmployeeIdValidatorService;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
@@ -37,10 +36,7 @@ class LinkSenderServiceTest extends TestCase
         $urlGenerator = $this->createMock(UrlGeneratorInterface::class);
         $urlGenerator->method('generate')->willReturn('http://example.com');
 
-        $employeeIdValidator = $this->createMock(EmployeeIdValidatorService::class);
-        $employeeIdValidator->method('isValid')->with('123')->willReturn(true);
-
-        $service = new LinkSenderService($em, $emailService, $urlGenerator, $employeeIdValidator);
+        $service = new LinkSenderService($em, $emailService, $urlGenerator);
 
         $checklist = (new Checklist())->setTitle('List');
 
@@ -63,10 +59,7 @@ class LinkSenderServiceTest extends TestCase
 
         $urlGenerator = $this->createMock(UrlGeneratorInterface::class);
 
-        $employeeIdValidator = $this->createMock(EmployeeIdValidatorService::class);
-        $employeeIdValidator->method('isValid')->with('123')->willReturn(true);
-
-        $service = new LinkSenderService($em, $emailService, $urlGenerator, $employeeIdValidator);
+        $service = new LinkSenderService($em, $emailService, $urlGenerator);
 
         $this->expectException(\RuntimeException::class);
 
@@ -115,14 +108,11 @@ class LinkSenderServiceTest extends TestCase
 
         $urlGenerator = $this->createMock(UrlGeneratorInterface::class);
 
-        $employeeIdValidator = $this->createMock(EmployeeIdValidatorService::class);
-        $employeeIdValidator->method('isValid')->with('bad-id')->willReturn(false);
-
-        $service = new LinkSenderService($em, $emailService, $urlGenerator, $employeeIdValidator);
+        $service = new LinkSenderService($em, $emailService, $urlGenerator);
 
         $this->expectException(\InvalidArgumentException::class);
 
-        $service->sendChecklistLink(new Checklist(), 'Manager', 'm@example.com', 'bad-id', 'Alice', 'Intro');
+        $service->sendChecklistLink(new Checklist(), 'Manager', 'm@example.com', 'invalid@id', 'Alice', 'Intro');
     }
 
     public function testSendChecklistLinkUsesRecipientNameWhenPersonNameNull(): void
@@ -158,10 +148,7 @@ class LinkSenderServiceTest extends TestCase
             UrlGeneratorInterface::ABSOLUTE_URL
         )->willReturn('http://example.com');
 
-        $employeeIdValidator = $this->createMock(EmployeeIdValidatorService::class);
-        $employeeIdValidator->method('isValid')->with('123')->willReturn(true);
-
-        $service = new LinkSenderService($em, $emailService, $urlGenerator, $employeeIdValidator);
+        $service = new LinkSenderService($em, $emailService, $urlGenerator);
 
         $checklist = (new Checklist())->setTitle('List');
 

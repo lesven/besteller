@@ -2,6 +2,7 @@
 
 namespace App\Service;
 
+use App\ValueObject\MitarbeiterId;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use InvalidArgumentException;
@@ -13,8 +14,7 @@ use InvalidArgumentException;
 class ApiControllerHelper
 {
     public function __construct(
-        private ParameterBagInterface $parameterBag,
-        private EmployeeIdValidatorService $employeeIdValidator
+        private ParameterBagInterface $parameterBag
     ) {
     }
 
@@ -30,10 +30,15 @@ class ApiControllerHelper
         return $auth === 'Bearer ' . $configuredToken;
     }
 
-    // Validiert die Mitarbeiter-ID mit dem Validator-Service
+    // Validiert die Mitarbeiter-ID mit dem Value Object
     public function isValidMitarbeiterId(string $mitarbeiterId): bool
     {
-        return $this->employeeIdValidator->isValid($mitarbeiterId);
+        try {
+            new MitarbeiterId($mitarbeiterId);
+            return true;
+        } catch (InvalidArgumentException $e) {
+            return false;
+        }
     }
 
     // Extrahiert und validiert Parameter für generateLink

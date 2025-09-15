@@ -3,7 +3,6 @@
 namespace App\Controller;
 
 use App\Exception\JsonValidationException;
-use App\Service\EmployeeIdValidatorService;
 use InvalidArgumentException;
 use App\Service\LinkSenderService;
 use App\Service\ApiControllerHelper;
@@ -35,14 +34,13 @@ class ApiController extends AbstractController
     public function __construct(
         private UrlGeneratorInterface $urlGenerator,
         private ParameterBagInterface $parameterBag,
-        private EmployeeIdValidatorService $employeeIdValidator,
         LinkSenderService $linkSenderService,
         ApiValidationService $apiValidationService,
         ?ApiControllerHelper $helper = null
     ) {
         $this->linkSenderService = $linkSenderService;
         $this->apiValidationService = $apiValidationService;
-        $this->helper = $helper ?? new ApiControllerHelper($parameterBag, $employeeIdValidator);
+        $this->helper = $helper ?? new ApiControllerHelper($parameterBag);
     }
 
     /**

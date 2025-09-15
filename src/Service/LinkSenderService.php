@@ -5,8 +5,8 @@ namespace App\Service;
 use App\Entity\Checklist;
 use App\Entity\Submission;
 use App\Service\EmailService;
-use App\Service\EmployeeIdValidatorService;
 use App\ValueObject\EmailAddress;
+use App\ValueObject\MitarbeiterId;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
@@ -22,8 +22,7 @@ class LinkSenderService
     public function __construct(
         private EntityManagerInterface $entityManager,
         private EmailService $emailService,
-        private UrlGeneratorInterface $urlGenerator,
-        private EmployeeIdValidatorService $employeeIdValidator
+        private UrlGeneratorInterface $urlGenerator
     ) {
     }
 
@@ -35,9 +34,9 @@ class LinkSenderService
      */
     public function sendChecklistLink(Checklist $checklist, string $recipientName, string $recipientEmail, string $mitarbeiterId, ?string $personName, string $intro): void
     {
-        // --- Validierung der Eingaben (mit EmailAddress Value Object) ---
-        if (!$recipientName || !$mitarbeiterId || !$this->employeeIdValidator->isValid($mitarbeiterId)) {
-            throw new \InvalidArgumentException('Bitte Empfängerdaten und gültige Personen-ID vollständig angeben.');
+        // --- Validierung der Eingaben mit Value Objects ---
+        if (!$recipientName) {
+            throw new \InvalidArgumentException('Bitte Empfängerdaten vollständig angeben.');
         }
 
         // Validierung der E-Mail-Adresse über Value Object
@@ -47,10 +46,17 @@ class LinkSenderService
             throw new \InvalidArgumentException('Bitte geben Sie eine gültige E-Mail-Adresse ein.');
         }
 
+        // Validierung der Mitarbeiter-ID über Value Object
+        try {
+            $mitarbeiterIdObject = new MitarbeiterId($mitarbeiterId);
+        } catch (\InvalidArgumentException $e) {
+            throw new \InvalidArgumentException('Bitte geben Sie eine gültige Personen-ID ein.');
+        }
+
         // --- Duplicate-Check ---
         /** @var \App\Repository\SubmissionRepository $repo */
         $repo = $this->entityManager->getRepository(Submission::class);
-        $existing = $repo->findOneByChecklistAndMitarbeiterId($checklist, $mitarbeiterId);
+        $existing = $repo->findOneByChecklistAndMitarbeiterId($checklist, $mitarbeiterIdObject->getValue());
 
         if ($existing) {
             throw new \RuntimeException('Für diese Personen-ID/Listen Kombination wurde bereits eine Bestellung übermittelt.');

@@ -4,6 +4,7 @@ namespace App\Entity;
 
 use App\Repository\SubmissionRepository;
 use App\ValueObject\EmailAddress;
+use App\ValueObject\MitarbeiterId;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 
@@ -32,6 +33,7 @@ class Submission
     private ?string $email = null;
 
     private ?EmailAddress $emailAddress = null;
+    private ?MitarbeiterId $mitarbeiterIdObject = null;
 
     /**
      * @var array<string, array<string, mixed>>
@@ -85,6 +87,22 @@ class Submission
     public function setMitarbeiterId(string $mitarbeiterId): static
     {
         $this->mitarbeiterId = $mitarbeiterId;
+        $this->mitarbeiterIdObject = new MitarbeiterId($mitarbeiterId);
+        return $this;
+    }
+
+    public function getMitarbeiterIdObject(): ?MitarbeiterId
+    {
+        if ($this->mitarbeiterIdObject === null && $this->mitarbeiterId !== null) {
+            $this->mitarbeiterIdObject = new MitarbeiterId($this->mitarbeiterId);
+        }
+        return $this->mitarbeiterIdObject;
+    }
+
+    public function setMitarbeiterIdObject(MitarbeiterId $mitarbeiterIdObject): static
+    {
+        $this->mitarbeiterIdObject = $mitarbeiterIdObject;
+        $this->mitarbeiterId = $mitarbeiterIdObject->getValue();
         return $this;
     }
 

@@ -2,7 +2,6 @@
 namespace App\Tests\Service;
 
 use App\Service\ApiControllerHelper;
-use App\Service\EmployeeIdValidatorService;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
@@ -16,7 +15,7 @@ class ApiControllerHelperTest extends TestCase
         $parameterBag->method('get')->willReturnCallback(fn($k) => $k === 'API_TOKEN' ? '' : null);
 
         $validator = $this->createMock(EmployeeIdValidatorService::class);
-        $helper = new ApiControllerHelper($parameterBag, $validator);
+        $helper = new ApiControllerHelper($parameterBag);
 
         $request = new Request();
         $this->assertTrue($helper->isAuthorized($request));
@@ -28,7 +27,7 @@ class ApiControllerHelperTest extends TestCase
         $parameterBag->method('get')->willReturnCallback(fn($k) => $k === 'API_TOKEN' ? 'secret' : null);
 
         $validator = $this->createMock(EmployeeIdValidatorService::class);
-        $helper = new ApiControllerHelper($parameterBag, $validator);
+        $helper = new ApiControllerHelper($parameterBag);
 
         $request = new Request();
         $this->assertFalse($helper->isAuthorized($request));
@@ -43,10 +42,7 @@ class ApiControllerHelperTest extends TestCase
     public function testExtractGenerateLinkParamsHappyPath(): void
     {
         $parameterBag = $this->createMock(ParameterBagInterface::class);
-        $validator = $this->createMock(EmployeeIdValidatorService::class);
-        $validator->method('isValid')->with('abc-123')->willReturn(true);
-
-        $helper = new ApiControllerHelper($parameterBag, $validator);
+        $helper = new ApiControllerHelper($parameterBag);
 
         $data = [
             'stückliste_id' => 123,
@@ -66,7 +62,7 @@ class ApiControllerHelperTest extends TestCase
     {
         $parameterBag = $this->createMock(ParameterBagInterface::class);
         $validator = $this->createMock(EmployeeIdValidatorService::class);
-        $helper = new ApiControllerHelper($parameterBag, $validator);
+        $helper = new ApiControllerHelper($parameterBag);
 
         $this->expectException(InvalidArgumentException::class);
         $helper->extractGenerateLinkParams(['foo' => 'bar']);
@@ -93,7 +89,7 @@ class ApiControllerHelperTest extends TestCase
     {
         $parameterBag = $this->createMock(ParameterBagInterface::class);
         $validator = $this->createMock(EmployeeIdValidatorService::class);
-        $helper = new ApiControllerHelper($parameterBag, $validator);
+        $helper = new ApiControllerHelper($parameterBag);
 
         $data = [
             'mitarbeiter_id' => 123,
