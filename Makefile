@@ -61,7 +61,7 @@ up-foreground: ## docker compose up (foreground)
 ## Start detached (default "up")
 up: ## docker compose up -d (detached)
 	@echo "==> docker compose up -d"
-	@$(DC_BASE) $(DC_ARGS) up -d --build
+	@$(DC_BASE) $(DC_ARGS) up -d
 
 ## alias to match older Makefile 'start'
 up-d: up
