@@ -3,6 +3,9 @@
 namespace App\Tests\Command;
 
 use App\Command\LoadFixturesCommand;
+use App\Factory\ChecklistFactory;
+use App\Factory\ChecklistGroupFactory;
+use App\Factory\GroupItemFactory;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Command\Command;
@@ -18,12 +21,15 @@ class LoadFixturesCommandTest extends TestCase
 {
     public function testExecuteFailsInNonDevEnvironment(): void
     {
-        // Mocks: EntityManager nicht benötigt für diesen Fall
+        // Mocks: EntityManager und Factories nicht benötigt für diesen Fall
         $entityManager = $this->createMock(EntityManagerInterface::class);
+        $checklistFactory = $this->createMock(ChecklistFactory::class);
+        $groupFactory = $this->createMock(ChecklistGroupFactory::class);
+        $itemFactory = $this->createMock(GroupItemFactory::class);
         $params = $this->createMock(ParameterBagInterface::class);
         $params->method('get')->with('kernel.environment')->willReturn('prod');
 
-        $command = new LoadFixturesCommand($entityManager, $params);
+        $command = new LoadFixturesCommand($entityManager, $params, $checklistFactory, $groupFactory, $itemFactory);
         $tester = new CommandTester($command);
 
         $exitCode = $tester->execute([]);
@@ -48,14 +54,21 @@ class LoadFixturesCommandTest extends TestCase
         // createQuery kann mehrmals aufgerufen werden; liefert immer denselben Stub
         $entityManager->method('createQuery')->willReturn($query);
 
-    // Erwartet: persist wird zumindest einmal aufgerufen und flush zweimal (Löschen + Erstellen)
-    $entityManager->expects($this->atLeastOnce())->method('persist');
-    $entityManager->expects($this->exactly(2))->method('flush');
+        // Erwartet: flush wird zweimal aufgerufen (Löschen + Erstellen)
+        $entityManager->expects($this->exactly(2))->method('flush');
 
+        // Factory-Mocks
+        $checklistFactory = $this->createMock(ChecklistFactory::class);
+        $groupFactory = $this->createMock(ChecklistGroupFactory::class);
+        $itemFactory = $this->createMock(GroupItemFactory::class);
+        
+        // Mock für Checklist-Erstellung
+        $checklistFactory->expects($this->exactly(3))->method('createChecklist');
+        
         $params = $this->createMock(ParameterBagInterface::class);
         $params->method('get')->with('kernel.environment')->willReturn('dev');
 
-        $command = new LoadFixturesCommand($entityManager, $params);
+        $command = new LoadFixturesCommand($entityManager, $params, $checklistFactory, $groupFactory, $itemFactory);
         $tester = new CommandTester($command);
 
         $exitCode = $tester->execute([]);
